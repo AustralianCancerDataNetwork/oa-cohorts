@@ -1,6 +1,6 @@
 [project]
 name = "oa-cohorts"
-version = "0.6.0"
+version = "0.6.1"
 description = "Serialisation utilities for OMOP CDM cohorts and CQI builder"
 readme = "README.md"
 authors = [

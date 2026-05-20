@@ -270,11 +270,11 @@ def render_indicator_summaries(
         grid.add_row("Reference", summary.reference or "-")
         grid.add_row(
             "Numerator",
-            f"{summary.numerator_measure_id}: {summary.numerator_measure_name} [{summary.numerator_label}]",
+            f"{summary.numerator_measure_id}: {summary.numerator_measure_name}",
         )
         grid.add_row(
             "Denominator",
-            f"{summary.denominator_measure_id}: {summary.denominator_measure_name} [{summary.denominator_label}]",
+            f"{summary.denominator_measure_id}: {summary.denominator_measure_name}",
         )
         grid.add_row("Benchmark", summary.benchmark_summary)
         return Panel.fit(
@@ -300,8 +300,8 @@ def render_indicator_summaries(
             str(summary.indicator_id),
             summary.description,
             summary.reference or "-",
-            f"{summary.numerator_measure_id}: {summary.numerator_measure_name} [{summary.numerator_label}]",
-            f"{summary.denominator_measure_id}: {summary.denominator_measure_name} [{summary.denominator_label}]",
+            f"{summary.numerator_measure_id}: {summary.numerator_measure_name}",
+            f"{summary.denominator_measure_id}: {summary.denominator_measure_name}",
             summary.benchmark_summary,
         )
 
@@ -317,14 +317,8 @@ def render_indicator_detail_summary(summary: IndicatorDetailSummary) -> Panel:
     grid.add_row("Reference", summary.reference or "-")
     grid.add_row("Reports", ", ".join(summary.report_memberships) or "-")
     grid.add_row("Benchmark", summary.benchmark_summary)
-    grid.add_row(
-        "Numerator",
-        _render_measure_summary(summary.numerator_measure, label=summary.numerator_label),
-    )
-    grid.add_row(
-        "Denominator",
-        _render_measure_summary(summary.denominator_measure, label=summary.denominator_label),
-    )
+    grid.add_row("Numerator", _render_measure_summary(summary.numerator_measure))
+    grid.add_row("Denominator", _render_measure_summary(summary.denominator_measure))
     return Panel.fit(grid, title="[bold]Indicator Summary[/bold]", border_style="green")
 
 
@@ -375,10 +369,9 @@ def render_indicator_summary_overview(
     return Panel.fit(grid, title="[bold]Summary[/bold]", border_style="green")
 
 
-def _render_measure_summary(summary: MeasureSummary, *, label: str) -> Text:
+def _render_measure_summary(summary: MeasureSummary) -> Text:
     lines = [
         f"{summary.measure_id}: {summary.name}",
-        f"Label: {label}",
         f"Combination: {summary.combination}",
         f"Episode override: {'yes' if summary.person_ep_override else 'no'}",
     ]

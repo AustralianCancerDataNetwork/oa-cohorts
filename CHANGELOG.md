@@ -134,3 +134,6 @@
 - removed dead temporal columns from indicator table (`temporal_early`, `temporal_late`, `temporal_min`, `temporal_min_units`, `temporal_max`, `temporal_max_units`)
 - `config_import` supports optional CSV tables
 - removed notebooks directory until updated examples can be created
+
+## 0.6.1
+- updated handling of numerator and denominator labels

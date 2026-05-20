@@ -47,9 +47,7 @@ class Indicator(HTMLRenderable, Base):
     indicator_reference: so.Mapped[str | None] = so.mapped_column(sa.String(100), nullable=True)
 
     numerator_measure_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('measure.measure_id'))
-    numerator_label: so.Mapped[str] = so.mapped_column(sa.String(100))
     denominator_measure_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('measure.measure_id'))
-    denominator_label: so.Mapped[str] = so.mapped_column(sa.String(100))
 
     numerator_max_days_prior: so.Mapped[int | None] = so.mapped_column(sa.Integer(), nullable=True)
     numerator_max_days_post: so.Mapped[int | None] = so.mapped_column(sa.Integer(), nullable=True)
@@ -71,6 +69,20 @@ class Indicator(HTMLRenderable, Base):
         secondary=report_indicator_map,
         back_populates="indicators"
     )
+
+    @property
+    def numerator_label(self) -> str:
+        if self.numerator_measure:
+            return self.numerator_measure.name
+        return 'no numerator measure defined'
+
+    @property
+    def denominator_label(self) -> str:
+        if self.denominator_measure:
+            return self.denominator_measure.name
+        if self.denominator_measure_id == 0:
+            return 'Whole cohort'
+        return 'no denominator measure defined'
 
     def execute(self, db: so.Session, *, people: list[int] | None = None):
         """
@@ -316,17 +328,10 @@ class Indicator(HTMLRenderable, Base):
 
     def _html_inner(self):
         blocks: list[object] = []
-
-        # Numerator
         blocks.append(RawHTML("<div class='subquery-section-title'>Numerator</div>"))
-        blocks.append(RawHTML(f"<div class='muted'>{esc(self.numerator_label)}</div>"))
         blocks.append(self.numerator_measure)
-
-        # Denominator
         blocks.append(RawHTML("<div class='subquery-section-title'>Denominator</div>"))
-        blocks.append(RawHTML(f"<div class='muted'>{esc(self.denominator_label)}</div>"))
         blocks.append(self.denominator_measure)
-
         return blocks
     
     def is_executable(self) -> IndicatorExecCheck:

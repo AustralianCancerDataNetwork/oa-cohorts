@@ -188,9 +188,7 @@ def _build_config_dir(config_dir: Path) -> Path:
             "indicator_description",
             "indicator_reference",
             "numerator_measure_id",
-            "numerator_label",
             "denominator_measure_id",
-            "denominator_label",
             "benchmark",
             "benchmark_unit",
         ],
@@ -200,9 +198,7 @@ def _build_config_dir(config_dir: Path) -> Path:
                 "indicator_description": "Test indicator",
                 "indicator_reference": "",
                 "numerator_measure_id": 2,
-                "numerator_label": "Numerator",
                 "denominator_measure_id": 1,
-                "denominator_label": "Denominator",
                 "benchmark": "",
                 "benchmark_unit": "days",
             },
@@ -646,8 +642,8 @@ def test_report_indicator_summary_cli_prints_report_indicators(tmp_path):
     assert result.exit_code == 0
     assert "Indicator Summary: Test report (test)" in result.stdout
     assert "Test indicator" in result.stdout
-    assert "2: Phenotype measure [Numerator]" in result.stdout
-    assert "1: Diagnosis [Denominator]" in result.stdout
+    assert "2: Phenotype measure" in result.stdout
+    assert "1: Diagnosis" in result.stdout
 
 
 def test_report_indicator_summary_cli_reports_missing_report(tmp_path):
