@@ -25,7 +25,8 @@ def get_measurable_registry() -> dict[RuleTarget, Type[MeasurableBase]]:
     from .ev_measureables import (
         MeasurementMeasurable,
         ProcedureMeasurable,
-        ObserveMeasurable
+        ObserveMeasurable,
+        VisitSpecialtyMeasurable,
     )
 
     from .pr_measurables import (
@@ -50,5 +51,6 @@ def get_measurable_registry() -> dict[RuleTarget, Type[MeasurableBase]]:
         RuleTarget.tx_to_death_window: TxDaysBeforeDeath,
         RuleTarget.dx_to_tx_window: TxDaysToStartTreatment,
         RuleTarget.tx_concurrent: TxConcurrentChemoRT,
-        RuleTarget.referral_to_specialist_window: ReferralToSpecialistWindowMeasurable
+        RuleTarget.referral_to_specialist_window: ReferralToSpecialistWindowMeasurable,
+        RuleTarget.ev_visit: VisitSpecialtyMeasurable,
     }

@@ -40,6 +40,8 @@ class RuleTemporality(str, enum.Enum):
     dt_numerator = "dt_numerator"
     dt_denominator = "dt_denominator"
 
+    dt_visit = "dt_visit"
+
 class RuleTarget(str, enum.Enum):
     # Diagnosis-related
     dx_any = "dx_any"
@@ -78,6 +80,8 @@ class RuleTarget(str, enum.Enum):
     # Intent modifiers
     intent_rt = "intent_rt"
     intent_sact = "intent_sact"
+
+    ev_visit = "ev_visit"
 
 class ThresholdDirection(str, enum.Enum):
     gt = ">"

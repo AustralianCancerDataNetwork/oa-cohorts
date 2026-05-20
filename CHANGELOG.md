@@ -137,3 +137,7 @@
 
 ## 0.6.1
 - updated handling of numerator and denominator labels
+
+## 0.7.0
+- `VisitSpecialtyMeasurable`: new measurable backed by `DxRelevantVisitMV`, filterable by `provider_specialty_concept_id`
+- added `RuleTarget.ev_visit`, `RuleTemporality.dt_visit`, `MeasurableDomain.visit` to support visit-specialty subqueries
