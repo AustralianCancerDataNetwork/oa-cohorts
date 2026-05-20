@@ -1,7 +1,7 @@
 site_name: OA Cohorts
 site_description: OMOP-Alchemy based composable API to feed clinical quality indicator results to downstream reporting
-site_url: https://AustralianCancerDataNetwork.github.io/oa_cohort/
-repo_url: https://github.com/AustralianCancerDataNetwork/oa_cohort
+site_url: https://AustralianCancerDataNetwork.github.io/oa-cohorts/
+repo_url: https://github.com/AustralianCancerDataNetwork/oa-cohorts
 repo_name: oa_cohorts
 
 theme:
