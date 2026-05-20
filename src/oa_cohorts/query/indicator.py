@@ -328,7 +328,9 @@ class Indicator(HTMLRenderable, Base):
 
     def _html_inner(self):
         blocks: list[object] = []
+        blocks.append(RawHTML("<div class='subquery-section-title'>Numerator</div>"))
         blocks.append(self.numerator_measure)
+        blocks.append(RawHTML("<div class='subquery-section-title'>Denominator</div>"))
         blocks.append(self.denominator_measure)
         return blocks
     
