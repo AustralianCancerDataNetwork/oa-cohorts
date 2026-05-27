@@ -141,3 +141,6 @@
 ## 0.7.0
 - `VisitSpecialtyMeasurable`: new measurable backed by `DxRelevantVisitMV`, filterable by `provider_specialty_concept_id`
 - added `RuleTarget.ev_visit`, `RuleTemporality.dt_visit`, `MeasurableDomain.visit` to support visit-specialty subqueries
+
+## 0.7.1
+- new `PrimaryDiagnosisConditionMV` to allow differentiation against 'primary-only' and 'all disease ep' measurable
