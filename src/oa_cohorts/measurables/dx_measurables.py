@@ -1,9 +1,7 @@
-from omop_constructs.alchemy.modifiers import ModifiedCondition
+from omop_constructs.alchemy.modifiers import ModifiedCondition, PrimaryDiagnosisConditionMV
 from omop_constructs.alchemy.modifiers.condition_modifier_mv  import StageModifier
-from orm_loader.helpers import Base, get_logger
+from orm_loader.helpers import Base
 from .measurable_base import MeasurableSpec, MeasurableBase, MeasurableDomain
-
-logger = get_logger(__name__)
 
 class AnyConditionMeasurable(ModifiedCondition, MeasurableBase, Base):
     __measurable__ = MeasurableSpec(
@@ -14,6 +12,17 @@ class AnyConditionMeasurable(ModifiedCondition, MeasurableBase, Base):
         event_date_attr="condition_start_date",
         value_concept_attr="condition_concept_id",
         value_string_attr="condition_code"
+    )
+
+class PrimaryDiagnosisEpisodeMeasurable(PrimaryDiagnosisConditionMV, MeasurableBase, Base):
+    __measurable__ = MeasurableSpec(
+        domain=MeasurableDomain.dx,
+        label="Primary Diagnosis Episode",
+        person_id_attr="person_id",
+        episode_id_attr="condition_episode",
+        event_date_attr="episode_start_date",
+        value_concept_attr="condition_concept_id",
+        value_string_attr="condition_code",
     )
 
 class StagedConditionMeasurable(StageModifier, MeasurableBase, Base):

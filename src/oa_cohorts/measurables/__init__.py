@@ -13,10 +13,16 @@ from .measurable_base import MeasurableBase, MeasurableDomain, MeasurableSpec, B
 # measurables in a more normal fashion.
 
 if TYPE_CHECKING:
-    from .dx_measurables import AnyConditionMeasurable, StagedConditionMeasurable, MetsConditionMeasurable
+    from .dx_measurables import (
+        AnyConditionMeasurable,
+        PrimaryDiagnosisEpisodeMeasurable,
+        StagedConditionMeasurable,
+        MetsConditionMeasurable,
+    )
 
 _EXPORTS = {
     "AnyConditionMeasurable": (".dx_measurables", "AnyConditionMeasurable"),
+    "PrimaryDiagnosisEpisodeMeasurable": (".dx_measurables", "PrimaryDiagnosisEpisodeMeasurable"),
     "StagedConditionMeasurable": (".dx_measurables", "StagedConditionMeasurable"),
     "MetsConditionMeasurable": (".dx_measurables", "MetsConditionMeasurable"),
 }
@@ -28,6 +34,7 @@ __all__ = [
     "MeasurableSpec",
     "BoundMeasurableSpec",
     "AnyConditionMeasurable",
+    "PrimaryDiagnosisEpisodeMeasurable",
     "StagedConditionMeasurable",
     "MetsConditionMeasurable",
 ]

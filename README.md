@@ -19,6 +19,17 @@ At a high level, the system lets you:
 
 This is intentionally object-centric: once a report is executed, downstream payloads are assembled from the resolved cohort and indicator member sets, with report-level demography fetched only for the in-scope cohort person_ids.
 
+## Diagnosis target semantics
+
+The diagnosis layer now distinguishes between two common clinical questions:
+
+* `dx_any`: any diagnosis row attached to the current disease episode
+* `dx_primary`: diagnosis rows restricted to the patient's primary diagnosis episode anchor
+
+In practice, `dx_primary` is the safer target when a cohort or indicator should be defined by the diagnosis present at the start of the primary episode of care, rather than by later progression or metastatic episodes that may carry related diagnosis coding.
+
+That distinction matters most for report definitions that need to answer questions like "was this a lung primary cohort?" rather than the broader question "did this episode ever carry a lung-related diagnosis code?"
+
 ## What’s here (roughly)
 
 * `Report / ReportCohortMap`: Top-level report definition, linking cohorts and indicators.

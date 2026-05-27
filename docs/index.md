@@ -115,6 +115,13 @@ Value-column resolution depends on the rule types present:
 
 That last point is important for derived window measurables such as `tx_to_death_window` and `referral_to_specialist_window`: threshold-only scalar rules can run against numeric-only measurables.
 
+`RuleTarget` selection also carries clinical meaning, not just technical routing. For example:
+
+* `dx_any` resolves against any diagnosis row attached to the current episode
+* `dx_primary` resolves against diagnosis rows anchored to the patient's primary diagnosis episode
+
+That distinction lets report authors choose whether a cohort should follow episode-level diagnosis coding broadly, or whether it should stay anchored to the diagnosis present at the start of the primary episode of care.
+
 ### Layer 1: QueryRule
 
 A `QueryRule` is the smallest declarative unit in the engine: a single predicate applied to a field resolved by a subquery.

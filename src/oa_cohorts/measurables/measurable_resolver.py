@@ -5,6 +5,7 @@ from .measurable_base import MeasurableBase
 def get_measurable_registry() -> dict[RuleTarget, Type[MeasurableBase]]:
     from .dx_measurables import (
         AnyConditionMeasurable,
+        PrimaryDiagnosisEpisodeMeasurable,
         StagedConditionMeasurable,
         MetsConditionMeasurable,
     )
@@ -35,7 +36,7 @@ def get_measurable_registry() -> dict[RuleTarget, Type[MeasurableBase]]:
 
     return {
         RuleTarget.dx_any: AnyConditionMeasurable,
-        RuleTarget.dx_primary: AnyConditionMeasurable,
+        RuleTarget.dx_primary: PrimaryDiagnosisEpisodeMeasurable,
         RuleTarget.dx_stage: StagedConditionMeasurable,
         RuleTarget.dx_mets: MetsConditionMeasurable,
         RuleTarget.tx_surgical: SurgicalMeasurable,
