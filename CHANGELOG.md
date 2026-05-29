@@ -144,3 +144,6 @@
 
 ## 0.7.1
 - new `PrimaryDiagnosisConditionMV` to allow differentiation against 'primary-only' and 'all disease ep' measurable
+
+## 0.7.2
+- upversion constructs to pull in treatment envelope window corrections
