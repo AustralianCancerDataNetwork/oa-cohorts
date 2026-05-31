@@ -1,6 +1,6 @@
 [project]
 name = "oa-cohorts"
-version = "0.7.3"
+version = "0.7.4"
 description = "Serialisation utilities for OMOP CDM cohorts and CQI builder"
 readme = "README.md"
 authors = [
@@ -8,7 +8,7 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "omop-constructs>=0.4.8",
+    "omop-constructs>=0.4.9",
     "omop-alchemy>=0.6.3",
     "rich>=13.0",
     "typer>=0.12",
