@@ -153,3 +153,6 @@
 
 ## 0.7.4
 - upversion constructs to pull in treatment envelope window corrections
+
+## 0.7.5
+- upversion constructs - date window data types
