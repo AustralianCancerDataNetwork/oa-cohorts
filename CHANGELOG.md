@@ -156,3 +156,6 @@
 
 ## 0.7.5
 - upversion constructs - date window data types
+
+## 0.7.6
+- dependabot alerts

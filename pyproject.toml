@@ -1,6 +1,6 @@
 [project]
 name = "oa-cohorts"
-version = "0.7.5"
+version = "0.7.6"
 description = "Serialisation utilities for OMOP CDM cohorts and CQI builder"
 readme = "README.md"
 authors = [
@@ -27,7 +27,7 @@ package-data = { "oa_cohorts" = ["**/*.css"] }
 [project.optional-dependencies]
 dev = [
   "ipython>=8.0",
-  "tornado>=6.5.5",
+  "tornado>=6.5.7",
   "pytest>=9.0.3",
   "pytest-cov>=4.0",
   "mypy>=1.8",
