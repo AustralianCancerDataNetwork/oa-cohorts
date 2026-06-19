@@ -5,6 +5,7 @@ from typing import Annotated, Sequence
 
 import typer
 from rich.console import Console
+import sqlalchemy as sa
 import sqlalchemy.orm as so
 from typer.main import get_command
 
@@ -68,6 +69,13 @@ def app_callback(
             OaCohortsConfig.configure_logging(verbosity=verbose)
 
 
+def _resolve_engine_for_command(console: Console, *, database_url: str | None) -> tuple[sa.Engine, str | None]:
+    try:
+        return resolve_engine(database_url=database_url)
+    except Exception as exc:
+        handle_cli_error(console, exc)
+
+
 @app.command("import-config")
 def import_config_command(
     config_path: Path = typer.Argument(..., help="Directory containing the config CSV files."),
@@ -77,7 +85,7 @@ def import_config_command(
     dry_run: bool = typer.Option(False, "--dry-run", help="Plan the import and report changes without writing to the database."),
 ) -> None:
     console = Console()
-    engine, resolved_url = resolve_engine(database_url=database_url)
+    engine, resolved_url = _resolve_engine_for_command(console, database_url=database_url)
     dedupe = not no_dedupe
     create_tables = not no_create_tables
 
@@ -118,7 +126,7 @@ def report_summary_command(
     short_name: str | None = typer.Option(None, "--short-name", help="Limit the summary to a report short name."),
 ) -> None:
     console = Console()
-    engine, resolved_url = resolve_engine(database_url=database_url)
+    engine, resolved_url = _resolve_engine_for_command(console, database_url=database_url)
 
     console.print(
         render_report_summary_header(
@@ -165,7 +173,7 @@ def indicator_summary_command(
     database_url: str | None = typer.Option(None, help="Override the runtime database URL for this query."),
 ) -> None:
     console = Console()
-    engine, resolved_url = resolve_engine(database_url=database_url)
+    engine, resolved_url = _resolve_engine_for_command(console, database_url=database_url)
 
     console.print(
         render_indicator_summary_header(
@@ -210,7 +218,7 @@ def report_indicator_summary_command(
     database_url: str | None = typer.Option(None, help="Override the runtime database URL for this query."),
 ) -> None:
     console = Console()
-    engine, resolved_url = resolve_engine(database_url=database_url)
+    engine, resolved_url = _resolve_engine_for_command(console, database_url=database_url)
 
     console.print(
         render_report_indicator_summary_header(
@@ -279,7 +287,7 @@ def measure_summary_command(
     database_url: str | None = typer.Option(None, help="Override the runtime database URL for this query."),
 ) -> None:
     console = Console()
-    engine, resolved_url = resolve_engine(database_url=database_url)
+    engine, resolved_url = _resolve_engine_for_command(console, database_url=database_url)
 
     console.print(
         render_measure_summary_header(
@@ -323,7 +331,7 @@ def bootstrap_schema_command(
     database_url: str | None = typer.Option(None, help="Override the runtime database URL for this bootstrap."),
 ) -> None:
     console = Console()
-    engine, resolved_url = resolve_engine(database_url=database_url)
+    engine, resolved_url = _resolve_engine_for_command(console, database_url=database_url)
 
     console.print(render_schema_bootstrap_header(database_url=resolved_url))
 

@@ -589,6 +589,20 @@ def test_report_summary_cli_reports_when_schema_has_not_been_loaded(tmp_path):
     assert "import-config" in result.stdout
 
 
+def test_report_summary_cli_renders_runtime_config_error(monkeypatch):
+    def _raise_not_found(cls, **engine_kwargs):
+        raise FileNotFoundError("missing config")
+
+    monkeypatch.delenv("ENGINE", raising=False)
+    monkeypatch.setattr(OaCohortsConfig, "get_engine", classmethod(_raise_not_found))
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["report-summary"])
+
+    assert result.exit_code == 1
+    assert "No oa-cohorts dashboard database configured" in result.stdout
+
+
 def test_bootstrap_schema_cli_creates_query_tables(tmp_path):
     database_path = tmp_path / "bootstrap.db"
     runner = CliRunner()

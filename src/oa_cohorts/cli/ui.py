@@ -22,7 +22,7 @@ from .report_summary import ReportSummary
 from .schema import SchemaBootstrapResult
 
 
-DEFAULT_DATABASE_LABEL = "configured cdm_db resource"
+DEFAULT_DATABASE_LABEL = "configured dashboard_db resource"
 
 
 def _render_header_panel(rows: list[tuple[str, RenderableType]]) -> Panel:

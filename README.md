@@ -73,7 +73,37 @@ This is a working internal engine under active development. APIs may shift.
 
 ## Docker
 
-The repo includes a lightweight CLI container under `docker/docker-compose.yaml` that joins the external `cava-network`. The CLI resolves its runtime database from the configured `cdm_db` resource by default. `--database-url` remains available as a per-command override, and `ENGINE` can be used as a local fallback when no stack config file is present.
+The repo includes a lightweight CLI container under `docker/docker-compose.yaml` that joins the external `cava-network`.
+
+### Resources
+
+oa-cohorts uses two separate database resources:
+
+* **`dashboard_db`** — where oa-cohorts stores its report, indicator, and measure configuration. This is the database the CLI commands (`import-config`, `report-summary`, etc.) read from and write to. oa-cohorts owns and provisions this resource via `omop-config configure oa_cohorts`.
+* **`cdm_db`** — the OMOP CDM database used for cohort execution. Typically shared with `omop_alchemy` or `omop_constructs`; not provisioned by oa-cohorts directly.
+
+Both resources can share the same physical database server, or be separate databases in production. To share a server but use different schemas, declare two `[resources.*]` entries that both point to the same `[databases.*]` entry:
+
+```toml
+[databases.mydb]
+dialect = "postgresql+psycopg2"
+host = "localhost"
+database_name = "mydb"
+
+[resources.dashboard_db]
+database = "mydb"
+cdm_schema = "public"        # schema where oa-cohorts stores its config tables
+
+[resources.cdm_db]
+database = "mydb"
+cdm_schema = "omop"          # OMOP CDM schema
+vocab_schema = "omop"
+results_schema = "results"
+```
+
+Note: `[resource_aliases]` maps a semantic name to an *existing* resource and inherits its full config (including schema). It is not the right tool for "same server, different schema" — use two separate resource entries as above.
+
+The CLI resolves `dashboard_db` by default (or the `oa_cohorts.default_resource` configured during setup). `--database-url` remains available as a per-command override, and `ENGINE` can be set as a local fallback when no stack config file is present.
 
 Example:
 
@@ -84,4 +114,4 @@ docker compose exec oa-cohorts oa-cohorts --help
 docker compose exec oa-cohorts oa-cohorts import-config /app/dash_config
 ```
 
-When using stack configuration, ensure the `cdm_db` host is reachable on `cava-network`, for example `postgresql+psycopg2://user:password@postgres:5432/dbname`. For one-off local overrides, pass `--database-url` or set `ENGINE` before invoking the command.
+When using stack configuration, ensure the `dashboard_db` host is reachable on `cava-network`, for example `postgresql+psycopg2://user:password@postgres:5432/dbname`. For one-off local overrides, pass `--database-url` or set `ENGINE` before invoking the command.
