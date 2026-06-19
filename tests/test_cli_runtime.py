@@ -16,6 +16,11 @@ def test_resolve_engine_uses_explicit_database_url(monkeypatch):
 
     monkeypatch.setattr(OaCohortsConfig, "get_engine", classmethod(_should_not_be_called))
 
+    def _should_not_be_called(cls, **engine_kwargs):
+        raise AssertionError("config should not be used")
+
+    monkeypatch.setattr(OaCohortsConfig, "get_engine", classmethod(_should_not_be_called))
+
     engine, resolved_url = resolve_engine(database_url="sqlite://")
 
     assert isinstance(engine, sa.Engine)
