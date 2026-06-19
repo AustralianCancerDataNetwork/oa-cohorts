@@ -162,3 +162,6 @@
 
 ## 0.8.0
 - upgrade to integrate oa-configurator updates
+
+## 0.8.1 
+- upversion omop-alchemy, omop-constructs
