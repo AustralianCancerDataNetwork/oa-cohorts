@@ -22,6 +22,9 @@ from .report_summary import ReportSummary
 from .schema import SchemaBootstrapResult
 
 
+DEFAULT_DATABASE_LABEL = "configured dashboard_db resource"
+
+
 def _render_header_panel(rows: list[tuple[str, RenderableType]]) -> Panel:
     grid = Table.grid(padding=(0, 2))
     grid.add_column(style="bold cyan")
@@ -44,7 +47,7 @@ def render_command_header(
         [
             ("Command", command_name),
             ("Config path", config_path),
-            ("Database", database_url or "ENGINE / default registry engine"),
+            ("Database", database_url or DEFAULT_DATABASE_LABEL),
             ("Dedupe", "yes" if dedupe else "no"),
             ("Create tables", "yes" if create_tables else "no"),
             ("Mode", Text("dry-run" if dry_run else "apply", style="cyan" if dry_run else "green")),
@@ -61,7 +64,7 @@ def render_report_summary_header(
     return _render_header_panel(
         [
             ("Command", "report-summary"),
-            ("Database", database_url or "ENGINE / default registry engine"),
+            ("Database", database_url or DEFAULT_DATABASE_LABEL),
             ("Report ID", str(report_id) if report_id is not None else "all"),
             ("Short name", short_name or "all"),
         ]
@@ -76,7 +79,7 @@ def render_indicator_summary_header(
     return _render_header_panel(
         [
             ("Command", "indicator-summary"),
-            ("Database", database_url or "ENGINE / default registry engine"),
+            ("Database", database_url or DEFAULT_DATABASE_LABEL),
             ("Indicator ID", str(indicator_id)),
         ]
     )
@@ -90,7 +93,7 @@ def render_report_indicator_summary_header(
     return _render_header_panel(
         [
             ("Command", "report-indicator-summary"),
-            ("Database", database_url or "ENGINE / default registry engine"),
+            ("Database", database_url or DEFAULT_DATABASE_LABEL),
             ("Report ID", str(report_id)),
         ]
     )
@@ -104,7 +107,7 @@ def render_measure_summary_header(
     return _render_header_panel(
         [
             ("Command", "measure-summary"),
-            ("Database", database_url or "ENGINE / default registry engine"),
+            ("Database", database_url or DEFAULT_DATABASE_LABEL),
             ("Measure ID", str(measure_id)),
         ]
     )
@@ -237,7 +240,7 @@ def render_schema_bootstrap_header(*, database_url: str | None) -> Panel:
     return _render_header_panel(
         [
             ("Command", "bootstrap-schema"),
-            ("Database", database_url or "ENGINE / default registry engine"),
+            ("Database", database_url or DEFAULT_DATABASE_LABEL),
             ("Scope", "oa-cohorts query/config schema"),
         ]
     )

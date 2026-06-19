@@ -237,3 +237,4 @@ _temp/
 notebooks/
 docker/
 .dockerignore
+*.db

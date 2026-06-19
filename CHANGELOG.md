@@ -159,3 +159,6 @@
 
 ## 0.7.6
 - dependabot alerts
+
+## 0.8.0
+- upgrade to integrate oa-configurator updates

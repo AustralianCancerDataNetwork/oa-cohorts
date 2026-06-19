@@ -1,5 +1,6 @@
 from omop_constructs.alchemy.events import DxMeasurementMV, DxProcedureMV, DxObservationMV, DxRelevantVisitMV
-from orm_loader.helpers import Base, get_logger
+from oa_configurator import get_logger
+from orm_loader.helpers import Base
 from .measurable_base import MeasurableSpec, MeasurableBase, MeasurableDomain
 
 logger = get_logger(__name__)
