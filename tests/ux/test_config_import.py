@@ -13,6 +13,7 @@ from oa_cohorts.cli.config_import import (
     _clean_row,
     import_config_directory,
 )
+from oa_cohorts.config import OaCohortsConfig
 from orm_loader.helpers import Base
 
 
@@ -461,6 +462,51 @@ def test_cli_main_dry_run_returns_zero(tmp_path):
             "--dry-run",
         ]
     )
+    assert status == 0
+
+
+def test_cli_verbose_flag_configures_logging(monkeypatch, tmp_path):
+    config_dir = _build_config_dir(tmp_path / "config")
+    database_path = tmp_path / "config.db"
+    calls: list[int] = []
+
+    def fake_configure_logging(config=None, *, verbosity: int = 0, console=None):
+        calls.append(verbosity)
+
+    monkeypatch.setattr(OaCohortsConfig, "configure_logging", fake_configure_logging)
+
+    status = main(
+        [
+            "-v",
+            "import-config",
+            str(config_dir),
+            "--database-url",
+            f"sqlite:///{database_path}",
+            "--dry-run",
+        ]
+    )
+
+    assert status == 0
+    assert calls == [1]
+
+
+def test_cli_main_imports_configs_using_package_config_engine(monkeypatch, tmp_path):
+    config_dir = _build_config_dir(tmp_path / "config")
+    database_path = tmp_path / "config.db"
+
+    def fake_get_engine(cls, **engine_kwargs):
+        return sa.create_engine(f"sqlite:///{database_path}", **engine_kwargs)
+
+    monkeypatch.delenv("ENGINE", raising=False)
+    monkeypatch.setattr(OaCohortsConfig, "get_engine", classmethod(fake_get_engine))
+
+    status = main(
+        [
+            "import-config",
+            str(config_dir),
+        ]
+    )
+
     assert status == 0
 
 

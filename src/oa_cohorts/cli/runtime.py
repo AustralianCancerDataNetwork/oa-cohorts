@@ -7,16 +7,38 @@ from rich.console import Console
 from sqlalchemy.exc import SQLAlchemyError
 import typer
 
+from oa_configurator import ConfigurationError
+from ..config import OaCohortsConfig
 from .ui import render_error
 
 
-def resolve_engine(*, database_url: str | None) -> tuple[sa.Engine, str | None]:
-    resolved_url = database_url or os.getenv("ENGINE")
-    if resolved_url:
-        return sa.create_engine(resolved_url), resolved_url
-    from omop_constructs.semantics import registry_engine
+def _redacted_engine_url(engine: sa.Engine) -> str:
+    return engine.url.render_as_string(hide_password=True)
 
-    return registry_engine, None
+
+def resolve_engine(*, database_url: str | None) -> tuple[sa.Engine, str | None]:
+    if database_url:
+        engine = sa.create_engine(database_url)
+        return engine, _redacted_engine_url(engine)
+
+    try:
+        engine = OaCohortsConfig.get_engine()
+        return engine, None
+    except FileNotFoundError as exc:
+        env_url = os.getenv("ENGINE")
+        if env_url:
+            engine = sa.create_engine(env_url)
+            return engine, _redacted_engine_url(engine)
+        raise FileNotFoundError(
+            "No oa-cohorts runtime database configured. Provide --database-url, "
+            "configure oa_cohorts with omop-config, or set ENGINE for a local override."
+        ) from exc
+    except KeyError as exc:
+        raise ConfigurationError(
+            f"Resource {exc} is not configured in the stack config. "
+            "Run 'omop-config configure oa_cohorts' to set it up, "
+            "or provide --database-url for a per-command override."
+        ) from exc
 
 
 def handle_cli_error(console: Console, exc: Exception) -> None:

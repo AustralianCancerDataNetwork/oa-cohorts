@@ -73,7 +73,7 @@ This is a working internal engine under active development. APIs may shift.
 
 ## Docker
 
-The repo includes a lightweight CLI container under `docker/docker-compose.yaml` that joins the external `cava-network` and expects an `ENGINE` SQLAlchemy URL.
+The repo includes a lightweight CLI container under `docker/docker-compose.yaml` that joins the external `cava-network`. The CLI resolves its runtime database from the configured `cdm_db` resource by default. `--database-url` remains available as a per-command override, and `ENGINE` can be used as a local fallback when no stack config file is present.
 
 Example:
 
@@ -84,4 +84,4 @@ docker compose exec oa-cohorts oa-cohorts --help
 docker compose exec oa-cohorts oa-cohorts import-config /app/dash_config
 ```
 
-The database host in `ENGINE` should be reachable on `cava-network`, for example `postgresql+psycopg2://user:password@postgres:5432/dbname`.
+When using stack configuration, ensure the `cdm_db` host is reachable on `cava-network`, for example `postgresql+psycopg2://user:password@postgres:5432/dbname`. For one-off local overrides, pass `--database-url` or set `ENGINE` before invoking the command.

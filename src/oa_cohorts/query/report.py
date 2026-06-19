@@ -4,7 +4,8 @@ from itertools import chain
 
 import sqlalchemy as sa
 import sqlalchemy.orm as so
-from orm_loader.helpers import Base, get_logger
+from oa_configurator import get_logger
+from orm_loader.helpers import Base
 from sqlalchemy.ext.associationproxy import association_proxy
 
 from oa_cohorts.query.measure import MeasureMember, MeasureExecutor

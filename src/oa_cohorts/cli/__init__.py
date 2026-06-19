@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Sequence
+from typing import Annotated, Sequence
 
 import typer
 from rich.console import Console
 import sqlalchemy.orm as so
 from typer.main import get_command
 
+from oa_configurator import load_stack_config
+from ..config import OaCohortsConfig
 from .config_import import import_config_directory
 from .indicator_summary import (
     has_indicator_summary_tables,
@@ -47,8 +49,23 @@ app = typer.Typer(
 
 
 @app.callback()
-def app_callback() -> None:
+def app_callback(
+    verbose: Annotated[
+        int,
+        typer.Option(
+            "--verbose",
+            "-v",
+            count=True,
+            help="Increase log verbosity (-v INFO, -vv DEBUG). Must come before the subcommand name.",
+        ),
+    ] = 0,
+) -> None:
     """Root CLI app."""
+    try:
+        OaCohortsConfig.configure_logging(load_stack_config(), verbosity=verbose)
+    except (FileNotFoundError, ValueError):
+        if verbose:
+            OaCohortsConfig.configure_logging(verbosity=verbose)
 
 
 @app.command("import-config")
