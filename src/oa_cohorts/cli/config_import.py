@@ -313,12 +313,14 @@ def _sync_table(
             detail=f"Writing {spec.table.name}",
             dry_run=dry_run,
         )
+        pk_set = set(pk_names)
         for row in replaced_rows:
-            _delete_existing_row(session, spec.table, pk_names, row)
+            predicate = sa.and_(*[spec.table.c[name] == row[name] for name in pk_names])
+            non_pk = {k: v for k, v in row.items() if k not in pk_set}
+            session.execute(sa.update(spec.table).where(predicate).values(**non_pk))
 
-        write_rows = replaced_rows + inserted_rows
-        if write_rows:
-            session.execute(sa.insert(spec.table), write_rows)
+        if inserted_rows:
+            session.execute(sa.insert(spec.table), inserted_rows)
         session.commit()
 
     _emit_progress(

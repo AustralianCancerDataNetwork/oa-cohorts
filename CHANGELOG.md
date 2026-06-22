@@ -168,3 +168,6 @@
 
 ## 0.8.2
 - Add temporality_map to IntentRTMeasurable to expose treatment_episode_end_date
+
+## 0.8.3 
+- change configuration import to handle upsert
