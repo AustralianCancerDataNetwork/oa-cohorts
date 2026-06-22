@@ -194,6 +194,7 @@ def _load_measurable_modules(monkeypatch):
         sa.Column("person_id", sa.Integer),
         sa.Column("episode_id", sa.Integer),
         sa.Column("treatment_episode_start_date", sa.Date),
+        sa.Column("treatment_episode_end_date", sa.Date),
         sa.Column("treatment_intent_concept_id", sa.Integer),
         sa.Column("sact", sa.Boolean),
         sa.Column("rt", sa.Boolean),
