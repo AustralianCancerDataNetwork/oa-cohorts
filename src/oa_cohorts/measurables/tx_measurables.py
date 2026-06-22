@@ -9,6 +9,7 @@ from omop_constructs.alchemy.episodes import (
 from oa_configurator import get_logger
 from orm_loader.helpers import Base
 from .measurable_base import MeasurableSpec, MeasurableBase, MeasurableDomain
+from ..core import RuleTemporality
 
 logger = get_logger(__name__)
 
@@ -73,8 +74,12 @@ class IntentRTMeasurable(ConditionTreatmentIntentMV, MeasurableBase, Base):
         person_id_attr="person_id",
         episode_id_attr="episode_id",
         event_date_attr="treatment_episode_start_date",
-        value_concept_attr="treatment_intent_concept_id",   
-        value_predicate_attr="rt"
+        value_concept_attr="treatment_intent_concept_id",
+        value_predicate_attr="rt",
+        temporality_map={
+            RuleTemporality.dt_rad:           "treatment_episode_start_date",
+            RuleTemporality.dt_treatment_end: "treatment_episode_end_date",
+        },
     )
 
 class TxDaysBeforeDeath(TreatmentEnvelopeMV, MeasurableBase, Base):

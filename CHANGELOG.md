@@ -165,3 +165,6 @@
 
 ## 0.8.1 
 - upversion omop-alchemy, omop-constructs
+
+## 0.8.2
+- Add temporality_map to IntentRTMeasurable to expose treatment_episode_end_date
