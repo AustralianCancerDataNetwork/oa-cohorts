@@ -198,6 +198,7 @@ def _load_measurable_modules(monkeypatch):
         sa.Column("treatment_intent_concept_id", sa.Integer),
         sa.Column("sact", sa.Boolean),
         sa.Column("rt", sa.Boolean),
+        sa.Column("concurrent_rt", sa.Boolean),
         extend_existing=True,
     )
     treatment_envelope_table = sa.Table(

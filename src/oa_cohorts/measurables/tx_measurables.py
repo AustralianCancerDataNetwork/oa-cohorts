@@ -82,6 +82,21 @@ class IntentRTMeasurable(ConditionTreatmentIntentMV, MeasurableBase, Base):
         },
     )
 
+class IntentConcurrentRTMeasurable(ConditionTreatmentIntentMV, MeasurableBase, Base):
+    __measurable__ = MeasurableSpec(
+        domain=MeasurableDomain.tx,
+        label="RT Episodes in Concurrent Chemoradiotherapy",
+        person_id_attr="person_id",
+        episode_id_attr="episode_id",
+        event_date_attr="treatment_episode_start_date",
+        value_concept_attr="treatment_intent_concept_id",
+        value_predicate_attr="concurrent_rt",
+        temporality_map={
+            RuleTemporality.dt_rad:           "treatment_episode_start_date",
+            RuleTemporality.dt_treatment_end: "treatment_episode_end_date",
+        },
+    )
+
 class TxDaysBeforeDeath(TreatmentEnvelopeMV, MeasurableBase, Base):
     __measurable__ = MeasurableSpec(
         domain=MeasurableDomain.tx,

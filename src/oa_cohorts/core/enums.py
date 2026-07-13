@@ -80,6 +80,7 @@ class RuleTarget(str, enum.Enum):
     # Intent modifiers
     intent_rt = "intent_rt"
     intent_sact = "intent_sact"
+    intent_concurrent_rt = "intent_concurrent_rt"
 
     ev_visit = "ev_visit"
 
