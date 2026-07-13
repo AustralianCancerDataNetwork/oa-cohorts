@@ -114,6 +114,7 @@ def _load_dx_primary_registry(monkeypatch):
         "RTTreatmentMeasurable",
         "IntentChemoMeasurable",
         "IntentRTMeasurable",
+        "IntentConcurrentRTMeasurable",
         "TxDaysBeforeDeath",
         "TxDaysToStartTreatment",
         "TxConcurrentChemoRT",
