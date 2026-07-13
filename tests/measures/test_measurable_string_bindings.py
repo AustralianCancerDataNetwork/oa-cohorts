@@ -116,6 +116,7 @@ def _load_measurable_modules(monkeypatch):
         sa.Column("event_concept_id", sa.Integer),
         sa.Column("event_label", sa.String),
         sa.Column("value_as_number", sa.Numeric),
+        sa.Column("value_as_concept_id", sa.Integer),
         extend_existing=True,
     )
     procedure_table = sa.Table(

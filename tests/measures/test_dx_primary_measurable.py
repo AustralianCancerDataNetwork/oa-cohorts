@@ -127,6 +127,7 @@ def _load_dx_primary_registry(monkeypatch):
         "ProcedureMeasurable",
         "ObserveMeasurable",
         "VisitSpecialtyMeasurable",
+        "MeasurementValueConceptMeasurable",
     ):
         setattr(ev_measurables_mod, name, type(name, (), {}))
     pr_measurables_mod = types.ModuleType("oa_cohorts.measurables.pr_measurables")

@@ -50,3 +50,13 @@ class VisitSpecialtyMeasurable(DxRelevantVisitMV, MeasurableBase, Base):
         value_concept_attr="provider_specialty_concept_id",
         value_string_attr="provider_specialty",
     )
+
+class MeasurementValueConceptMeasurable(DxMeasurementMV, MeasurableBase, Base):
+    __measurable__ = MeasurableSpec(
+        domain=MeasurableDomain.meas,
+        label="Diagnosis-episode linked measurements (precoordinated answer concept)",
+        person_id_attr="person_id",
+        episode_id_attr="episode_id",
+        event_date_attr="event_date",
+        value_concept_attr="value_as_concept_id",
+    )
