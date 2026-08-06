@@ -174,3 +174,6 @@
 
 ## 0.8.6 
 - pin to v<2 for oa-configurator
+
+## 0.8.7 
+- whoops that was meant to be <1.0
