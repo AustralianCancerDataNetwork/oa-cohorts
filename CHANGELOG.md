@@ -171,3 +171,6 @@
 
 ## 0.8.3 
 - change configuration import to handle upsert
+
+## 0.8.6 
+- pin to v<2 for oa-configurator

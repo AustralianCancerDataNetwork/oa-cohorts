@@ -1481,7 +1481,7 @@ wheels = [
 
 [[package]]
 name = "oa-cohorts"
-version = "0.8.5"
+version = "0.8.6"
 source = { editable = "." }
 dependencies = [
     { name = "oa-configurator" },
@@ -1520,7 +1520,7 @@ requires-dist = [
     { name = "mkdocstrings-python", marker = "extra == 'dev'", specifier = ">=2.0.1" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.8" },
     { name = "myst-parser", marker = "extra == 'docs'" },
-    { name = "oa-configurator", specifier = ">=0.1.1" },
+    { name = "oa-configurator", specifier = ">=0.1.1,<2.0.0" },
     { name = "omop-alchemy", specifier = ">=0.7.0" },
     { name = "omop-constructs", specifier = ">=0.5.2" },
     { name = "orm-loader", specifier = ">=0.5.0" },
