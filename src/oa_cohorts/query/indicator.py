@@ -1,14 +1,17 @@
 from __future__ import annotations
+
+from collections.abc import Sequence
 from datetime import date, datetime, timedelta
+
 import sqlalchemy as sa
 import sqlalchemy.orm as so
-from typing import Sequence
 from orm_loader.helpers import Base
-from ..core.html_utils import HTMLRenderable, RawHTML, esc
-from .report import Report, report_indicator_map
-from .measure import Measure, MeasureMember, MeasureExecutor
-from .typing import Row
+
 from ..core.executability import ExecStatus, IndicatorExecCheck
+from ..core.html_utils import HTMLRenderable, RawHTML
+from .measure import Measure, MeasureExecutor, MeasureMember
+from .report import Report, report_indicator_map
+
 
 class Indicator(HTMLRenderable, Base):
 
@@ -58,14 +61,14 @@ class Indicator(HTMLRenderable, Base):
     benchmark: so.Mapped[int | None] = so.mapped_column(sa.Integer(), nullable=True)
     benchmark_unit: so.Mapped[str | None] = so.mapped_column(sa.String(20), nullable=True)
 
-    numerator_measure: so.Mapped['Measure'] = so.relationship(
+    numerator_measure: so.Mapped[Measure] = so.relationship(
         foreign_keys=[numerator_measure_id], lazy="joined"
     )
-    denominator_measure: so.Mapped['Measure'] = so.relationship(
+    denominator_measure: so.Mapped[Measure] = so.relationship(
         foreign_keys=[denominator_measure_id], lazy="joined"
     )
 
-    in_reports: so.Mapped[list['Report']] = so.relationship(
+    in_reports: so.Mapped[list[Report]] = so.relationship(
         secondary=report_indicator_map,
         back_populates="indicators"
     )
@@ -230,11 +233,15 @@ class Indicator(HTMLRenderable, Base):
         # Once a dynamic window is configured, both dates must be present.
         if resolved_member_date is None or resolved_anchor_date is None:
             return False
-        if prior_days is not None and resolved_member_date < resolved_anchor_date - timedelta(days=prior_days):
-            return False
-        if post_days is not None and resolved_member_date > resolved_anchor_date + timedelta(days=post_days):
-            return False
-        return True
+        before_window = (
+            prior_days is not None
+            and resolved_member_date < resolved_anchor_date - timedelta(days=prior_days)
+        )
+        after_window = (
+            post_days is not None
+            and resolved_member_date > resolved_anchor_date + timedelta(days=post_days)
+        )
+        return not (before_window or after_window)
 
     def _window_for_side(self, side: str) -> tuple[int | None, int | None]:
         if side == "numerator":

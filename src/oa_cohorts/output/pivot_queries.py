@@ -1,20 +1,21 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import date, datetime, timedelta
-from typing import Sequence
 from typing import TYPE_CHECKING
-from ..query.report import Report
+
 from ..query.measure import MeasureExecutor, MeasureMember
+from ..query.report import Report
 from .report_payload import (
-    DashCohortDefinitionPayload, 
-    DashCohortPayload, 
-    IndicatorPayload, 
-    MeasureSummary, 
-    ReportPayload, 
     CohortDemographyRow,
-    PivotIndicatorRow, 
+    DashCohortDefinitionPayload,
+    DashCohortPayload,
+    IndicatorPayload,
+    MeasureSummary,
     PivotCohortRow,
-    ReportMeasurePayload
+    PivotIndicatorRow,
+    ReportMeasurePayload,
+    ReportPayload,
 )
 
 if TYPE_CHECKING:
@@ -128,11 +129,15 @@ def _member_within_indicator_window(
     resolved_anchor_date = _coerce_date(anchor_date)
     if resolved_member_date is None or resolved_anchor_date is None:
         return False
-    if prior_days is not None and resolved_member_date < resolved_anchor_date - timedelta(days=prior_days):
-        return False
-    if post_days is not None and resolved_member_date > resolved_anchor_date + timedelta(days=post_days):
-        return False
-    return True
+    before_window = (
+        prior_days is not None
+        and resolved_member_date < resolved_anchor_date - timedelta(days=prior_days)
+    )
+    after_window = (
+        post_days is not None
+        and resolved_member_date > resolved_anchor_date + timedelta(days=post_days)
+    )
+    return not (before_window or after_window)
 
 
 def _cohort_anchor_dates_by_key(

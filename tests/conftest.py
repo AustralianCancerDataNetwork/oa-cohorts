@@ -8,14 +8,28 @@ from types import SimpleNamespace
 import pytest
 import sqlalchemy as sa
 
-from oa_cohorts.core import RuleCombination, RuleMatcher, RuleTarget, RuleTemporality, ThresholdDirection
-from oa_cohorts.measurables.measurable_base import MeasurableBase, MeasurableSpec, MeasurableDomain
-from oa_cohorts.query.dash_cohort import DashCohort, DashCohortDef
+from oa_cohorts.core import (
+    RuleCombination,
+    RuleMatcher,
+    RuleTarget,
+    RuleTemporality,
+    ThresholdDirection,
+)
+from oa_cohorts.measurables.measurable_base import (
+    MeasurableBase,
+    MeasurableDomain,
+    MeasurableSpec,
+)
+from oa_cohorts.query.dash_cohort import DashCohort
 from oa_cohorts.query.indicator import Indicator
-from oa_cohorts.query.measure import MeasureExecutor, MeasureMember, MeasureSQLCompiler
-from oa_cohorts.query.query_rule import ExactRule, PhenotypeRule, PresenceRule, ScalarRule
+from oa_cohorts.query.measure import MeasureExecutor, MeasureMember
+from oa_cohorts.query.query_rule import (
+    ExactRule,
+    PhenotypeRule,
+    PresenceRule,
+    ScalarRule,
+)
 from oa_cohorts.query.subquery import Subquery
-
 
 os.environ.setdefault("ENGINE", "sqlite://")
 

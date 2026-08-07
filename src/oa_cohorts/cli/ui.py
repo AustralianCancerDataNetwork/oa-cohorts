@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Self
+
 from rich import box
 from rich.console import Console, RenderableType
 from rich.panel import Panel
@@ -20,7 +22,6 @@ from .indicator_summary import IndicatorDetailSummary, IndicatorSummary, Measure
 from .measure_summary import MeasureDetailSummary
 from .report_summary import ReportSummary
 from .schema import SchemaBootstrapResult
-
 
 DEFAULT_DATABASE_LABEL = "configured dashboard_db resource"
 
@@ -417,7 +418,7 @@ class ImportProgressDisplay:
         self._progress: Progress | None = None
         self._task_id: TaskID | None = None
 
-    def __enter__(self) -> "ImportProgressDisplay":
+    def __enter__(self) -> Self:
         if self.enabled:
             self._progress = Progress(
                 SpinnerColumn(),

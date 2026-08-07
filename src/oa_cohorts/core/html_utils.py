@@ -1,10 +1,14 @@
 import html
-from typing import Iterable, Protocol, Union, Any, Mapping
+from collections.abc import Iterable, Mapping
 from pathlib import Path
-from IPython.display import HTML, display # type: ignore
+from typing import Any, Protocol, Union
+
 import sqlalchemy as sa
+from IPython.display import HTML, display
 from sqlalchemy.dialects import postgresql
+
 from .executability import ExecStatus
+
 
 def esc(x: Any) -> str:
     return "" if x is None else html.escape(str(x))

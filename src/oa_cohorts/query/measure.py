@@ -1,16 +1,26 @@
 from __future__ import annotations
-import sqlalchemy as sa
-import sqlalchemy.orm as so
+
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import date
-from typing import Optional, Sequence, Callable
-from orm_loader.helpers import Base
-from .typing import SQLQuery, COMBINATION_SQL
-from .subquery import Subquery
-from ..core.executability import MeasureExecCheck, ExecStatus
-from ..core import RuleCombination, WindowPickStrategy, ResultDateSource
-from ..core.html_utils import HTMLRenderable, RawHTML, table, td, esc, HTMLChild, sql_block
 
+import sqlalchemy as sa
+import sqlalchemy.orm as so
+from orm_loader.helpers import Base
+
+from ..core import ResultDateSource, RuleCombination, WindowPickStrategy
+from ..core.executability import ExecStatus, MeasureExecCheck
+from ..core.html_utils import (
+    HTMLChild,
+    HTMLRenderable,
+    RawHTML,
+    esc,
+    sql_block,
+    table,
+    td,
+)
+from .subquery import Subquery
+from .typing import COMBINATION_SQL, SQLQuery
 
 
 @dataclass(frozen=True)
@@ -32,8 +42,8 @@ class MeasureMember:
 
     person_id: int
     measure_resolver: int
-    episode_id: Optional[int] = None
-    measure_date: Optional[date] = None
+    episode_id: int | None = None
+    measure_date: date | None = None
 
     @classmethod
     def from_row(cls, r):
@@ -90,19 +100,19 @@ class Measure(HTMLRenderable, Base):
 
     subquery: so.Mapped[Subquery | None] = so.relationship("Subquery", lazy="joined")
 
-    child_links: so.Mapped[list["MeasureRelationship"]] = so.relationship(
+    child_links: so.Mapped[list[MeasureRelationship]] = so.relationship(
         "MeasureRelationship",
         foreign_keys="MeasureRelationship.parent_measure_id",
         lazy="selectin",
     )
 
-    parent_links: so.Mapped[list["MeasureRelationship"]] = so.relationship(
+    parent_links: so.Mapped[list[MeasureRelationship]] = so.relationship(
         "MeasureRelationship",
         foreign_keys="MeasureRelationship.child_measure_id",
         lazy="selectin",
     )
 
-    window_config: so.Mapped["MeasureTemporalWindow | None"] = so.relationship(
+    window_config: so.Mapped[MeasureTemporalWindow | None] = so.relationship(
         "MeasureTemporalWindow",
         foreign_keys="MeasureTemporalWindow.measure_id",
         back_populates="measure",
@@ -120,7 +130,7 @@ class Measure(HTMLRenderable, Base):
         return executor.members(self)
     
     @property
-    def children(self) -> list["Measure"]:
+    def children(self) -> list[Measure]:
         return [rel.child for rel in self.child_links]
     
     def __repr__(self) -> str:
@@ -307,7 +317,7 @@ class Measure(HTMLRenderable, Base):
         try:
             from sqlalchemy.dialects import postgresql
             dialect = postgresql.dialect()
-        except Exception:
+        except ImportError:
             dialect = sa.create_engine("sqlite://").dialect
 
         compiled = stmt.compile(
@@ -324,11 +334,11 @@ class MeasureRelationship(HTMLRenderable, Base):
     This can't be achieved via association table alone, despite lack of additional data, due to the self-referential nature of this relationship.
     """
     __tablename__ = 'measure_relationship'
-    parent_measure_id: so.Mapped[Optional[int]] = so.mapped_column(sa.ForeignKey('measure.measure_id'), primary_key=True) 
-    child_measure_id: so.Mapped[Optional[int]] = so.mapped_column(sa.ForeignKey('measure.measure_id'), primary_key=True) 
+    parent_measure_id: so.Mapped[int | None] = so.mapped_column(sa.ForeignKey('measure.measure_id'), primary_key=True) 
+    child_measure_id: so.Mapped[int | None] = so.mapped_column(sa.ForeignKey('measure.measure_id'), primary_key=True) 
 
-    parent: so.Mapped["Measure"] = so.relationship("Measure", foreign_keys=[parent_measure_id], back_populates='child_links')
-    child: so.Mapped["Measure"] = so.relationship("Measure", foreign_keys=[child_measure_id], back_populates='parent_links')
+    parent: so.Mapped[Measure] = so.relationship("Measure", foreign_keys=[parent_measure_id], back_populates='child_links')
+    child: so.Mapped[Measure] = so.relationship("Measure", foreign_keys=[child_measure_id], back_populates='parent_links')
     
     def __repr__(self) -> str:
         return f"<MeasureRelationship parent={self.parent_measure_id} child={self.child_measure_id}>"
@@ -394,10 +404,10 @@ class MeasureTemporalWindow(Base):
     )
     require_same_resolver: so.Mapped[bool] = so.mapped_column(sa.Boolean, default=True)
 
-    measure: so.Mapped["Measure"] = so.relationship(
+    measure: so.Mapped[Measure] = so.relationship(
         "Measure", foreign_keys=[measure_id], back_populates="window_config"
     )
-    candidate_measure: so.Mapped["Measure"] = so.relationship(
+    candidate_measure: so.Mapped[Measure] = so.relationship(
         "Measure", foreign_keys=[candidate_measure_id]
     )
 

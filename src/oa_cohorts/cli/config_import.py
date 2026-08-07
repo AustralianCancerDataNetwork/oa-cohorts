@@ -1,19 +1,16 @@
 from __future__ import annotations
 
 import csv
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Any
 
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 from orm_loader.helpers import Base
 
-from ..core.coercion import (
-    coerce_column_value,
-    parse_bool
-)
-
+from ..core.coercion import coerce_column_value, parse_bool
 from ..query import (
     DashCohort,
     DashCohortDef,
@@ -32,9 +29,16 @@ from ..query import (
     subquery_rule_map,
 )
 
-
 RowTransform = Callable[[Any], Any]
 ImportProgressCallback = Callable[["ImportProgressEvent"], None]
+
+
+def _model_table(model: type[Base]) -> sa.Table:
+    """Narrow ``Model.__table__``, typed ``FromClause``, to the ``Table`` it always is here."""
+    table = model.__table__
+    if not isinstance(table, sa.Table):
+        raise TypeError(f"{model.__name__}.__table__ is {type(table).__name__}, not a Table")
+    return table
 
 
 def _bool_default_true(v: Any) -> bool:
@@ -346,19 +350,19 @@ def _sync_table(
 
 CONFIG_IMPORT_SPECS: tuple[TableImportSpec, ...] = (
     TableImportSpec(
-        table=Phenotype.__table__,
+        table=_model_table(Phenotype),
         filenames=("phenotype.csv",),
     ),
     TableImportSpec(
-        table=PhenotypeDefinition.__table__,
+        table=_model_table(PhenotypeDefinition),
         filenames=("phenotype_definition.csv",),
     ),
     TableImportSpec(
-        table=QueryRule.__table__,
+        table=_model_table(QueryRule),
         filenames=("query_rule.csv",),
     ),
     TableImportSpec(
-        table=Subquery.__table__,
+        table=_model_table(Subquery),
         filenames=("subquery.csv",),
     ),
     TableImportSpec(
@@ -366,28 +370,28 @@ CONFIG_IMPORT_SPECS: tuple[TableImportSpec, ...] = (
         filenames=("subquery_rule_map.csv",),
     ),
     TableImportSpec(
-        table=Measure.__table__,
+        table=_model_table(Measure),
         filenames=("measure.csv",),
         value_transforms={
             "person_ep_override": parse_bool,
         },
     ),
     TableImportSpec(
-        table=MeasureRelationship.__table__,
+        table=_model_table(MeasureRelationship),
         filenames=("measure_relationship.csv",),
     ),
     TableImportSpec(
-        table=MeasureTemporalWindow.__table__,
+        table=_model_table(MeasureTemporalWindow),
         filenames=("measure_temporal_window.csv",),
         value_transforms={"require_same_resolver": _bool_default_true},
         optional=True,
     ),
     TableImportSpec(
-        table=DashCohortDef.__table__,
+        table=_model_table(DashCohortDef),
         filenames=("dash_cohort_def.csv",),
     ),
     TableImportSpec(
-        table=DashCohort.__table__,
+        table=_model_table(DashCohort),
         filenames=("dash_cohort.csv",),
     ),
     TableImportSpec(
@@ -395,15 +399,15 @@ CONFIG_IMPORT_SPECS: tuple[TableImportSpec, ...] = (
         filenames=("dash_cohort_def_map.csv",),
     ),
     TableImportSpec(
-        table=Indicator.__table__,
+        table=_model_table(Indicator),
         filenames=("indicator.csv",),
     ),
     TableImportSpec(
-        table=Report.__table__,
+        table=_model_table(Report),
         filenames=("report.csv",),
     ),
     TableImportSpec(
-        table=ReportCohortMap.__table__,
+        table=_model_table(ReportCohortMap),
         filenames=("report_cohort_map.csv",),
         value_transforms={
             "primary_cohort": parse_bool,

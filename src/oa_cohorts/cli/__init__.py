@@ -1,15 +1,16 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Annotated, Sequence
+from typing import Annotated
 
-import typer
-from rich.console import Console
 import sqlalchemy as sa
 import sqlalchemy.orm as so
+import typer
+from oa_configurator import load_stack_config
+from rich.console import Console
 from typer.main import get_command
 
-from oa_configurator import load_stack_config
 from ..config import OaCohortsConfig
 from .config_import import import_config_directory
 from .indicator_summary import (
@@ -26,22 +27,21 @@ from .ui import (
     ImportProgressDisplay,
     render_command_header,
     render_empty_state,
+    render_import_results,
+    render_import_summary,
     render_indicator_detail_summary,
     render_indicator_summaries,
     render_indicator_summary_header,
     render_indicator_summary_overview,
-    render_import_results,
-    render_import_summary,
     render_measure_detail_summary,
     render_measure_summary_header,
-    render_report_summaries,
     render_report_indicator_summary_header,
+    render_report_summaries,
     render_report_summary_header,
     render_report_summary_overview,
     render_schema_bootstrap_header,
     render_schema_bootstrap_result,
 )
-
 
 app = typer.Typer(
     help="CLI utilities for cohort configuration import and inspection.",
@@ -101,16 +101,18 @@ def import_config_command(
     )
 
     try:
-        with so.sessionmaker(bind=engine, future=True)() as session:
-            with ImportProgressDisplay(console, enabled=not dry_run) as progress:
-                results = import_config_directory(
-                    config_path,
-                    session,
-                    dedupe=dedupe,
-                    create_tables=create_tables,
-                    dry_run=dry_run,
-                    progress_callback=progress.update if not dry_run else None,
-                )
+        with (
+            so.sessionmaker(bind=engine, future=True)() as session,
+            ImportProgressDisplay(console, enabled=not dry_run) as progress,
+        ):
+            results = import_config_directory(
+                config_path,
+                session,
+                dedupe=dedupe,
+                create_tables=create_tables,
+                dry_run=dry_run,
+                progress_callback=progress.update if not dry_run else None,
+            )
     except Exception as exc:
         handle_cli_error(console, exc)
         return

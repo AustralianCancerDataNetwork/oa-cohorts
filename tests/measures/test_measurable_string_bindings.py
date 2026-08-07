@@ -306,12 +306,12 @@ def _load_measurable_modules(monkeypatch):
         )
         return {
             module_name: importlib.import_module(module_name)
-            for module_name in {
+            for module_name in (
                 "oa_cohorts.measurables.dx_measurables",
                 "oa_cohorts.measurables.ev_measureables",
                 "oa_cohorts.measurables.tx_measurables",
                 "oa_cohorts.measurables.pr_measurables",
-            }
+            )
         }
 
 

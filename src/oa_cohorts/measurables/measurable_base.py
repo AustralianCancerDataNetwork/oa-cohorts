@@ -1,10 +1,13 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import ClassVar, Optional, Mapping, Any, TypeAlias
-import sqlalchemy as sa
+
 import enum
-from typing import TypeAlias
+from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import Any, ClassVar, TypeAlias
+
+import sqlalchemy as sa
 from sqlalchemy.sql import ColumnElement
+
 from ..core import RuleTarget, RuleTemporality
 
 SQLCol: TypeAlias = sa.Column[Any] | ColumnElement[Any]
@@ -34,15 +37,15 @@ class MeasurableSpec:
     person_id_attr: str
     event_date_attr: str
 
-    value_numeric_attr: Optional[str] = None
-    value_concept_attr: Optional[str] = None
-    value_string_attr: Optional[str] = None 
-    value_predicate_attr: Optional[str] = None 
+    value_numeric_attr: str | None = None
+    value_concept_attr: str | None = None
+    value_string_attr: str | None = None 
+    value_predicate_attr: str | None = None 
 
     temporality_map: Mapping[RuleTemporality, str] | None = None
     valid_targets: set[RuleTarget] | None = None
 
-    def bind(self, cls: type[Any]) -> "BoundMeasurableSpec":
+    def bind(self, cls: type[Any]) -> BoundMeasurableSpec:
         """
         Resolve declared attribute names against a concrete measurable class.
 

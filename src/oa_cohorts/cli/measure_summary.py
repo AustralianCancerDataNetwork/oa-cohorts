@@ -9,7 +9,6 @@ from oa_cohorts.query.dash_cohort import DashCohortDef
 from oa_cohorts.query.indicator import Indicator
 from oa_cohorts.query.measure import Measure, MeasureRelationship
 from oa_cohorts.query.report import Report
-from oa_cohorts.query.subquery import Subquery
 
 
 @dataclass(frozen=True)

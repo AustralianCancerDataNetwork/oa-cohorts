@@ -1,15 +1,18 @@
 from __future__ import annotations
+
+from collections.abc import Iterable
+from typing import Any, TypeAlias
+
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 from orm_loader.helpers import Base
-from .query_rule import QueryRule
-from ..core import RuleTarget, RuleTemporality
-from ..measurables import get_measurable_registry, MeasurableBase
-from ..measurables.measurable_base import SQLCol
-from ..core.html_utils import HTMLRenderable, RawHTML, esc, HTMLChild
+from sqlalchemy.sql import CompoundSelect, Select
 
-from sqlalchemy.sql import Select, CompoundSelect
-from typing import TypeAlias, Any, Iterable
+from ..core import RuleTarget, RuleTemporality
+from ..core.html_utils import HTMLChild, HTMLRenderable, RawHTML, esc
+from ..measurables import MeasurableBase, get_measurable_registry
+from ..measurables.measurable_base import SQLCol
+from .query_rule import QueryRule
 
 SQLQuery: TypeAlias = Select[Any] | CompoundSelect[Any]
 
@@ -56,7 +59,7 @@ class Subquery(HTMLRenderable, Base):
     name: so.Mapped[str] = so.mapped_column(sa.String)
     short_name: so.Mapped[str | None] = so.mapped_column(sa.String, nullable=True)
 
-    rules: so.Mapped[list["QueryRule"]] = so.relationship(
+    rules: so.Mapped[list[QueryRule]] = so.relationship(
         secondary=subquery_rule_map,
         lazy="selectin",
     )

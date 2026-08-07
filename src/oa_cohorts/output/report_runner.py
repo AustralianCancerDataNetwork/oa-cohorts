@@ -1,18 +1,22 @@
 from __future__ import annotations
+
+from collections.abc import Sequence
+from typing import TYPE_CHECKING
+
 import sqlalchemy.orm as so
-from typing import Sequence, TYPE_CHECKING
-from ..query.report import Report
+
 from ..query.measure import MeasureExecutor, MeasureMember
+from ..query.report import Report
 from .person_demography import DemographyFilter
-from .query_plan import QueryPlan, MeasureNode
-from .report_payload import ReportBundle, PivotCohortRow, PivotIndicatorRow
 from .pivot_queries import (
-    build_pivot_indicators, 
-    build_pivot_cohort, 
-    collect_report_cohort_members,
     build_cohort_demography,
-    build_report_payload
+    build_pivot_cohort,
+    build_pivot_indicators,
+    build_report_payload,
+    collect_report_cohort_members,
 )
+from .query_plan import MeasureNode, QueryPlan
+from .report_payload import PivotCohortRow, PivotIndicatorRow, ReportBundle
 
 if TYPE_CHECKING:
     from omop_constructs.alchemy.demography import PersonDemography
