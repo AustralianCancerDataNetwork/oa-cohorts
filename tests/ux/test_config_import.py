@@ -5,6 +5,7 @@ from pathlib import Path
 
 import sqlalchemy as sa
 import sqlalchemy.orm as so
+from orm_loader.helpers import Base
 from typer.testing import CliRunner
 
 from oa_cohorts.cli import app, main
@@ -14,7 +15,6 @@ from oa_cohorts.cli.config_import import (
     import_config_directory,
 )
 from oa_cohorts.config import OaCohortsConfig
-from orm_loader.helpers import Base
 
 
 def _write_csv(path: Path, fieldnames: list[str], rows: list[dict[str, object]]) -> None:

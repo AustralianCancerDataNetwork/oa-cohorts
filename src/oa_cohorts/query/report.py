@@ -1,6 +1,9 @@
 from __future__ import annotations
+
+from collections.abc import Sequence
 from datetime import date
 from itertools import chain
+from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 import sqlalchemy.orm as so
@@ -8,15 +11,15 @@ from oa_configurator import get_logger
 from orm_loader.helpers import Base
 from sqlalchemy.ext.associationproxy import association_proxy
 
-from oa_cohorts.query.measure import MeasureMember, MeasureExecutor
-from ..core.html_utils import HTMLRenderable, RawHTML, esc, td, exec_badge, table
+from oa_cohorts.query.measure import MeasureExecutor, MeasureMember
+
 from ..core.executability import ExecStatus
+from ..core.html_utils import HTMLRenderable, RawHTML, esc, exec_badge, table, td
 from .typing import PersonFilter
 
-from typing import TYPE_CHECKING, Sequence
 if TYPE_CHECKING:
-    from .indicator import Indicator
     from .dash_cohort import DashCohort
+    from .indicator import Indicator
 
 logger = get_logger(__name__)
 
@@ -40,8 +43,8 @@ class ReportCohortMap(HTMLRenderable, Base):
     dash_cohort_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('dash_cohort.dash_cohort_id'))
     primary_cohort: so.Mapped[bool] = so.mapped_column(sa.Boolean, default=False)
 
-    cohort: so.Mapped['DashCohort'] = so.relationship(back_populates='in_reports', lazy="joined")
-    report: so.Mapped['Report'] = so.relationship(back_populates='cohorts')
+    cohort: so.Mapped[DashCohort] = so.relationship(back_populates='in_reports', lazy="joined")
+    report: so.Mapped[Report] = so.relationship(back_populates='cohorts')
 
     measures = association_proxy("cohort", "measures")
     definition_count = association_proxy("cohort", "definition_count")
@@ -116,13 +119,13 @@ class Report(HTMLRenderable, Base):
     report_name: so.Mapped[str] = so.mapped_column(sa.String(250))
     report_short_name: so.Mapped[str] = so.mapped_column(sa.String(50), unique=True)
     report_description: so.Mapped[str] = so.mapped_column(sa.String(1000))
-    report_create_date: so.Mapped[date] = so.mapped_column(sa.DateTime, default=date.today)
-    report_edit_date: so.Mapped[date] = so.mapped_column(sa.DateTime, default=date.today)
+    report_create_date: so.Mapped[date] = so.mapped_column(sa.Date, default=date.today)
+    report_edit_date: so.Mapped[date] = so.mapped_column(sa.Date, default=date.today)
     report_author: so.Mapped[str] = so.mapped_column(sa.String(250))
     report_owner: so.Mapped[str | None] = so.mapped_column(sa.String(250), nullable=True)
 
-    cohorts: so.Mapped[list['ReportCohortMap']] = so.relationship(back_populates='report')
-    indicators: so.Mapped[list['Indicator']] = so.relationship(
+    cohorts: so.Mapped[list[ReportCohortMap]] = so.relationship(back_populates='report')
+    indicators: so.Mapped[list[Indicator]] = so.relationship(
         secondary=report_indicator_map,
         back_populates="in_reports",
         lazy="selectin",
@@ -143,7 +146,7 @@ class Report(HTMLRenderable, Base):
     def cohort_measures(self):
         return list(set(chain.from_iterable([c.measures for c in self.report_cohorts])))
     
-    def members(self, executor: MeasureExecutor) -> Sequence["MeasureMember"]:
+    def members(self, executor: MeasureExecutor) -> Sequence[MeasureMember]:
         return list(set(chain.from_iterable([c.members(executor) for c in self.report_cohorts])))
 
     def execute(
@@ -151,7 +154,7 @@ class Report(HTMLRenderable, Base):
             executor: MeasureExecutor,
             *, 
             people: list[int] | None = None, 
-            person_filter: "PersonFilter | None" = None,
+            person_filter: PersonFilter | None = None,
             strict: bool = True
         ) -> None:
 

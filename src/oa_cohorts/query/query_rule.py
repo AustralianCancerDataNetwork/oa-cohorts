@@ -1,13 +1,26 @@
 from __future__ import annotations
+
+from collections.abc import Iterable
+from typing import Any, ClassVar
+
 import sqlalchemy as sa
 import sqlalchemy.orm as so
-from orm_loader.helpers import Base
 from omop_alchemy.cdm.model import Concept
-from typing import Any, Iterable
+from orm_loader.helpers import Base
+
+from ..core import RuleMatcher, RuleTarget, ThresholdDirection
+from ..core.html_utils import (
+    HTMLChild,
+    HTMLRenderable,
+    RawHTML,
+    esc,
+    render_sql,
+    table,
+    td,
+)
 from ..measurables import get_measurable_registry
-from ..core import RuleMatcher, ThresholdDirection, RuleTarget
-from ..core.html_utils import HTMLRenderable, RawHTML, td, table, render_sql, esc, HTMLChild
 from .phenotype import Phenotype
+
 
 class QueryRule(Base, HTMLRenderable):
     """
@@ -48,7 +61,10 @@ class QueryRule(Base, HTMLRenderable):
     phenotype_id: so.Mapped[int | None] = so.mapped_column(
         sa.ForeignKey("phenotype.phenotype_id"), nullable=True, index=True
     )
-    __mapper_args__ = {
+    # SQLAlchemy declares `__mapper_args__: Any` (instance-level) on
+    # DeclarativeBase, so ty reads ClassVar here as an LSP violation. RUF012
+    # accepts nothing but ClassVar, so suppress on this class 
+    __mapper_args__: ClassVar[dict[str, Any]] = {  # ty: ignore[invalid-attribute-override]
         "polymorphic_on": matcher,
     }
 
@@ -198,7 +214,7 @@ class ExactRule(QueryRule):
     Clinically, this corresponds to strict inclusion of a well-defined coded event.
     """
 
-    __mapper_args__ = {
+    __mapper_args__: ClassVar[dict[str, Any]] = {
         "polymorphic_identity": RuleMatcher.exact,
     }
 
@@ -224,7 +240,7 @@ class HierarchyBase(QueryRule):
     Subclasses define whether the expanded hierarchy is included or excluded.
     """
 
-    __mapper_args__ = {
+    __mapper_args__: ClassVar[dict[str, Any]] = {
         "polymorphic_abstract": True,
     }
 
@@ -280,7 +296,7 @@ class HierarchyRule(HierarchyBase):
     Clinically, this supports defining cohorts using broad disease groupings
     or procedure families without hard-coding long lists of concept IDs.
     """
-    __mapper_args__ = {
+    __mapper_args__: ClassVar[dict[str, Any]] = {
         "polymorphic_identity": RuleMatcher.hierarchy,
     }
 
@@ -296,7 +312,7 @@ class HierarchyExclusionRule(HierarchyBase):
     "all cancers except small cell lung cancer" or
     "all procedures except palliative procedures".
     """
-    __mapper_args__ = {
+    __mapper_args__: ClassVar[dict[str, Any]] = {
         "polymorphic_identity": RuleMatcher.hierarchyexclusion,
     }
 
@@ -313,7 +329,7 @@ class AbsenceRule(QueryRule):
 
     Clinically, this supports negative definitions (e.g. "no documented metastases").
     """
-    __mapper_args__ = {
+    __mapper_args__: ClassVar[dict[str, Any]] = {
         "polymorphic_identity": RuleMatcher.absence,
     }
 
@@ -336,7 +352,7 @@ class PresenceRule(QueryRule):
     Clinically, this supports definitions like "has any recorded procedure"
     or "has any recorded observation of this type".
     """
-    __mapper_args__ = {
+    __mapper_args__: ClassVar[dict[str, Any]] = {
         "polymorphic_identity": RuleMatcher.presence,
     }
 
@@ -365,7 +381,7 @@ class ScalarRule(QueryRule):
     - "Time to treatment > 30 days"
     """
 
-    __mapper_args__ = {
+    __mapper_args__: ClassVar[dict[str, Any]] = {
         "polymorphic_identity": RuleMatcher.scalar,
     }
 
@@ -448,7 +464,7 @@ class PredicateRule(QueryRule):
         - "disease is metastatic"
     """
 
-    __mapper_args__ = {
+    __mapper_args__: ClassVar[dict[str, Any]] = {
         "polymorphic_identity": RuleMatcher.predicate,
     }
 
@@ -500,7 +516,7 @@ class PhenotypeRule(QueryRule):
     - curated clinical phenotypes,
     - research-defined concept groupings.
     """
-    __mapper_args__ = {
+    __mapper_args__: ClassVar[dict[str, Any]] = {
         "polymorphic_identity": RuleMatcher.phenotype,
     }
 
@@ -558,7 +574,7 @@ class SubstringRule(QueryRule):
     Clinically, this supports coarse-grained grouping when hierarchical
     relationships are unavailable or insufficiently curated.
     """
-    __mapper_args__ = {
+    __mapper_args__: ClassVar[dict[str, Any]] = {
         "polymorphic_identity": RuleMatcher.substring,
     }
     @property

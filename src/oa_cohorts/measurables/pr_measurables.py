@@ -1,7 +1,8 @@
-from omop_constructs.alchemy.demography import PersonDemography
 from oa_configurator import get_logger
+from omop_constructs.alchemy.demography import PersonDemography
 from orm_loader.helpers import Base
-from .measurable_base import MeasurableSpec, MeasurableBase, MeasurableDomain
+
+from .measurable_base import MeasurableBase, MeasurableDomain, MeasurableSpec
 
 logger = get_logger(__name__)
 

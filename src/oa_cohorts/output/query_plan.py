@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-import sqlalchemy as sa
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Iterable, Sequence, TypeAlias, Protocol, runtime_checkable, Literal
+from typing import Literal, Protocol, TypeAlias, runtime_checkable
 
-from sqlalchemy.sql import Select, CompoundSelect
+import sqlalchemy as sa
+from sqlalchemy.sql import CompoundSelect, Select
+
 from ..core.html_utils import HTMLRenderable, RawHTML, esc
 from ..query.measure import Measure, MeasureSQLCompiler
 
@@ -16,9 +18,9 @@ def _render_sql(stmt_or_clause: sa.ClauseElement) -> str:
     Prefer Postgres dialect if available.
     """
     try:
-        from sqlalchemy.dialects import postgresql  # type: ignore
+        from sqlalchemy.dialects import postgresql
         dialect = postgresql.dialect()
-    except Exception:
+    except ImportError:
         dialect = sa.create_engine("sqlite://").dialect
 
     compiled = stmt_or_clause.compile(
@@ -57,7 +59,7 @@ class QueryNode(HTMLRenderable):
         for child in self.children():
             yield from child.iter_measures()
 
-    def iter_nodes(self) -> Iterable["QueryNode"]:
+    def iter_nodes(self) -> Iterable[QueryNode]:
         yield self
         for c in self.children():
             yield from c.iter_nodes()
@@ -68,7 +70,7 @@ class QueryNode(HTMLRenderable):
     def summary_items(self) -> dict[str, str]:
         return {}
 
-    def children(self) -> Sequence["QueryNode"]:
+    def children(self) -> Sequence[QueryNode]:
         return ()
 
     def sql_any(self, *, ep_override: bool = False) -> SQLQuery:

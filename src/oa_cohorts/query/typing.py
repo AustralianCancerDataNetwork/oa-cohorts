@@ -1,7 +1,9 @@
+from typing import Any, Protocol, TypeAlias
+
 import sqlalchemy as sa
-from sqlalchemy.sql import Select, CompoundSelect
 from sqlalchemy.engine import Row as SARow
-from typing import TypeAlias, Any, Protocol
+from sqlalchemy.sql import CompoundSelect, Select
+
 from ..core import RuleCombination
 
 Row = SARow[Any]

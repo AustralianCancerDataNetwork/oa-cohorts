@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import date, datetime, time
+from datetime import UTC, date, datetime, time
+from enum import Enum
 from typing import Any
 
 import sqlalchemy as sa
@@ -59,18 +60,35 @@ def parse_float(value: Any) -> float | None:
     raise ValueError(f"Cannot coerce {value!r} to float")
 
 
+def to_naive_utc(value: datetime) -> datetime:
+    """
+    Normalise a datetime to a naive value in UTC.
+
+    Datetimes in this package are naive by policy. OMOP CDM datetime fields carry
+    no timezone, and no column here uses ``DateTime(timezone=True)`` - an aware
+    value would silently lose its offset on write to Postgres. Normalising on the
+    way in keeps every datetime in one frame, so a source offset can never shift
+    a value onto a different calendar day during downstream date comparisons.
+
+    Naive input is returned unchanged.
+    """
+    if value.tzinfo is None:
+        return value
+    return value.astimezone(UTC).replace(tzinfo=None)
+
+
 def parse_datetime(value: Any) -> datetime | None:
     value = normalise_null(value)
     if value is None:
         return None
     if isinstance(value, datetime):
-        return value
+        return to_naive_utc(value)
     if isinstance(value, date):
         return datetime.combine(value, time.min)
     if isinstance(value, str):
         text = value.strip()
         try:
-            return datetime.fromisoformat(text.replace("Z", "+00:00"))
+            return to_naive_utc(datetime.fromisoformat(text))
         except ValueError:
             return datetime.combine(date.fromisoformat(text), time.min)
     raise ValueError(f"Cannot coerce {value!r} to datetime")
@@ -81,15 +99,23 @@ def parse_date(value: Any) -> date | None:
     if value is None:
         return None
     if isinstance(value, datetime):
-        return value.date()
+        # Normalise before taking the date, so an offset cannot shift the day.
+        return to_naive_utc(value).date()
     if isinstance(value, date):
         return value
     if isinstance(value, str):
-        return date.fromisoformat(value.strip())
+        text = value.strip()
+        try:
+            return date.fromisoformat(text)
+        except ValueError:
+            # A full datetime string landing in a Date column: normalise the
+            # offset before taking the day, mirroring parse_datetime. Raises
+            # ValueError from fromisoformat if it is not a datetime either.
+            return to_naive_utc(datetime.fromisoformat(text)).date()
     raise ValueError(f"Cannot coerce {value!r} to date")
 
 
-def parse_enum(value: Any, enum_cls: type) -> Any:
+def parse_enum(value: Any, enum_cls: type[Enum]) -> Any:
     value = normalise_null(value)
     if value is None or isinstance(value, enum_cls):
         return value

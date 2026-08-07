@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# Canonical CAVA pre-commit hook: keeps uv.lock in sync with pyproject.toml.
+#
+# If pyproject.toml is staged, finds the specific dependency line(s) that
+# changed (added, removed, or had their version spec edited) and refreshes
+# only those packages in uv.lock via `uv lock --upgrade-package`. Does not
+# touch any other package -- this is a targeted sync, not a blanket
+# `uv lock`, so it never pulls in an unrelated upstream release.
+set -euo pipefail
+
+if ! git diff --cached --name-only | grep -q '^pyproject\.toml$'; then
+    exit 0
+fi
+
+if ! command -v uv >/dev/null 2>&1; then
+    echo "pre-commit: uv not found on PATH, skipping uv.lock sync" >&2
+    exit 0
+fi
+
+# Candidate tokens from changed quoted-string lines. POSIX character classes,
+# not \s -- BSD sed (macOS) does not support \s and silently leaves the line
+# unsubstituted, which would pass whole diff lines to uv as package names.
+candidates=$(git diff --cached -- pyproject.toml \
+    | grep -E '^[+-][[:space:]]*"[A-Za-z0-9][A-Za-z0-9._-]*' \
+    | sed -E 's/^[+-][[:space:]]*"([A-Za-z0-9][A-Za-z0-9._-]*).*/\1/' \
+    | sort -u)
+
+if [ -z "$candidates" ]; then
+    exit 0
+fi
+
+# pyproject.toml holds quoted-string lists that are not dependencies (e.g.
+# [tool.ruff.lint] ignore, classifiers). Keep only names that are actually
+# declared as dependencies, so a lint-rule code is never sent to uv.
+declared=$(python3 - <<'PY'
+import tomllib
+from pathlib import Path
+
+with Path("pyproject.toml").open("rb") as fh:
+    data = tomllib.load(fh)
+
+project = data.get("project", {})
+specs = list(project.get("dependencies", []))
+for extra in project.get("optional-dependencies", {}).values():
+    specs.extend(extra)
+for group in data.get("dependency-groups", {}).values():
+    specs.extend(s for s in group if isinstance(s, str))
+
+for spec in specs:
+    name = spec.strip()
+    for sep in ("[", ";", "=", ">", "<", "!", "~", " ", "@"):
+        name = name.split(sep, 1)[0]
+    if name:
+        print(name.strip())
+PY
+)
+
+upgrade_args=()
+matched=()
+while IFS= read -r name; do
+    [ -n "$name" ] || continue
+    if printf '%s\n' "$declared" | grep -qxF "$name"; then
+        upgrade_args+=(--upgrade-package "$name")
+        matched+=("$name")
+    fi
+done <<< "$candidates"
+
+if [ ${#upgrade_args[@]} -eq 0 ]; then
+    # Every changed line was either a non-dependency list entry or a removed
+    # dependency. A plain `uv lock` reconciles removals without upgrading
+    # anything that is still valid.
+    echo "pre-commit: reconciling uv.lock with pyproject.toml"
+    uv lock
+else
+    echo "pre-commit: syncing uv.lock for changed dependencies:"
+    printf '  - %s\n' "${matched[@]}"
+    uv lock "${upgrade_args[@]}"
+fi
+
+git add uv.lock

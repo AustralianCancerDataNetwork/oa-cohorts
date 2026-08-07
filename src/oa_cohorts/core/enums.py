@@ -1,5 +1,6 @@
 import enum
 
+
 class RuleMatcher(str, enum.Enum):
     substring = 'substring' 
     exact = 'exact' 

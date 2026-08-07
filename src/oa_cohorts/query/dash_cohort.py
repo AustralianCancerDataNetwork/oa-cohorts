@@ -1,16 +1,18 @@
 from __future__ import annotations
-from oa_cohorts.core.html_utils import HTMLRenderable
-from orm_loader.helpers import Base
-from sqlalchemy.ext.associationproxy import association_proxy
+
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Any
+
 import sqlalchemy as sa
 import sqlalchemy.orm as so
-from itertools import chain
-from typing import Sequence, Any, TYPE_CHECKING
-from ..core.html_utils import HTMLRenderable, RawHTML
+from orm_loader.helpers import Base
+from sqlalchemy.ext.associationproxy import association_proxy
+
 from ..core.executability import ExecStatus, MeasureExecCheck
+from ..core.html_utils import HTMLRenderable, RawHTML
 
 if TYPE_CHECKING:
-    from .measure import Measure, MeasureMember, MeasureExecutor
+    from .measure import Measure, MeasureExecutor, MeasureMember
     from .report import ReportCohortMap
 
 from sqlalchemy.engine import Row as SARow
@@ -47,18 +49,18 @@ class DashCohortDef(HTMLRenderable, Base):
     dash_cohort_def_short_name: so.Mapped[str] = so.mapped_column(sa.String(50))
     measure_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('measure.measure_id'))
 
-    dash_cohort_objects: so.Mapped[list['DashCohort']] = so.relationship(
+    dash_cohort_objects: so.Mapped[list[DashCohort]] = so.relationship(
         secondary=dash_cohort_def_map,
         back_populates="definitions",
     )
 
-    dash_cohort_measure: so.Mapped['Measure'] = so.relationship(
+    dash_cohort_measure: so.Mapped[Measure] = so.relationship(
         "Measure",
         foreign_keys=[measure_id],
         lazy="joined",
     )
 
-    def members(self, executor: MeasureExecutor) -> Sequence["MeasureMember"]:
+    def members(self, executor: MeasureExecutor) -> Sequence[MeasureMember]:
         """
         Members of a cohort definition are exactly the members of its backing measure.
         Assumes the measure has already been executed.
@@ -141,7 +143,7 @@ class DashCohort(HTMLRenderable, Base):
 
     dash_cohort_name: so.Mapped[str] = so.mapped_column(sa.String(250))
 
-    in_reports: so.Mapped[list['ReportCohortMap']] = so.relationship(back_populates='cohort')
+    in_reports: so.Mapped[list[ReportCohortMap]] = so.relationship(back_populates='cohort')
     definitions: so.Mapped[list[DashCohortDef]] = so.relationship(
         secondary=dash_cohort_def_map,
         back_populates="dash_cohort_objects",
@@ -158,7 +160,7 @@ class DashCohort(HTMLRenderable, Base):
             for d in self.definitions
         ]
 
-    def members(self, executor: MeasureExecutor) -> Sequence["MeasureMember"]:
+    def members(self, executor: MeasureExecutor) -> Sequence[MeasureMember]:
         seen = set()
         out: list[MeasureMember] = []
 

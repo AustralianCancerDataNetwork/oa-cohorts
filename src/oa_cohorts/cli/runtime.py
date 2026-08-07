@@ -4,11 +4,11 @@ import os
 from typing import NoReturn
 
 import sqlalchemy as sa
+import typer
+from oa_configurator import ConfigurationError
 from rich.console import Console
 from sqlalchemy.exc import SQLAlchemyError
-import typer
 
-from oa_configurator import ConfigurationError
 from ..config import OaCohortsConfig
 from .ui import render_error
 

@@ -1,6 +1,7 @@
 import pytest
 import sqlalchemy as sa
 
+
 def test_exact_rule_missing_concept(rule_exact_missing):
     with pytest.raises(RuntimeError, match="Rule concept"):
         rule_exact_missing.get_filter_details(sa.column("x"))

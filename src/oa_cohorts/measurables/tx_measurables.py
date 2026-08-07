@@ -1,15 +1,16 @@
-from omop_constructs.alchemy.episodes import (
-    SurgicalProcedureMV, 
-    DxTreatStartMV, 
-    ConditionTreatmentEpisode, 
-    TreatmentEnvelopeMV, 
-    ConditionTreatmentIntentMV, 
-    ConsultWindowMV
-)
 from oa_configurator import get_logger
+from omop_constructs.alchemy.episodes import (
+    ConditionTreatmentEpisode,
+    ConditionTreatmentIntentMV,
+    ConsultWindowMV,
+    DxTreatStartMV,
+    SurgicalProcedureMV,
+    TreatmentEnvelopeMV,
+)
 from orm_loader.helpers import Base
-from .measurable_base import MeasurableSpec, MeasurableBase, MeasurableDomain
+
 from ..core import RuleTemporality
+from .measurable_base import MeasurableBase, MeasurableDomain, MeasurableSpec
 
 logger = get_logger(__name__)
 

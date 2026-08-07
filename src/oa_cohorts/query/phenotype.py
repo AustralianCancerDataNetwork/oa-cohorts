@@ -1,11 +1,13 @@
 from __future__ import annotations
+
 import sqlalchemy as sa
 import sqlalchemy.orm as so
-from typing import TYPE_CHECKING, List
-from orm_loader.helpers import Base
 from omop_alchemy.cdm.model import Concept
+from orm_loader.helpers import Base
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
-from ..core.html_utils import esc, td, th, tr, table, HTMLRenderable, RawHTML
+
+from ..core.html_utils import HTMLRenderable, RawHTML, table, td
+
 
 class Phenotype(HTMLRenderable, Base):
     __tablename__ = "phenotype"
@@ -15,12 +17,12 @@ class Phenotype(HTMLRenderable, Base):
     description: so.Mapped[str | None] = so.mapped_column(sa.String, nullable=True)
 
     # relationships
-    phenotype_definitions: so.Mapped[List['PhenotypeDefinition']] = so.relationship(
+    phenotype_definitions: so.Mapped[list[PhenotypeDefinition]] = so.relationship(
         "PhenotypeDefinition",
         back_populates='phenotype',
         lazy="selectin",  
     )
-    phenotype_concepts: AssociationProxy[List["Concept"]] = association_proxy(
+    phenotype_concepts: AssociationProxy[list[Concept]] = association_proxy(
         "phenotype_definitions", "concept"
     )
 
@@ -71,13 +73,13 @@ class PhenotypeDefinition(HTMLRenderable, Base):
     # relevant vocabulary is loaded.
     query_concept_id: so.Mapped[int] = so.mapped_column(sa.Integer, primary_key=True, default=0)
 
-    phenotype: so.Mapped['Phenotype'] = so.relationship(
+    phenotype: so.Mapped[Phenotype] = so.relationship(
         "Phenotype",
         back_populates="phenotype_definitions",
         foreign_keys=[phenotype_id],
     )
 
-    concept: so.Mapped['Concept'] = so.relationship(
+    concept: so.Mapped[Concept] = so.relationship(
         "Concept",
         primaryjoin=lambda: so.foreign(PhenotypeDefinition.query_concept_id) == Concept.concept_id,
         foreign_keys=[query_concept_id],

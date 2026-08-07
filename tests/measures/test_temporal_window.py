@@ -5,9 +5,8 @@ from dataclasses import dataclass
 import pytest
 import sqlalchemy as sa
 
-from oa_cohorts.core import WindowPickStrategy, ResultDateSource
+from oa_cohorts.core import ResultDateSource, WindowPickStrategy
 from oa_cohorts.query.measure import MeasureSQLCompiler
-
 from tests.conftest import FakeMeasure, FakeSubquery
 
 

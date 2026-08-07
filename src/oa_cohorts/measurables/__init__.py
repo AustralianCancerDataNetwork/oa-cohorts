@@ -3,8 +3,13 @@ from __future__ import annotations
 from importlib import import_module
 from typing import TYPE_CHECKING
 
+from .measurable_base import (
+    BoundMeasurableSpec,
+    MeasurableBase,
+    MeasurableDomain,
+    MeasurableSpec,
+)
 from .measurable_resolver import get_measurable_registry
-from .measurable_base import MeasurableBase, MeasurableDomain, MeasurableSpec, BoundMeasurableSpec
 
 # Keep runtime imports light here. The concrete diagnosis measurables pull in
 # OMOP-backed modifier modules with heavy import-time side effects, so we only
@@ -15,9 +20,9 @@ from .measurable_base import MeasurableBase, MeasurableDomain, MeasurableSpec, B
 if TYPE_CHECKING:
     from .dx_measurables import (
         AnyConditionMeasurable,
+        MetsConditionMeasurable,
         PrimaryDiagnosisEpisodeMeasurable,
         StagedConditionMeasurable,
-        MetsConditionMeasurable,
     )
 
 _EXPORTS = {
@@ -28,15 +33,15 @@ _EXPORTS = {
 }
 
 __all__ = [
-    "get_measurable_registry",
+    "AnyConditionMeasurable",
+    "BoundMeasurableSpec",
     "MeasurableBase",
     "MeasurableDomain",
     "MeasurableSpec",
-    "BoundMeasurableSpec",
-    "AnyConditionMeasurable",
+    "MetsConditionMeasurable",
     "PrimaryDiagnosisEpisodeMeasurable",
     "StagedConditionMeasurable",
-    "MetsConditionMeasurable",
+    "get_measurable_registry",
 ]
 
 

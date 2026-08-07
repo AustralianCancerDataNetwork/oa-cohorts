@@ -1,7 +1,12 @@
-from omop_constructs.alchemy.modifiers import ModifiedCondition, PrimaryDiagnosisConditionMV
-from omop_constructs.alchemy.modifiers.condition_modifier_mv  import StageModifier
+from omop_constructs.alchemy.modifiers import (
+    ModifiedCondition,
+    PrimaryDiagnosisConditionMV,
+)
+from omop_constructs.alchemy.modifiers.condition_modifier_mv import StageModifier
 from orm_loader.helpers import Base
-from .measurable_base import MeasurableSpec, MeasurableBase, MeasurableDomain
+
+from .measurable_base import MeasurableBase, MeasurableDomain, MeasurableSpec
+
 
 class AnyConditionMeasurable(ModifiedCondition, MeasurableBase, Base):
     __measurable__ = MeasurableSpec(

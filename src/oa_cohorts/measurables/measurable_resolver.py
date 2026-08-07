@@ -1,39 +1,35 @@
-from typing import Type
+
 from ..core import RuleTarget
 from .measurable_base import MeasurableBase
 
-def get_measurable_registry() -> dict[RuleTarget, Type[MeasurableBase]]:
+
+def get_measurable_registry() -> dict[RuleTarget, type[MeasurableBase]]:
     from .dx_measurables import (
         AnyConditionMeasurable,
+        MetsConditionMeasurable,
         PrimaryDiagnosisEpisodeMeasurable,
         StagedConditionMeasurable,
-        MetsConditionMeasurable,
     )
-
-    from .tx_measurables import (
-        SurgicalMeasurable,
-        AllCurrentTreatmentMeasurable,
-        ChemoTreatmentMeasurable,
-        RTTreatmentMeasurable,
-        IntentChemoMeasurable,
-        IntentRTMeasurable,
-        IntentConcurrentRTMeasurable,
-        TxDaysBeforeDeath,
-        TxDaysToStartTreatment,
-        TxConcurrentChemoRT,
-        ReferralToSpecialistWindowMeasurable
-    )
-
     from .ev_measureables import (
         MeasurementMeasurable,
-        ProcedureMeasurable,
-        ObserveMeasurable,
-        VisitSpecialtyMeasurable,
         MeasurementValueConceptMeasurable,
+        ObserveMeasurable,
+        ProcedureMeasurable,
+        VisitSpecialtyMeasurable,
     )
-
-    from .pr_measurables import (
-        DeathMeasurable
+    from .pr_measurables import DeathMeasurable
+    from .tx_measurables import (
+        AllCurrentTreatmentMeasurable,
+        ChemoTreatmentMeasurable,
+        IntentChemoMeasurable,
+        IntentConcurrentRTMeasurable,
+        IntentRTMeasurable,
+        ReferralToSpecialistWindowMeasurable,
+        RTTreatmentMeasurable,
+        SurgicalMeasurable,
+        TxConcurrentChemoRT,
+        TxDaysBeforeDeath,
+        TxDaysToStartTreatment,
     )
 
     return {

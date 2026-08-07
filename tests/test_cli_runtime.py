@@ -1,11 +1,17 @@
 from __future__ import annotations
 
-import sqlalchemy as sa
 import pytest
+import sqlalchemy as sa
+from oa_configurator import (
+    ConfigurationError,
+    DatabaseConfig,
+    ResourceConfig,
+    StackConfig,
+    ToolConfig,
+)
 
-from oa_configurator import ConfigurationError, DatabaseConfig, ResourceConfig, StackConfig, ToolConfig
-from oa_cohorts.config import OaCohortsConfig, resolve_cdm_resource_name
 from oa_cohorts.cli.runtime import resolve_engine
+from oa_cohorts.config import OaCohortsConfig, resolve_cdm_resource_name
 
 
 def test_resolve_engine_uses_explicit_database_url(monkeypatch):
