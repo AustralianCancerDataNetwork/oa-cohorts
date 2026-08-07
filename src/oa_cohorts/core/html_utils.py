@@ -4,11 +4,12 @@ from pathlib import Path
 from typing import Any, Protocol, Union
 
 import sqlalchemy as sa
-from IPython.display import HTML, display
+from oa_configurator import get_logger
 from sqlalchemy.dialects import postgresql
 
 from .executability import ExecStatus
 
+logger = get_logger(__name__)
 
 def esc(x: Any) -> str:
     return "" if x is None else html.escape(str(x))
@@ -67,17 +68,25 @@ class HTMLRenderable:
       - _html_css_class()  -> e.g. "measure", "subquery", "queryrule"
     """
     _css_loaded = False
+    _css_warned = False
 
     @classmethod
     def _ensure_css(cls):
         if cls._css_loaded:
             return
 
+        try:
+            from IPython.display import HTML, display
+        except ImportError:
+            if not cls._css_warned:
+                logger.warning("IPython not available; HTML will render without styling")
+            HTMLRenderable._css_warned = True
+            return
         css_path = Path(__file__).parent / "render.css"
         css = css_path.read_text()
         style_tag = f"<style>{css}</style>"
         display(HTML(style_tag))
-        cls._css_loaded = True
+        HTMLRenderable._css_loaded = True
 
     def _html_title(self) -> str:
         return self.__class__.__name__
