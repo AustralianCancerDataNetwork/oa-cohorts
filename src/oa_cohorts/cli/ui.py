@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Self
 
 from rich import box
-from rich.console import Console, RenderableType
+from rich.console import Console, Group, RenderableType
 from rich.panel import Panel
 from rich.progress import (
     BarColumn,
@@ -17,11 +18,21 @@ from rich.progress import (
 from rich.table import Table
 from rich.text import Text
 
+from ..schema import (
+    MigrationStatus,
+    RevisionInfo,
+    SchemaBootstrapResult,
+    SchemaCheckResult,
+)
 from .config_import import ImportProgressEvent, TableImportResult
-from .indicator_summary import IndicatorDetailSummary, IndicatorSummary, MeasureSummary
+from .indicator_summary import (
+    IndicatorDetailSummary,
+    IndicatorSummary,
+    MeasureSummary,
+    ReportPresentation,
+)
 from .measure_summary import MeasureDetailSummary
 from .report_summary import ReportSummary
-from .schema import SchemaBootstrapResult
 
 DEFAULT_DATABASE_LABEL = "configured dashboard_db resource"
 
@@ -240,22 +251,201 @@ def render_report_summary_overview(summaries: list[ReportSummary]) -> Panel:
 def render_schema_bootstrap_header(*, database_url: str | None) -> Panel:
     return _render_header_panel(
         [
-            ("Command", "bootstrap-schema"),
+            ("Command", "schema bootstrap"),
             ("Database", database_url or DEFAULT_DATABASE_LABEL),
             ("Scope", "oa-cohorts query/config schema"),
         ]
     )
 
 
+_BOOTSTRAP_ACTION_LABELS = {
+    "created": ("Created", "green"),
+    "stamped": ("Adopted existing schema", "green"),
+    "unchanged": ("Already managed", "cyan"),
+    "blocked": ("Blocked", "red"),
+}
+
+
 def render_schema_bootstrap_result(result: SchemaBootstrapResult) -> Panel:
+    label, colour = _BOOTSTRAP_ACTION_LABELS.get(result.action, (result.action, "cyan"))
+
     grid = Table.grid(padding=(0, 2))
     grid.add_column(style="bold cyan")
     grid.add_column()
+    grid.add_row("Outcome", Text(label, style=f"bold {colour}"))
     grid.add_row("Tables in scope", str(result.table_count))
     grid.add_row("Created now", str(len(result.created_tables)))
     grid.add_row("Already present", str(len(result.existing_tables)))
     grid.add_row("Created tables", ", ".join(result.created_tables) or "-")
-    return Panel.fit(grid, title="[bold]Schema Bootstrap[/bold]", border_style="green")
+    grid.add_row("Revision", result.revision or "-")
+    for message in result.messages:
+        grid.add_row("Note", Text(message, style="yellow" if result.blocked else ""))
+
+    return Panel.fit(
+        grid,
+        title="[bold]Schema Bootstrap[/bold]",
+        border_style="red" if result.blocked else "green",
+    )
+
+
+def render_schema_check_result(
+    result: SchemaCheckResult,
+    *,
+    title: str = "Schema Check",
+) -> RenderableType:
+    """Render the differences Alembic would need to reconcile."""
+    if result.is_clean:
+        return Panel.fit(
+            Text(result.summary_line(), style="green"),
+            title=f"[bold]{title}[/bold]",
+            border_style="green",
+        )
+
+    table = Table(box=box.SIMPLE_HEAVY, header_style="bold", expand=False)
+    table.add_column("Operation", style="bold red")
+    table.add_column("Location", style="cyan", overflow="fold")
+    table.add_column("Detail", overflow="fold")
+
+    for change in result.sorted_changes():
+        table.add_row(change.operation, change.location, change.detail)
+
+    header = Text(result.summary_line(), style="bold red")
+    return Panel(
+        Group(header, Text(""), table),
+        title=f"[bold]{title}[/bold]",
+        border_style="red",
+    )
+
+
+def render_schema_drift_warning(
+    result: SchemaCheckResult,
+    *,
+    blocking: bool,
+    overridden: bool = False,
+    uninitialised: bool = False,
+) -> RenderableType:
+    """Render the in-workflow warning shown before a command touches the database."""
+    if uninitialised:
+        return Panel.fit(
+            Text(
+                "This database has none of the oa-cohorts tables yet.\n"
+                "Run 'oa-cohorts schema bootstrap' to create them.",
+                style="yellow",
+            ),
+            title="[bold]Schema Not Initialised[/bold]",
+            border_style="yellow",
+        )
+
+    if blocking:
+        advice = (
+            "This command writes to the database and has been stopped.\n"
+            "Run 'oa-cohorts schema check' for full detail, then "
+            "'oa-cohorts schema upgrade' to apply pending migrations.\n"
+            "Pass --ignore-schema-drift to run anyway."
+        )
+        title = "Schema Drift — Command Blocked"
+    elif overridden:
+        advice = (
+            "Proceeding despite schema differences because --ignore-schema-drift was passed.\n"
+            "Writes touching the affected columns may fail."
+        )
+        title = "Schema Drift — Override Active"
+    else:
+        advice = (
+            "Results below may be incomplete or misleading.\n"
+            "Run 'oa-cohorts schema check' for full detail."
+        )
+        title = "Schema Drift"
+
+    return Group(
+        render_schema_check_result(result, title=title),
+        Panel.fit(Text(advice, style="yellow"), border_style="yellow"),
+    )
+
+
+def render_schema_auto_bootstrap() -> Panel:
+    return Panel.fit(
+        Text(
+            "This database has none of the oa-cohorts tables.\n"
+            "Creating them through the migrations so the schema is tracked.",
+            style="cyan",
+        ),
+        title="[bold]Initialising Schema[/bold]",
+        border_style="cyan",
+    )
+
+
+def render_schema_guard_unavailable(message: str) -> Panel:
+    return Panel.fit(
+        Text(
+            f"The schema check could not run: {message}\nContinuing without verification.",
+            style="yellow",
+        ),
+        title="[bold]Schema Check Skipped[/bold]",
+        border_style="yellow",
+    )
+
+
+def render_schema_status(
+    status: MigrationStatus,
+    *,
+    database_url: str | None,
+) -> Panel:
+    grid = Table.grid(padding=(0, 2))
+    grid.add_column(style="bold cyan")
+    grid.add_column()
+    grid.add_row("Database", database_url or DEFAULT_DATABASE_LABEL)
+    grid.add_row("Current revision", status.current or Text("not stamped", style="yellow"))
+    grid.add_row("Head revision", status.head or "-")
+
+    if status.is_up_to_date:
+        grid.add_row("Pending", Text("none", style="green"))
+    elif not status.is_stamped:
+        grid.add_row(
+            "Pending",
+            Text("unknown — run 'oa-cohorts schema bootstrap' to adopt this database", style="yellow"),
+        )
+    else:
+        grid.add_row("Pending", Text(f"{len(status.pending)} migration(s)", style="yellow"))
+        for revision in status.pending:
+            grid.add_row("", f"{revision.revision}  {revision.message}")
+
+    border = "green" if status.is_up_to_date else "yellow"
+    return Panel.fit(grid, title="[bold]Schema Status[/bold]", border_style=border)
+
+
+def render_migration_history(revisions: Sequence[RevisionInfo]) -> RenderableType:
+    if not revisions:
+        return render_empty_state("No migrations are defined.", title="Migration History")
+
+    table = Table(title="Migration History", box=box.SIMPLE_HEAVY, header_style="bold")
+    table.add_column("Revision", style="cyan")
+    table.add_column("Down revision")
+    table.add_column("Description", overflow="fold")
+    table.add_column("Head", justify="center")
+
+    for revision in revisions:
+        table.add_row(
+            revision.revision,
+            revision.down_revision or "(base)",
+            revision.message,
+            "yes" if revision.is_head else "",
+        )
+    return table
+
+
+def render_schema_command_header(
+    *,
+    command_name: str,
+    database_url: str | None,
+) -> Panel:
+    return _render_header_panel(
+        [
+            ("Command", command_name),
+            ("Database", database_url or DEFAULT_DATABASE_LABEL),
+            ("Scope", "oa-cohorts query/config schema"),
+        ]
+    )
 
 
 def render_indicator_summaries(
@@ -312,15 +502,39 @@ def render_indicator_summaries(
     return table
 
 
+def _render_report_presentations(presentations: tuple[ReportPresentation, ...]) -> Table | str:
+    if not any(item.overridden for item in presentations):
+        return ", ".join(f"{i.report_name} ({i.report_short_name})" for i in presentations) or "-"
+
+    table = Table(box=box.SIMPLE, header_style="bold", pad_edge=False, show_edge=False)
+    table.add_column("Report")
+    table.add_column("Label")
+    table.add_column("Reference")
+    table.add_column("Benchmark")
+    table.add_column("Overrides")
+
+    for item in presentations:
+        table.add_row(
+            f"{item.report_name} ({item.report_short_name})",
+            item.label,
+            item.reference or "-",
+            item.benchmark_summary,
+            ", ".join(item.overridden) or "inherits",
+        )
+
+    return table
+
+
 def render_indicator_detail_summary(summary: IndicatorDetailSummary) -> Panel:
     grid = Table.grid(padding=(0, 2))
     grid.add_column(style="bold cyan")
     grid.add_column()
     grid.add_row("ID", str(summary.indicator_id))
+    # Canonical, not report-resolved: this view spans every report the indicator is in.
     grid.add_row("Description", summary.description)
     grid.add_row("Reference", summary.reference or "-")
-    grid.add_row("Reports", ", ".join(summary.report_memberships) or "-")
     grid.add_row("Benchmark", summary.benchmark_summary)
+    grid.add_row("Reports", _render_report_presentations(summary.presentations))
     grid.add_row("Numerator", _render_measure_summary(summary.numerator_measure))
     grid.add_row("Denominator", _render_measure_summary(summary.denominator_measure))
     return Panel.fit(grid, title="[bold]Indicator Summary[/bold]", border_style="green")

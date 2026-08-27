@@ -1,7 +1,8 @@
 
 from datetime import date, datetime
+from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class MeasureSummary(BaseModel):
@@ -11,15 +12,32 @@ class MeasureSummary(BaseModel):
 
 
 class IndicatorPayload(BaseModel):
+
     indicator_id: int
     indicator_description: str
     indicator_reference: str | None = None
+
+    display_label: str = ""
+    display_reference: str | None = None
+    display_benchmark: int | None = None
+    display_benchmark_unit: str | None = None
 
     numerator_label: str
     denominator_label: str
 
     numerator_measure: MeasureSummary
     denominator_measure: MeasureSummary
+
+    @model_validator(mode="before")
+    @classmethod
+    def _inherit_display_fields(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        if data.get("display_label") in (None, ""):
+            data["display_label"] = data.get("indicator_description")
+        if "display_reference" not in data:
+            data["display_reference"] = data.get("indicator_reference")
+        return data
 
 
 class DashCohortDefinitionPayload(BaseModel):

@@ -75,35 +75,49 @@ This is a working internal engine under active development. APIs may shift.
 
 The repo includes a lightweight CLI container under `docker/docker-compose.yaml` that joins the external `cava-network`.
 
-### Resources
+### Databases
 
-oa-cohorts uses two separate database resources:
+oa-cohorts uses two separate databases:
 
-* **`dashboard_db`** — where oa-cohorts stores its report, indicator, and measure configuration. This is the database the CLI commands (`import-config`, `report-summary`, etc.) read from and write to. oa-cohorts owns and provisions this resource via `omop-config configure oa_cohorts`.
-* **`cdm_db`** — the OMOP CDM database used for cohort execution. Typically shared with `omop_alchemy` or `omop_constructs`; not provisioned by oa-cohorts directly.
+* **`dashboard_db`** — where oa-cohorts stores its report, indicator, and measure configuration. This is the database the CLI commands (`import-config`, `report-summary`, `schema *`, etc.) read from, write to, and migrate. oa-cohorts owns it and provisions it via `omop-config configure oa_cohorts`.
+* **`cdm_db`** — the OMOP CDM database used for cohort execution. Owned by `omop_alchemy` and shared, not provisioned by oa-cohorts. It is optional: nothing in the schema, import or summary commands reads the CDM, so a dashboard-only deployment needs no CDM configured at all.
 
-Both resources can share the same physical database server, or be separate databases in production. To share a server but use different schemas, declare two `[resources.*]` entries that both point to the same `[databases.*]` entry:
+Left unset, `cdm_db` falls back to a database entry literally named `cdm_db` — the same name `omop_alchemy` and `omop_constructs` default their own fields to, which is how the three share one CDM without importing each other's config. Point oa-cohorts at a differently-named entry with `omop-config configure oa_cohorts --cdm-db <name>`.
+
+Both can share the same physical server, or be separate databases in production. To share a server but use different schemas, declare two `[databases.*]` entries over one `[connections.*]` entry:
 
 ```toml
-[databases.mydb]
-dialect = "postgresql+psycopg2"
+[connections.local]
+dialect = "postgresql+psycopg"
 host = "localhost"
 database_name = "mydb"
 
-[resources.dashboard_db]
-database = "mydb"
-cdm_schema = "public"        # schema where oa-cohorts stores its config tables
+[databases.dashboard_db]
+kind = "generic"
+connection = "local"
+schema_name = "public"       # schema where oa-cohorts stores its config tables
 
-[resources.cdm_db]
-database = "mydb"
-cdm_schema = "omop"          # OMOP CDM schema
+[databases.cdm_db]
+kind = "cdm"
+connection = "local"
+schema_name = "omop"         # OMOP CDM schema
 vocab_schema = "omop"
 results_schema = "results"
 ```
 
-Note: `[resource_aliases]` maps a semantic name to an *existing* resource and inherits its full config (including schema). It is not the right tool for "same server, different schema" — use two separate resource entries as above.
+`dashboard_db` is declared `kind = "generic"` and `cdm_db` `kind = "cdm"`; oa-cohorts validates both at resolution time, so pointing `--cdm-db` at a generic entry fails with a clear error rather than at first query.
 
-The CLI resolves `dashboard_db` by default (or the `oa_cohorts.default_resource` configured during setup). `--database-url` remains available as a per-command override, and `ENGINE` can be set as a local fallback when no stack config file is present.
+### Local SQLite bundle
+
+After running `dash_config/export_vocab_subset.py`, the companion importer can build a local SQLite file from the Athena vocabulary files and the exported dashboard configuration:
+
+```bash
+python dash_config/import_to_sqlite.py 20260827 --output dash.db
+```
+
+Use `--dashboard-only` to omit the CDM vocabulary tables and create a file containing only the dashboard configuration. The importer creates a temporary stack `config.toml` so the logical `dashboard_db` and `cdm_db` resources both resolve to the same SQLite file; the temporary config is removed afterwards.
+
+`--database-url` remains available as a per-command override, and `ENGINE` can be set as a local fallback when no stack config file is present.
 
 Example:
 
@@ -113,5 +127,3 @@ docker compose up -d oa-cohorts
 docker compose exec oa-cohorts oa-cohorts --help
 docker compose exec oa-cohorts oa-cohorts import-config /app/dash_config
 ```
-
-When using stack configuration, ensure the `dashboard_db` host is reachable on `cava-network`, for example `postgresql+psycopg2://user:password@postgres:5432/dbname`. For one-off local overrides, pass `--database-url` or set `ENGINE` before invoking the command.

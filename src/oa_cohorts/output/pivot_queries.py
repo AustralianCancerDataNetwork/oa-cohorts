@@ -5,7 +5,7 @@ from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING
 
 from ..query.measure import MeasureExecutor, MeasureMember
-from ..query.report import Report
+from ..query.report import Report, ReportIndicatorMap
 from .report_payload import (
     CohortDemographyRow,
     DashCohortDefinitionPayload,
@@ -383,30 +383,41 @@ def build_cohort_payloads(report: Report, executor: MeasureExecutor) -> list[Das
     return out
 
 
+def _build_indicator_payload(link: ReportIndicatorMap) -> IndicatorPayload:
+    ind = link.indicator
+
+    return IndicatorPayload(
+        indicator_id=ind.indicator_id,
+        indicator_description=ind.indicator_description,
+        indicator_reference=ind.indicator_reference,
+        display_label=link.label,
+        display_reference=link.reference,
+        display_benchmark=link.benchmark,
+        display_benchmark_unit=link.benchmark_unit,
+        numerator_label=ind.numerator_label,
+        denominator_label=ind.denominator_label,
+        numerator_measure=MeasureSummary(
+            id=ind.numerator_measure.measure_id,
+            measure_name=ind.numerator_measure.name,
+            measure_combination=ind.numerator_measure.combination.value,
+        ),
+        denominator_measure=MeasureSummary(
+            id=ind.denominator_measure.measure_id,
+            measure_name=ind.denominator_measure.name,
+            measure_combination=ind.denominator_measure.combination.value,
+        ),
+    )
+
+
 def build_report_payload(report: Report, executor: MeasureExecutor) -> ReportPayload:
     return ReportPayload(
         report_name=report.report_name,
         report_short_name=report.report_short_name,
         report_description=report.report_description,
         indicators=[
-            IndicatorPayload(
-                indicator_id=ind.indicator_id,
-                indicator_description=ind.indicator_description,
-                indicator_reference=ind.indicator_reference,
-                numerator_label=ind.numerator_label,
-                denominator_label=ind.denominator_label,
-                numerator_measure=MeasureSummary(
-                    id=ind.numerator_measure.measure_id,
-                    measure_name=ind.numerator_measure.name,
-                    measure_combination=ind.numerator_measure.combination.value,
-                ),
-                denominator_measure=MeasureSummary(
-                    id=ind.denominator_measure.measure_id,
-                    measure_name=ind.denominator_measure.name,
-                    measure_combination=ind.denominator_measure.combination.value,
-                ),
-            )
-            for ind in report.indicators
+            _build_indicator_payload(link)
+            for link in report.indicator_links
+            if link.indicator is not None
         ],
         report_cohorts=build_cohort_payloads(report, executor=executor),
         report_measures=[

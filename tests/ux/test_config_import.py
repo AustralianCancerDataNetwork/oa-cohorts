@@ -8,7 +8,7 @@ import sqlalchemy.orm as so
 from orm_loader.helpers import Base
 from typer.testing import CliRunner
 
-from oa_cohorts.cli import app, main
+from oa_cohorts.cli import app, main, runtime
 from oa_cohorts.cli.config_import import (
     CONFIG_IMPORT_SPECS,
     _clean_row,
@@ -361,6 +361,188 @@ def test_reimport_skips_existing_and_replaces_changed_rows(tmp_path):
         assert row["report_owner"] == "Owner"
 
 
+# --------------------------------------------------------------------------
+# report_indicator_map override columns
+#
+# The link table gained four nullable override columns in 0003. That made
+# _sync_table's replace branch reachable for this table for the first time, and the
+# values it can now replace are authored by hand and not reconstructible -- so what an
+# import does to a column the CSV does not carry is load-bearing.
+# --------------------------------------------------------------------------
+
+OVERRIDE_COLUMNS = (
+    "indicator_label_override",
+    "indicator_reference_override",
+    "benchmark_override",
+    "benchmark_unit_override",
+)
+
+WIDE_LINK_COLUMNS = ["report_id", "indicator_id", *OVERRIDE_COLUMNS]
+
+
+def _write_link_csv(config_dir: Path, rows: list[dict[str, object]], *, wide: bool) -> None:
+    """Rewrite report_indicator_map.csv, with or without the override columns."""
+    fieldnames = WIDE_LINK_COLUMNS if wide else ["report_id", "indicator_id"]
+    _write_csv(config_dir / "report_indicator_map.csv", fieldnames, rows)
+
+
+def _link_row(session: so.Session) -> dict:
+    table = Base.metadata.tables["report_indicator_map"]
+    return dict(session.execute(sa.select(table)).mappings().one())
+
+
+def _imported_with_an_override(tmp_path: Path) -> tuple[Path, so.sessionmaker]:
+    """A loaded database whose one link carries hand-entered overrides."""
+    config_dir = _build_config_dir(tmp_path / "config")
+    engine = sa.create_engine("sqlite://")
+    session_factory = so.sessionmaker(bind=engine, future=True)
+
+    with session_factory() as session:
+        import_config_directory(config_dir, session)
+        table = Base.metadata.tables["report_indicator_map"]
+        session.execute(
+            sa.update(table).values(
+                indicator_label_override="Presented at Lung MDT meeting",
+                benchmark_override=85,
+            )
+        )
+        session.commit()
+
+    return config_dir, session_factory
+
+
+def test_a_narrow_csv_still_imports_against_the_widened_table(tmp_path):
+    """An export predating the override columns must load, not fail on their absence."""
+    config_dir = _build_config_dir(tmp_path / "config")
+    engine = sa.create_engine("sqlite://")
+
+    with so.sessionmaker(bind=engine, future=True)() as session:
+        results = import_config_directory(config_dir, session)
+
+        by_table = _result_lookup(results)
+        assert by_table["report_indicator_map"].inserted_rows == 1
+        assert by_table["report_indicator_map"].dropped_duplicate_rows == 1
+        row = _link_row(session)
+        assert [row[name] for name in OVERRIDE_COLUMNS] == [None] * len(OVERRIDE_COLUMNS)
+
+
+def test_a_narrow_csv_leaves_existing_overrides_alone(tmp_path):
+    """The case that used to break.
+
+    A column absent from the file means the file has no opinion about it. Previously the
+    absent columns were compared as None, the row was queued for replacement, and the
+    UPDATE was then built from the row's own keys -- which had none left, emitting
+    ``UPDATE report_indicator_map SET  WHERE ...``. That is a SQL syntax error, so the
+    import died rather than either preserving or clearing the values.
+    """
+    config_dir, session_factory = _imported_with_an_override(tmp_path)
+
+    with session_factory() as session:
+        results = import_config_directory(config_dir, session, create_tables=False)
+
+        by_table = _result_lookup(results)
+        assert by_table["report_indicator_map"].replaced_rows == 0
+        assert by_table["report_indicator_map"].skipped_existing_rows == 1
+
+        row = _link_row(session)
+        assert row["indicator_label_override"] == "Presented at Lung MDT meeting"
+        assert row["benchmark_override"] == 85
+
+
+def test_a_wide_csv_round_trips_override_values(tmp_path):
+    config_dir = _build_config_dir(tmp_path / "config")
+    _write_link_csv(
+        config_dir,
+        [
+            {
+                "report_id": 1,
+                "indicator_id": 1,
+                "indicator_label_override": "Presented at Lung MDT meeting",
+                "indicator_reference_override": "LUCAP 3.1",
+                "benchmark_override": 85,
+                "benchmark_unit_override": "percent",
+            }
+        ],
+        wide=True,
+    )
+    engine = sa.create_engine("sqlite://")
+
+    with so.sessionmaker(bind=engine, future=True)() as session:
+        import_config_directory(config_dir, session)
+
+        row = _link_row(session)
+        assert row["indicator_label_override"] == "Presented at Lung MDT meeting"
+        assert row["indicator_reference_override"] == "LUCAP 3.1"
+        assert row["benchmark_override"] == 85
+        assert row["benchmark_unit_override"] == "percent"
+
+
+def test_an_empty_cell_clears_an_override_rather_than_blanking_it(tmp_path):
+    """Present-but-empty is an instruction; absent is not.
+
+    An empty cell has to arrive as NULL and not as "", or a report that meant to inherit
+    would render an empty label instead of the canonical one.
+    """
+    config_dir, session_factory = _imported_with_an_override(tmp_path)
+    _write_link_csv(
+        config_dir,
+        [{"report_id": 1, "indicator_id": 1, **{name: "" for name in OVERRIDE_COLUMNS}}],
+        wide=True,
+    )
+
+    with session_factory() as session:
+        results = import_config_directory(config_dir, session, create_tables=False)
+
+        assert _result_lookup(results)["report_indicator_map"].replaced_rows == 1
+        row = _link_row(session)
+        assert [row[name] for name in OVERRIDE_COLUMNS] == [None] * len(OVERRIDE_COLUMNS)
+
+
+def test_a_wide_csv_matching_the_database_is_not_a_replacement(tmp_path):
+    """Skipped-vs-replaced counts are how an operator sees whether an import did anything."""
+    config_dir, session_factory = _imported_with_an_override(tmp_path)
+    _write_link_csv(
+        config_dir,
+        [
+            {
+                "report_id": 1,
+                "indicator_id": 1,
+                "indicator_label_override": "Presented at Lung MDT meeting",
+                "indicator_reference_override": "",
+                "benchmark_override": 85,
+                "benchmark_unit_override": "",
+            }
+        ],
+        wide=True,
+    )
+
+    with session_factory() as session:
+        results = import_config_directory(config_dir, session, create_tables=False)
+
+        by_table = _result_lookup(results)
+        assert by_table["report_indicator_map"].replaced_rows == 0
+        assert by_table["report_indicator_map"].skipped_existing_rows == 1
+
+
+def test_a_partially_widened_csv_only_touches_the_columns_it_carries(tmp_path):
+    """Absent and empty in the same file: one column is instructed, three are not."""
+    config_dir, session_factory = _imported_with_an_override(tmp_path)
+    _write_csv(
+        config_dir / "report_indicator_map.csv",
+        ["report_id", "indicator_id", "indicator_reference_override"],
+        [{"report_id": 1, "indicator_id": 1, "indicator_reference_override": "LUCAP 3.1"}],
+    )
+
+    with session_factory() as session:
+        import_config_directory(config_dir, session, create_tables=False)
+
+        row = _link_row(session)
+        assert row["indicator_reference_override"] == "LUCAP 3.1"
+        # Absent from the file, so untouched.
+        assert row["indicator_label_override"] == "Presented at Lung MDT meeting"
+        assert row["benchmark_override"] == 85
+
+
 def test_dry_run_returns_counts_without_writing(tmp_path):
     config_dir = _build_config_dir(tmp_path / "config")
     engine = sa.create_engine("sqlite://")
@@ -494,11 +676,11 @@ def test_cli_main_imports_configs_using_package_config_engine(monkeypatch, tmp_p
     config_dir = _build_config_dir(tmp_path / "config")
     database_path = tmp_path / "config.db"
 
-    def fake_get_engine(cls, **engine_kwargs):
+    def fake_get_engine(**engine_kwargs):
         return sa.create_engine(f"sqlite:///{database_path}", **engine_kwargs)
 
     monkeypatch.delenv("ENGINE", raising=False)
-    monkeypatch.setattr(OaCohortsConfig, "get_engine", classmethod(fake_get_engine))
+    monkeypatch.setattr(runtime, "create_dashboard_engine", fake_get_engine)
 
     status = main(
         [
@@ -590,11 +772,11 @@ def test_report_summary_cli_reports_when_schema_has_not_been_loaded(tmp_path):
 
 
 def test_report_summary_cli_renders_runtime_config_error(monkeypatch):
-    def _raise_not_found(cls, **engine_kwargs):
+    def _raise_not_found(**engine_kwargs):
         raise FileNotFoundError("missing config")
 
     monkeypatch.delenv("ENGINE", raising=False)
-    monkeypatch.setattr(OaCohortsConfig, "get_engine", classmethod(_raise_not_found))
+    monkeypatch.setattr(runtime, "create_dashboard_engine", _raise_not_found)
 
     runner = CliRunner()
     result = runner.invoke(app, ["report-summary"])

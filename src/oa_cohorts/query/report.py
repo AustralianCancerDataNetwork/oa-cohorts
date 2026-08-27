@@ -23,12 +23,146 @@ if TYPE_CHECKING:
 
 logger = get_logger(__name__)
 
-report_indicator_map = sa.Table(
-    'report_indicator_map',
-    Base.metadata,
-    sa.Column('report_id', sa.ForeignKey('report.report_id'), primary_key=True),
-    sa.Column('indicator_id', sa.ForeignKey('indicator.indicator_id'), primary_key=True),
-)
+class ReportIndicatorMap(HTMLRenderable, Base):
+    """
+    Maps indicators to reports, carrying the report's own view of the indicator.
+
+    An indicator may belong to more than one report, and the same clinical concept can
+    need different presentation in each. ``indicator_description``, ``indicator_reference``
+    and the benchmark live on the indicator and are therefore shared by every report that
+    links to it.
+
+    The override columns here let a report restate any of those four values without
+    forking the indicator. The indicator row holds the canonical, stream-neutral value;
+    ``NULL`` in an override means "inherit it".
+
+    Overrides are display and citation metadata only. 
+
+    Read a link's resolved values through ``label``, ``reference``, ``benchmark`` and
+    ``benchmark_unit``.
+    """
+
+    __tablename__ = 'report_indicator_map'
+
+
+    report_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('report.report_id'), primary_key=True)
+    indicator_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('indicator.indicator_id'), primary_key=True)
+    indicator_label_override: so.Mapped[str | None] = so.mapped_column(sa.String(250), nullable=True)
+    indicator_reference_override: so.Mapped[str | None] = so.mapped_column(sa.String(100), nullable=True)
+    benchmark_override: so.Mapped[int | None] = so.mapped_column(sa.Integer(), nullable=True)
+    benchmark_unit_override: so.Mapped[str | None] = so.mapped_column(sa.String(20), nullable=True)
+
+    report: so.Mapped[Report] = so.relationship(back_populates='indicator_links')
+    indicator: so.Mapped[Indicator] = so.relationship(back_populates='report_links', lazy="joined")
+
+    @property
+    def label(self) -> str:
+        """The indicator's description as this report states it."""
+        if self.indicator_label_override is not None:
+            return self.indicator_label_override
+        if self.indicator is not None:
+            return self.indicator.indicator_description
+        return f'indicator {self.indicator_id}'
+
+    @property
+    def reference(self) -> str | None:
+        """The citation relevant to this report context. 
+        A report with no override inherits the canonical reference.
+        """
+        if self.indicator_reference_override is not None:
+            return self.indicator_reference_override
+        if self.indicator is not None:
+            return self.indicator.indicator_reference
+        return None
+
+    @property
+    def benchmark(self) -> int | None:
+        """The target as this report states it."""
+        if self.benchmark_override is not None:
+            return self.benchmark_override
+        if self.indicator is not None:
+            return self.indicator.benchmark
+        return None
+
+    @property
+    def benchmark_unit(self) -> str | None:
+        """The benchmark's unit as this report states it.
+
+        Resolved independently of ``benchmark``: a report that restates the value in the
+        same unit overrides only the value.
+        """
+        if self.benchmark_unit_override is not None:
+            return self.benchmark_unit_override
+        if self.indicator is not None:
+            return self.indicator.benchmark_unit
+        return None
+
+    @property
+    def has_overrides(self) -> bool:
+        return any(
+            getattr(self, name) is not None
+            for name in (
+                'indicator_label_override',
+                'indicator_reference_override',
+                'benchmark_override',
+                'benchmark_unit_override',
+            )
+        )
+
+    def __repr__(self):
+        overrides = [
+            name.removeprefix('indicator_').removesuffix('_override')
+            for name in (
+                'indicator_label_override',
+                'indicator_reference_override',
+                'benchmark_override',
+                'benchmark_unit_override',
+            )
+            if getattr(self, name) is not None
+        ]
+        detail = f" overrides={overrides}" if overrides else ""
+        return f"<ReportIndicatorMap report={self.report_id} indicator={self.indicator_id}{detail}>"
+
+    def _html_css_class(self) -> str:
+        return "report-indicator"
+
+    def _html_title(self) -> str:
+        if self.indicator is not None:
+            return f"Indicator: {self.indicator.indicator_description}"
+        return f"Indicator: {self.indicator_id}"
+
+    def _html_header(self) -> dict[str, str]:
+
+        def marked(overridden: object) -> str:
+            return " (this report)" if overridden is not None else ""
+
+        hdr: dict[str, str] = {"ID": str(self.indicator_id)}
+
+        hdr["Label" + marked(self.indicator_label_override)] = self.label
+
+        reference = self.reference
+        if reference is not None:
+            hdr["Reference" + marked(self.indicator_reference_override)] = reference
+
+        benchmark = self.benchmark
+        if benchmark is not None:
+            # Resolved unit, not benchmark_unit_override: a report that restates only the
+            # value inherits the unit, and rendering "85" instead of "85 percent" drops it.
+            unit = self.benchmark_unit or ""
+            overridden = (
+                self.benchmark_override
+                if self.benchmark_override is not None
+                else self.benchmark_unit_override
+            )
+            hdr["Benchmark" + marked(overridden)] = f"{benchmark} {unit}".strip()
+
+        return hdr
+
+    def _html_inner(self):
+        if self.indicator is None:
+            return [RawHTML("<div class='muted'><i>Indicator not loaded</i></div>")]
+        return [self.indicator]
+
 
 class ReportCohortMap(HTMLRenderable, Base):
     """
@@ -125,10 +259,15 @@ class Report(HTMLRenderable, Base):
     report_owner: so.Mapped[str | None] = so.mapped_column(sa.String(250), nullable=True)
 
     cohorts: so.Mapped[list[ReportCohortMap]] = so.relationship(back_populates='report')
+    indicator_links: so.Mapped[list[ReportIndicatorMap]] = so.relationship(
+        back_populates='report',
+        lazy="selectin",
+    )
     indicators: so.Mapped[list[Indicator]] = so.relationship(
-        secondary=report_indicator_map,
+        secondary=ReportIndicatorMap.__table__,
         back_populates="in_reports",
         lazy="selectin",
+        viewonly=True,
     )
 
     denominator_measures = association_proxy("indicators", "denominator_measure")
@@ -236,17 +375,17 @@ class Report(HTMLRenderable, Base):
         # Indicators
         blocks.append(RawHTML("<div class='subquery-section-title'>Indicators</div>"))
 
-        if self.indicators:
-            for ind in sorted(self.indicators):
+        if self.indicator_links:
+            for link in sorted(self.indicator_links, key=lambda item: item.indicator):
                 blocks.append(
                     RawHTML("<details class='indicator-collapse'>")
                 )
                 blocks.append(
                     RawHTML(
-                        f"<summary><b>{esc(ind.indicator_description)}</b></summary>"
+                        f"<summary><b>{esc(link.label)}</b></summary>"
                     )
                 )
-                blocks.append(ind)
+                blocks.append(link)
                 blocks.append(RawHTML("</details>"))
         else:
             blocks.append(RawHTML("<div class='muted'><i>No indicators</i></div>"))
@@ -342,11 +481,12 @@ class Report(HTMLRenderable, Base):
 
         indicator_rows = []
 
-        for ind in sorted(self.indicators):
+        for link in sorted(self.indicator_links, key=lambda item: item.indicator):
+            ind = link.indicator
             check = ind.is_executable()
 
             indicator_rows.append([
-                td(ind.indicator_description),
+                td(link.label),
                 td(f'{ind.numerator_measure.id} - {ind.numerator_measure.name}'),
                 td(exec_badge(check.numerator.status)),
                 td(f'{ind.denominator_measure.id} - {ind.denominator_measure.name}' if ind.denominator_measure else "<i>Full cohort</i>"),

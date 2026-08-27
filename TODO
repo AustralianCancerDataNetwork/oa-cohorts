@@ -3,3 +3,4 @@
 [x] remove reliance on execution status within the ORM - cache needs to be only on the executor else we get conflict - need to guarantee measures of same ID will have same execution status / same membership
 [] scan for duplication before loading registry and creating DAG
 [] scan for correct column names before compiling / creating 
+[x] migration path

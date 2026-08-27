@@ -9,7 +9,7 @@ from oa_configurator import ConfigurationError
 from rich.console import Console
 from sqlalchemy.exc import SQLAlchemyError
 
-from ..config import OaCohortsConfig
+from ..config import create_dashboard_engine
 from .ui import render_error
 
 
@@ -23,7 +23,7 @@ def resolve_engine(*, database_url: str | None) -> tuple[sa.Engine, str | None]:
         return engine, _redacted_engine_url(engine)
 
     try:
-        engine = OaCohortsConfig.get_engine()
+        engine = create_dashboard_engine()
         return engine, None
     except ConfigurationError:
         raise
@@ -38,13 +38,20 @@ def resolve_engine(*, database_url: str | None) -> tuple[sa.Engine, str | None]:
         ) from exc
 
 
-def handle_cli_error(console: Console, exc: Exception) -> NoReturn:
+def handle_cli_error(console: Console, exc: Exception, *, engine: sa.Engine | None = None) -> NoReturn:
     if isinstance(exc, SQLAlchemyError):
         detail = str(exc).strip()
         message = f"Database operation failed: {exc.__class__.__name__}."
         if detail:
             message = f"{message} Detail: {detail}"
         console.print(render_error(message))
+        # A raw "no such column" is usually drift the up-front guard's fast
+        # path could not see. Diagnose it here rather than leaving the user to
+        # read SQL.
+        if engine is not None:
+            from .schema import explain_schema_failure
+
+            explain_schema_failure(console, engine, exc)
         raise typer.Exit(code=1) from exc
 
     if isinstance(exc, (RuntimeError, ValueError, FileNotFoundError, NotADirectoryError)):

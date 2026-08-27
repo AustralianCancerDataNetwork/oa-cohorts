@@ -57,3 +57,5 @@ nav:
     - Example execution: example_execution.md
   - Outputs:
     - Measure Resolution: measure_resolution.md
+  - Operations:
+    - Schema Management: schema_management.md

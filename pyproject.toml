@@ -8,10 +8,11 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "oa-configurator>=0.1.1,<1.0.0",
-    "omop-constructs>=0.5.2",
-    "omop-alchemy>=0.7.0",
-    "orm-loader>=0.5.0",
+    "alembic>=1.13",
+    "oa-configurator>=1.2.1,<2",
+    "omop-constructs>=0.7.0,<1",
+    "omop-alchemy[postgres]>=1.1,<2",
+    "orm-loader>=1.1,<2",
     "rich>=13.0",
     "typer>=0.12",
 ]
@@ -43,8 +44,17 @@ dev = [
   "pytest>=9.0.3",
   "pytest-cov>=4.0",
   "mypy>=1.8",
-  "ty>=0.0.1a20",
-  "ruff>=0.4",
+  "ty==0.0.61",
+  # >=0.16 deliberately, and deliberately different from the rest of the stack.
+  # Ruff 0.16 widened its default rule set enormously; omop-constructs and its
+  # siblings pin <0.16 and treat lifting that as a stack-wide decision. This repo
+  # has already made it: the 182 findings 0.16 raised were driven to zero (see
+  # _dash/ruff-0.16-assessment.md for the rule-by-rule outcome, and the ignore
+  # list below for what was kept). A floor of >=0.4 left that resolving to 0.16
+  # by accident, so a lockfile refresh could silently drop back to 0.15 and stop
+  # enforcing rules this repo has already paid for. <0.17 because the next
+  # widening has not been assessed.
+  "ruff>=0.16.1,<0.17",
   "mkdocs-material>=9.7.1",
   "mkdocstrings-python>=2.0.1",
   "mkdocs>=1.6.1",
@@ -56,6 +66,12 @@ docs = [
   "sphinx",
   "myst-parser",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# The `requires_database` marker itself is registered by oa-configurator's
+# pytest plugin, which skips a test when the named database is not configured
+# and fails it if that database's connection is not marked test_only.
 
 [tool.ruff.lint]
 ignore = [

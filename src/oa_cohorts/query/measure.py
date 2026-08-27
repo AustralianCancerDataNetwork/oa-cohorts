@@ -334,8 +334,12 @@ class MeasureRelationship(HTMLRenderable, Base):
     This can't be achieved via association table alone, despite lack of additional data, due to the self-referential nature of this relationship.
     """
     __tablename__ = 'measure_relationship'
-    parent_measure_id: so.Mapped[int | None] = so.mapped_column(sa.ForeignKey('measure.measure_id'), primary_key=True) 
-    child_measure_id: so.Mapped[int | None] = so.mapped_column(sa.ForeignKey('measure.measure_id'), primary_key=True) 
+    # Not Mapped[int | None]: a primary key column cannot hold NULL, and the
+    # optional annotation left Column.nullable True while every backend emitted
+    # NOT NULL — a permanent 'modify_nullable' in autogenerate comparisons. The
+    # attribute is still None before flush; only the column metadata changes.
+    parent_measure_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('measure.measure_id'), primary_key=True)
+    child_measure_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('measure.measure_id'), primary_key=True) 
 
     parent: so.Mapped[Measure] = so.relationship("Measure", foreign_keys=[parent_measure_id], back_populates='child_links')
     child: so.Mapped[Measure] = so.relationship("Measure", foreign_keys=[child_measure_id], back_populates='parent_links')

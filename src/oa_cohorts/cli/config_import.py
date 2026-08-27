@@ -23,9 +23,9 @@ from ..query import (
     QueryRule,
     Report,
     ReportCohortMap,
+    ReportIndicatorMap,
     Subquery,
     dash_cohort_def_map,
-    report_indicator_map,
     subquery_rule_map,
 )
 
@@ -159,6 +159,26 @@ def _row_signature(row: dict[str, Any], column_names: Iterable[str]) -> tuple[An
     return tuple(row.get(column_name) for column_name in column_names)
 
 
+def _present_columns(row: dict[str, Any], column_names: Iterable[str]) -> list[str]:
+    return [name for name in column_names if name in row]
+
+
+def _updatable_columns(
+    row: dict[str, Any],
+    present: Iterable[str],
+    pk_names: Iterable[str],
+) -> dict[str, Any]:
+    """The columns an UPDATE for this row should set: present, and not part of the key.
+
+    Returning only present columns is what makes an older, narrower export a no-op on the
+    columns it does not know about rather than a wipe of them. It also keeps the emitted
+    statement legal: ``values()`` with nothing in it renders ``UPDATE t SET  WHERE ...``,
+    which is a syntax error rather than an empty update.
+    """
+    pk_set = set(pk_names)
+    return {name: row[name] for name in present if name not in pk_set}
+
+
 def _dedupe_incoming_rows(
     rows: list[dict[str, Any]],
     *,
@@ -290,7 +310,12 @@ def _sync_table(
             if existing is None:
                 inserted_rows.append(row)
                 continue
-            if _row_signature(existing, column_names) == _row_signature(row, column_names):
+            compared = _present_columns(row, column_names)
+            if _row_signature(existing, compared) == _row_signature(row, compared):
+                skipped_existing_rows += 1
+                continue
+            if not _updatable_columns(row, compared, pk_names):
+                # Nothing to write: every column the file carried is part of the key.
                 skipped_existing_rows += 1
                 continue
             replaced_rows.append(row)
@@ -317,11 +342,10 @@ def _sync_table(
             detail=f"Writing {spec.table.name}",
             dry_run=dry_run,
         )
-        pk_set = set(pk_names)
         for row in replaced_rows:
             predicate = sa.and_(*[spec.table.c[name] == row[name] for name in pk_names])
-            non_pk = {k: v for k, v in row.items() if k not in pk_set}
-            session.execute(sa.update(spec.table).where(predicate).values(**non_pk))
+            updates = _updatable_columns(row, _present_columns(row, column_names), pk_names)
+            session.execute(sa.update(spec.table).where(predicate).values(**updates))
 
         if inserted_rows:
             session.execute(sa.insert(spec.table), inserted_rows)
@@ -414,7 +438,7 @@ CONFIG_IMPORT_SPECS: tuple[TableImportSpec, ...] = (
         },
     ),
     TableImportSpec(
-        table=report_indicator_map,
+        table=_model_table(ReportIndicatorMap),
         filenames=("report_indicator_map.csv",),
     ),
 )

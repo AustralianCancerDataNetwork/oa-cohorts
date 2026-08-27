@@ -10,7 +10,7 @@ from orm_loader.helpers import Base
 from ..core.executability import ExecStatus, IndicatorExecCheck
 from ..core.html_utils import HTMLRenderable, RawHTML
 from .measure import Measure, MeasureExecutor, MeasureMember
-from .report import Report, report_indicator_map
+from .report import Report, ReportIndicatorMap
 
 
 class Indicator(HTMLRenderable, Base):
@@ -68,10 +68,45 @@ class Indicator(HTMLRenderable, Base):
         foreign_keys=[denominator_measure_id], lazy="joined"
     )
 
-    in_reports: so.Mapped[list[Report]] = so.relationship(
-        secondary=report_indicator_map,
-        back_populates="indicators"
+    report_links: so.Mapped[list[ReportIndicatorMap]] = so.relationship(
+        back_populates='indicator'
     )
+    # viewonly for the same reason as Report.indicators: see the note there.
+    in_reports: so.Mapped[list[Report]] = so.relationship(
+        secondary=ReportIndicatorMap.__table__,
+        back_populates="indicators",
+        viewonly=True,
+    )
+
+    def link_for(self, report: Report) -> ReportIndicatorMap | None:
+        """Return this indicator's link to ``report``, or ``None`` if it is not in it."""
+        report_id = getattr(report, 'report_id', report)
+        for link in self.report_links:
+            if link.report_id == report_id:
+                return link
+        return None
+
+    def label_in(self, report: Report) -> str:
+        """The description as ``report`` states it, falling back to the canonical value.
+        """
+        link = self.link_for(report)
+        if link is not None:
+            return link.label
+        return self.indicator_description
+
+    def reference_in(self, report: Report) -> str | None:
+        """The citation as ``report`` states it, falling back to the canonical value."""
+        link = self.link_for(report)
+        if link is not None:
+            return link.reference
+        return self.indicator_reference
+
+    def benchmark_in(self, report: Report) -> tuple[int | None, str | None]:
+        """The benchmark and its unit as ``report`` states them."""
+        link = self.link_for(report)
+        if link is not None:
+            return link.benchmark, link.benchmark_unit
+        return self.benchmark, self.benchmark_unit
 
     @property
     def numerator_label(self) -> str:
@@ -299,6 +334,7 @@ class Indicator(HTMLRenderable, Base):
         return self.indicator_description < other.indicator_description
 
     def __repr__(self):
+        # Canonical values; see _html_title.
         i = f'({self.id}) {self.indicator_description}'
         if self.indicator_reference:
             i += f' [{self.indicator_reference}]'
@@ -310,6 +346,8 @@ class Indicator(HTMLRenderable, Base):
         return "indicator"
 
     def _html_title(self) -> str:
+        # Canonical: an indicator rendered on its own has no report to resolve against.
+        # Any report that states it differently shows up in the header.
         return f"Indicator: {self.indicator_description}"
 
     def _html_header(self) -> dict[str, str]:
@@ -330,6 +368,14 @@ class Indicator(HTMLRenderable, Base):
         if self.has_denominator_window():
             prior, post = self.denominator_window()
             hdr["Denominator window"] = f"-{prior if prior is not None else '∞'} / +{post if post is not None else '∞'} days"
+
+        restated = [
+            f"{link.report.report_short_name}: {link.label}"
+            for link in self.report_links
+            if link.report is not None and link.has_overrides
+        ]
+        if restated:
+            hdr["Restated by"] = "; ".join(sorted(restated))
 
         return hdr
 
