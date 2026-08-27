@@ -10,13 +10,11 @@
       
       
       
-        <link rel="canonical" href="https://AustralianCancerDataNetwork.github.io/oa-cohorts/measure_resolution/">
+        <link rel="canonical" href="https://AustralianCancerDataNetwork.github.io/oa-cohorts/schema_management/">
       
       
-        <link rel="prev" href="../example_execution/">
+        <link rel="prev" href="../measure_resolution/">
       
-      
-        <link rel="next" href="../schema_management/">
       
       
         
@@ -27,7 +25,7 @@
     
     
       
-        <title>Measure Resolution - OA Cohorts</title>
+        <title>Schema Management - OA Cohorts</title>
       
     
     
@@ -70,7 +68,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#measure-resolution" class="md-skip">
+        <a href="#schema-management" class="md-skip">
           Skip to content
         </a>
       
@@ -106,7 +104,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Measure Resolution
+              Schema Management
             
           </span>
         </div>
@@ -456,8 +454,6 @@
       
   
   
-    
-  
   
   
     
@@ -470,11 +466,13 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
         
           
           <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
@@ -495,12 +493,101 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
   
     Outputs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../measure_resolution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Measure Resolution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
   
 
           </label>
@@ -529,7 +616,7 @@
   <span class="md-ellipsis">
     
   
-    Measure Resolution
+    Schema Management
   
 
     
@@ -547,7 +634,7 @@
   <span class="md-ellipsis">
     
   
-    Measure Resolution
+    Schema Management
   
 
     
@@ -573,10 +660,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#measuremember-the-atomic-result-row" class="md-nav__link">
+  <a href="#getting-started" class="md-nav__link">
     <span class="md-ellipsis">
       
-        MeasureMember: the atomic result row
+        Getting started
       
     </span>
   </a>
@@ -584,10 +671,65 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#canonical-combination-semantics" class="md-nav__link">
+  <a href="#commands" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Canonical Combination Semantics
+        Commands
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#drift-warnings-during-normal-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Drift warnings during normal work
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-an-import-does-to-a-column-your-csv-does-not-have" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What an import does to a column your CSV does not have
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enum-values-are-not-checked" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enum values are not checked
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-a-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a migration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adopting-a-database-older-than-the-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adopting a database older than the models
       
     </span>
   </a>
@@ -598,95 +740,6 @@
   
 </nav>
       
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-        
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Operations
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Operations
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../schema_management/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Schema Management
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -726,10 +779,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#measuremember-the-atomic-result-row" class="md-nav__link">
+  <a href="#getting-started" class="md-nav__link">
     <span class="md-ellipsis">
       
-        MeasureMember: the atomic result row
+        Getting started
       
     </span>
   </a>
@@ -737,10 +790,65 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#canonical-combination-semantics" class="md-nav__link">
+  <a href="#commands" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Canonical Combination Semantics
+        Commands
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#drift-warnings-during-normal-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Drift warnings during normal work
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-an-import-does-to-a-column-your-csv-does-not-have" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What an import does to a column your CSV does not have
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enum-values-are-not-checked" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enum values are not checked
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-a-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a migration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adopting-a-database-older-than-the-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adopting a database older than the models
       
     </span>
   </a>
@@ -793,7 +901,7 @@
         <a href="./" class="md-path__link">
           
   <span class="md-ellipsis">
-    Outputs
+    Operations
   </span>
 
         </a>
@@ -815,160 +923,68 @@
   
 
 
-<h1 id="measure-resolution">Measure Resolution<a class="headerlink" href="#measure-resolution" title="Permanent link">&para;</a></h1>
-<h2 id="measuremember-the-atomic-result-row"><code>MeasureMember</code>: the atomic result row<a class="headerlink" href="#measuremember-the-atomic-result-row" title="Permanent link">&para;</a></h2>
-<p>When a measure executes, it materialises <code>MeasureMember</code> rows:</p>
-<div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">MeasureMember</span><span class="p">:</span>
-    <span class="n">person_id</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="n">measure_resolver</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="n">episode_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
-    <span class="n">measure_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span>
+<h1 id="schema-management">Schema Management<a class="headerlink" href="#schema-management" title="Permanent link">&para;</a></h1>
+<p>The dashboard database holds the tables that describe reports, indicators, measures, subqueries, and rules. Those tables are versioned with Alembic, and <code>oa-cohorts schema</code> is the interface to them.</p>
+<h2 id="getting-started">Getting started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h2>
+<p>The current schema is the baseline. To bring a database under management:</p>
+<div class="highlight"><pre><span></span><code>oa-cohorts<span class="w"> </span>schema<span class="w"> </span>bootstrap
 </code></pre></div>
-<p>A <code>MeasureMember</code> is not just a boolean membership flag. It captures:</p>
+<p>On an existing database this checks that the schema matches the models and then records it as revision <code>0001_baseline</code> without running any DDL. If it does not match, bootstrap stops and reports what differs — stamping a mismatched schema as the baseline would make that mismatch permanent and invisible. Pass <code>--adopt-on-drift</code> if the difference is known and intentional.</p>
+<p>On an empty database the same command creates the tables and records the revision.</p>
+<h2 id="commands">Commands<a class="headerlink" href="#commands" title="Permanent link">&para;</a></h2>
 <ul>
-<li>who qualified</li>
-<li>under which resolver</li>
-<li>on what date</li>
+<li><code>schema check</code> compares the live schema to the models and lists every difference. Exits non-zero when they disagree, so <code>oa-cohorts schema check --quiet</code> works as a deployment gate.</li>
+<li><code>schema status</code> shows the current revision, the head, and anything pending between them.</li>
+<li><code>schema bootstrap</code> creates or adopts, as above.</li>
+<li><code>schema upgrade</code> applies pending migrations.</li>
+<li><code>schema sql</code> prints the SQL an upgrade would run without executing it, for review or for handing to whoever owns the database.</li>
+<li><code>schema history</code> lists the revisions.</li>
 </ul>
-<p>This preserved timing is what allows indicator windows, per-period reporting, and episode-aware logic to work later in the pipeline.</p>
-<h2 id="canonical-combination-semantics">Canonical Combination Semantics<a class="headerlink" href="#canonical-combination-semantics" title="Permanent link">&para;</a></h2>
-<p>Measures compose child results using the canonical member shape. In the shipped config this is primarily through <code>OR</code> and <code>AND</code>.</p>
-<h3 id="or-preserve-all-qualifying-rows"><code>OR</code>: preserve all qualifying rows<a class="headerlink" href="#or-preserve-all-qualifying-rows" title="Permanent link">&para;</a></h3>
-<p><code>OR</code> logic unions child outputs without collapsing them.</p>
-<p>Implementation shape:</p>
+<h2 id="drift-warnings-during-normal-work">Drift warnings during normal work<a class="headerlink" href="#drift-warnings-during-normal-work" title="Permanent link">&para;</a></h2>
+<p>Every command that opens the dashboard database checks the schema first, so a mismatch surfaces when you were about to use the data rather than after something has already failed.</p>
+<p>Read commands — <code>report-summary</code>, <code>indicator-summary</code>, <code>measure-summary</code> — print a warning and carry on, since their results are still worth seeing with the caveat attached. <code>import-config</code> stops instead, because a config import that fails partway through a mismatched schema leaves a partly loaded database that re-running will not fix. Use <code>--ignore-schema-drift</code> to import anyway.</p>
+<p>If a command fails with a database error regardless, the error is re-checked against the live schema and any mismatch reported as the likely cause, so a bare <code>no such column: report.report_owner</code> arrives with an explanation.</p>
+<h2 id="what-an-import-does-to-a-column-your-csv-does-not-have">What an import does to a column your CSV does not have<a class="headerlink" href="#what-an-import-does-to-a-column-your-csv-does-not-have" title="Permanent link">&para;</a></h2>
+<p><code>import-config</code> upserts on primary key: a row whose non-key columns differ from the stored row is updated. Two rules govern the columns a file omits, and they matter most for <code>report_indicator_map</code>, whose override values are authored by hand and cannot be regenerated from anything.</p>
 <ul>
-<li>each child emits canonical rows</li>
-<li>rows are combined with <code>UNION ALL</code></li>
-<li>all qualifying dates are preserved</li>
+<li><strong>A column absent from the CSV is left alone.</strong> The file has no opinion about it, so the stored value stands and the row does not count as replaced. </li>
+<li><strong>A column present but empty is set to <code>NULL</code>.</strong> That is an instruction, and it is how a value is deliberately cleared through the transport.</li>
 </ul>
-<p>Example:</p>
-<ul>
-<li>measure = ECOG 0 OR ECOG 1</li>
-</ul>
-<p>If the same person qualifies on two different dates, both rows survive.</p>
-<p><img alt="Qualification temporal resolution" src="../img/temporal_resolver_2.png" /></p>
-<h3 id="and-resolver-aligned-intersection"><code>AND</code>: resolver-aligned intersection<a class="headerlink" href="#and-resolver-aligned-intersection" title="Permanent link">&para;</a></h3>
-<p><code>AND</code> is not a simple person-level intersection. The same <code>measure_resolver</code> must satisfy all child criteria.</p>
-<p>Implementation shape:</p>
-<ul>
-<li>child rows are aligned by <code>measure_resolver</code></li>
-<li>the resulting qualification date is the latest child date</li>
-<li>rows with mismatched resolvers do not qualify together</li>
-</ul>
-<p>This represents the earliest point at which all required conditions have become true for the same clinical context.</p>
-<p>Example:</p>
-<ul>
-<li>measure = Stage III AND Radiotherapy</li>
-</ul>
-<p>If Stage III qualifies under episode 10 and Radiotherapy qualifies under episode 10, the composite measure qualifies.</p>
-<p>If the two child rows belong to different episodes, they do not intersect.</p>
-<p><img alt="Qualification temporal resolution" src="../img/temporal_resolver_3.png" /></p>
-<h3 id="first-vs-any"><code>FIRST</code> vs <code>ANY</code><a class="headerlink" href="#first-vs-any" title="Permanent link">&para;</a></h3>
-<p>The engine compiles multiple SQL variants for measures and subqueries:</p>
-<ul>
-<li><code>ANY</code>: preserve all qualifying rows</li>
-<li><code>FIRST</code>: collapse to the earliest qualifying row per resolver</li>
-<li><code>UNDATED</code>: keep qualifying membership without dates for intermediate set logic</li>
-</ul>
-<h3 id="temporal-window-event-to-event-timing">Temporal Window: Event-to-Event Timing<a class="headerlink" href="#temporal-window-event-to-event-timing" title="Permanent link">&para;</a></h3>
-<p>A third measure kind handles cases where qualification depends on the relationship between two events — specifically, whether event B occurs within a defined window relative to event A.</p>
-<p>This is expressed via <code>MeasureTemporalWindow</code>, a separate config table with a 1:1 relationship to <code>Measure</code> (enforced by primary key). A measure with a <code>window_config</code> row is a temporal window measure.</p>
-<p><strong>Anchor and candidate</strong></p>
-<p>The measure's own <code>subquery_id</code> defines the anchor event. A separate <code>candidate_measure_id</code> points to another measure whose events are evaluated relative to that anchor. The anchor is deduplicated to one row per resolver (earliest event) before the join.</p>
-<p><strong>Window bounds</strong></p>
-<p><code>window_min_days</code> and <code>window_max_days</code> are optional. <code>NULL</code> means unbounded on that side. Negative values are valid — a candidate event occurring before the anchor can still qualify when it falls within the configured bounds. The emitted result remains the canonical <code>MeasureMember</code> row shape described above, so downstream comparison is based on the resolved <code>measure_date</code> selected by the window logic rather than on a separately emitted delta column.</p>
-<p><strong>Pick strategy</strong> (<code>window_pick_strategy</code>)</p>
-<p>Controls which candidate event is retained per resolver after applying the window filter:</p>
-<table>
-<thead>
-<tr>
-<th>Value</th>
-<th>Behaviour</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>any</code></td>
-<td>All qualifying candidate events are preserved</td>
-</tr>
-<tr>
-<td><code>earliest</code></td>
-<td>One row per resolver: earliest qualifying candidate date</td>
-</tr>
-<tr>
-<td><code>latest</code></td>
-<td>One row per resolver: latest qualifying candidate date</td>
-</tr>
-<tr>
-<td><code>closest</code></td>
-<td>One row per resolver: candidate date closest to anchor date</td>
-</tr>
-</tbody>
-</table>
-<p>Default when <code>NULL</code>: <code>earliest</code>.</p>
-<p><strong>Result date</strong> (<code>result_date_source</code>)</p>
-<p>Controls which date is emitted as <code>measure_date</code> in the output:</p>
-<table>
-<thead>
-<tr>
-<th>Value</th>
-<th>Emitted date</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>candidate</code></td>
-<td>Date of the candidate event</td>
-</tr>
-<tr>
-<td><code>anchor</code></td>
-<td>Date of the anchor event</td>
-</tr>
-<tr>
-<td><code>greatest</code></td>
-<td>Later of anchor or candidate</td>
-</tr>
-<tr>
-<td><code>least</code></td>
-<td>Earlier of anchor or candidate</td>
-</tr>
-</tbody>
-</table>
-<p>Default when <code>NULL</code>: <code>candidate</code>.</p>
-<p><strong>Resolver alignment</strong> (<code>require_same_resolver</code>)</p>
-<p>When <code>TRUE</code> (default), the anchor and candidate are joined on both <code>person_id</code> and <code>measure_resolver</code>. When <code>FALSE</code>, the join is on <code>person_id</code> only.</p>
-<p><strong>SQL variants</strong></p>
-<p><code>sql_any()</code> and <code>sql_first()</code> are supported. <code>sql_undated()</code> raises <code>NotImplementedError</code> — this surfaces as <code>WARN</code> (not <code>FAIL</code>) in <code>is_executable()</code> because the measure is still usable in the normal execution path.</p>
-<p><strong>Configuration</strong></p>
-<p>Temporal window measures are loaded via <code>measure_temporal_window.csv</code> in the config directory. The CSV is optional — existing deployments without it are unaffected.</p>
-<p>Example — GP referral to treatment within 42 days:</p>
-<div class="highlight"><pre><span></span><code>Measure:
-  name:        GP referral to first treatment or pall care &lt;= 42d
-  combination: rule_or
-  subquery_id: &lt;GP referral subquery&gt;
+<p>The distinction is the difference between "this export predates the column" and "this export wants the column cleared", which a plain empty-vs-missing comparison cannot tell apart. Before it existed, a narrow CSV imported against a database holding overrides emitted <code>UPDATE report_indicator_map SET  WHERE ...</code> — a bare SQL syntax error rather than either outcome.</p>
+<h2 id="enum-values-are-not-checked">Enum values are not checked<a class="headerlink" href="#enum-values-are-not-checked" title="Permanent link">&para;</a></h2>
+<p><code>schema check</code> uses Alembic's comparison, which inspects column types but never the set of values an existing enum accepts. Adding a member to <code>RuleTemporality</code>, or to any other rule enum, produces no revision and no warning — it fails when a row using the new value is written.</p>
+<p>Enum changes therefore need their <code>ALTER TYPE</code> added to the migration by hand. <code>sync_enum_labels</code> does that idempotently:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">oa_cohorts.schema.enum_ops</span><span class="w"> </span><span class="kn">import</span> <span class="n">sync_enum_labels</span>
 
-MeasureTemporalWindow:
-  candidate_measure_id: &lt;any treatment OR pall care composite&gt;
-  window_min_days:      NULL
-  window_max_days:      42
-  window_pick_strategy: earliest
-  result_date_source:   candidate
-  require_same_resolver: TRUE
+<span class="k">def</span><span class="w"> </span><span class="nf">upgrade</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">sync_enum_labels</span><span class="p">(</span><span class="s2">&quot;ruletemporality&quot;</span><span class="p">,</span> <span class="p">(</span>
+        <span class="s2">&quot;dt_any&quot;</span><span class="p">,</span> <span class="s2">&quot;dt_current_start&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="s2">&quot;dt_referral&quot;</span><span class="p">,</span>
+    <span class="p">))</span>
 </code></pre></div>
-<h3 id="nested-measures">Nested Measures<a class="headerlink" href="#nested-measures" title="Permanent link">&para;</a></h3>
-<p>Measures can be nested arbitrarily:</p>
-<div class="highlight"><pre><span></span><code>A AND (B OR C)
+<p>It emits <code>ALTER TYPE ... ADD VALUE IF NOT EXISTS</code> for each label, so it adds only what is missing and is safe to re-run. It also does nothing on SQLite, where these columns are plain <code>VARCHAR</code>. Pass the full label set rather than just the new one, so the revision stays reproducible.</p>
+<p>Because it is idempotent it can sit in a revision that also creates the type — <code>0001_baseline</code> does exactly that, as the pattern to copy. Note that <code>ALTER TYPE ... ADD VALUE</code> cannot run inside a transaction on Postgres older than 12; the helper raises a clear error rather than failing obscurely.</p>
+<h2 id="adding-a-migration">Adding a migration<a class="headerlink" href="#adding-a-migration" title="Permanent link">&para;</a></h2>
+<p>Model changes need a revision. Generate one against a scratch database rather than production:</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sa</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">oa_cohorts.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">revise</span><span class="p">,</span> <span class="n">upgrade</span>
+
+<span class="n">engine</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">create_engine</span><span class="p">(</span><span class="s2">&quot;sqlite:///scratch.db&quot;</span><span class="p">)</span>
+<span class="n">upgrade</span><span class="p">(</span><span class="n">engine</span><span class="p">)</span>                                  <span class="c1"># bring it to the current head</span>
+<span class="n">revise</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="s2">&quot;add referral temporality&quot;</span><span class="p">)</span>
 </code></pre></div>
-<p>Evaluation proceeds bottom-up:</p>
-<ol>
-<li><code>B OR C</code> resolves to all qualifying child rows</li>
-<li><code>A</code> resolves independently</li>
-<li><code>AND</code> aligns rows on <code>measure_resolver</code></li>
-<li>the composite qualification date becomes the latest aligned child date</li>
-</ol>
-<p>The canonical member shape is preserved at every level, which is why deeply nested logic can still feed report generation consistently.</p>
-<p><img alt="Qualification temporal resolution" src="../img/temporal_resolver_1.png" /></p>
+Do not edit <code>0001_baseline.py</code> to track model changes. It is a frozen snapshot of the schema at the point migrations were introduced, and <code>schema check</code> reporting clean depends on it staying in step with the models it describes.
+Notes:</p>
+<ul>
+<li><strong>Keep the revision id inside 32 characters.</strong> <code>alembic_version.version_num</code> is <code>VARCHAR(32)</code>. A longer id applies its DDL and <em>then</em> fails writing the version row — and only on Postgres, since SQLite does not enforce varchar length. The result is a database whose schema has changed but whose recorded revision has not. <code>test_revision_ids_fit_the_alembic_version_column</code> guards this.</li>
+<li><strong><code>copy_from</code> needs the table as it is <em>before</em> the direction being run.</strong> A revision that adds columns and drops them again needs two frozen shapes, not one: batch mode drops columns from the description it was given, so handing <code>downgrade</code> the pre-add shape fails with <code>KeyError</code> on the first column it cannot find. </li>
+</ul>
+<h2 id="adopting-a-database-older-than-the-models">Adopting a database older than the models<a class="headerlink" href="#adopting-a-database-older-than-the-models" title="Permanent link">&para;</a></h2>
+<p><code>schema bootstrap</code> stamps head, which asserts the live schema matches the current models. When it does not, the database is not necessarily broken — it may simply match an <em>earlier</em> revision, with the difference being migrations that have never been applied.</p>
+<div class="highlight"><pre><span></span><code>oa-cohorts<span class="w"> </span>schema<span class="w"> </span>bootstrap<span class="w"> </span>--revision<span class="w"> </span>0001_baseline
+oa-cohorts<span class="w"> </span>schema<span class="w"> </span>upgrade
+</code></pre></div>
+<p><code>bootstrap</code> refuses to stamp head in that situation rather than claiming migrations ran that never did — which would leave <code>0002</code> permanently unapplied and the column types permanently wrong.</p>
+<p><code>--adopt-on-drift</code> is the different case — a difference that is known and intentional and that no migration will resolve. It repairs nothing and should not be used to get past an unapplied migration.</p>
 
 
 
