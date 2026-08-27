@@ -49,6 +49,7 @@ REQUIRED_VOCABULARY_MODELS = (
 OPTIONAL_VOCABULARY_MODELS = (Drug_Strength, Source_To_Concept_Map)
 CHUNK_SIZE = 500
 FETCH_SIZE = 10_000
+SELECTED_CONCEPT_TABLE = "_vocab_subset_concept"
 
 
 def _chunks(values: Iterable[int], size: int = CHUNK_SIZE) -> Iterator[tuple[int, ...]]:
@@ -195,62 +196,105 @@ def _selected_vocabulary_ids(
     return vocabulary_ids
 
 
-def _concepts_in_vocabularies(
+def _selected_concept_table(
+    connection: sa.Connection,
     concept_table: sa.Table,
     vocabulary_ids: set[str],
-) -> sa.ScalarSelect[Any]:
-    return sa.select(concept_table.c.concept_id).where(
-        concept_table.c.vocabulary_id.in_(sorted(vocabulary_ids))
-    ).scalar_subquery()
+) -> sa.Table:
+    """Materialise the selected concept IDs into an indexed temporary table.
+
+    The membership test has to be a join, not an ``IN (SELECT ...)`` subquery.
+    At ~1.4M selected concept IDs the subquery result does not fit in
+    ``work_mem``, so PostgreSQL cannot hash it and degrades the ``IN`` to a
+    correlated ``Materialize`` node that it rescans linearly for every row of
+    the outer table -- ~10^14 tuple comparisons against the 84M-row
+    ``concept_ancestor``, which never completes. Joining against a real table
+    with a primary key gives a hash join and a single sequential pass instead.
+    """
+    temp_table = sa.Table(
+        SELECTED_CONCEPT_TABLE,
+        sa.MetaData(),
+        sa.Column("concept_id", sa.Integer, primary_key=True),
+        prefixes=["TEMPORARY"],
+    )
+    temp_table.drop(connection, checkfirst=True)
+    temp_table.create(connection)
+    connection.execute(
+        temp_table.insert().from_select(
+            ["concept_id"],
+            sa.select(concept_table.c.concept_id).where(
+                concept_table.c.vocabulary_id.in_(sorted(vocabulary_ids))
+            ),
+        )
+    )
+    if connection.dialect.name == "postgresql":
+        connection.execute(sa.text(f"ANALYZE {SELECTED_CONCEPT_TABLE}"))
+    return temp_table
 
 
-def _predicate_for_table(
+def _membership_statement(
+    columns: list[sa.Column[Any]],
+    table: sa.Table,
+    temp_table: sa.Table,
+    endpoints: tuple[sa.Column[Any], ...],
+    extra_conditions: tuple[sa.ColumnElement[bool], ...] = (),
+) -> sa.Select[Any]:
+    """Select rows where any endpoint column matches a selected concept.
+
+    Each endpoint gets its own LEFT JOIN and the row is kept when at least one
+    join matched. LEFT JOIN rather than a UNION of inner joins so a row whose
+    endpoints are both selected is emitted once without a deduplicating sort;
+    ``concept_id`` is the joined table's primary key, so each join matches at
+    most one row and never fans the source row out.
+    """
+    source: sa.FromClause = table
+    conditions: list[sa.ColumnElement[bool]] = list(extra_conditions)
+    for index, endpoint in enumerate(endpoints):
+        alias = temp_table.alias(f"sel_{index}")
+        source = source.outerjoin(alias, alias.c.concept_id == endpoint)
+        conditions.append(alias.c.concept_id.is_not(None))
+    return sa.select(*columns).select_from(source).where(sa.or_(*conditions))
+
+
+def _statement_for_table(
     table_name: str,
     table: sa.Table,
-    concept_table: sa.Table,
+    temp_table: sa.Table,
     vocabulary_ids: set[str],
-) -> sa.ColumnElement[bool] | None:
-    """Build the Athena vocabulary subset predicate for one table.
+) -> sa.Select[Any]:
+    """Build the Athena vocabulary subset SELECT for one table."""
+    columns = _table_columns(table)
+    sorted_vocabulary_ids = sorted(vocabulary_ids)
 
-    Domain, concept class, and relationship are small reference catalogues
-    without a vocabulary ID of their own, so they are emitted in full. The
-    remaining relationship tables retain rows touching a concept in one of
-    the selected whole vocabularies, including the other endpoint where it is
-    outside the selected vocabularies.
-    """
-    concept_ids = _concepts_in_vocabularies(concept_table, vocabulary_ids)
-
-    if table_name == "concept":
-        return table.c.vocabulary_id.in_(sorted(vocabulary_ids))
-    if table_name == "vocabulary":
-        return table.c.vocabulary_id.in_(sorted(vocabulary_ids))
+    if table_name in {"concept", "vocabulary"}:
+        return sa.select(*columns).where(
+            table.c.vocabulary_id.in_(sorted_vocabulary_ids)
+        )
     if table_name in {"domain", "concept_class", "relationship"}:
-        return None
+        return sa.select(*columns)
     if table_name == "concept_ancestor":
-        return sa.or_(
-            table.c.ancestor_concept_id.in_(concept_ids),
-            table.c.descendant_concept_id.in_(concept_ids),
+        endpoints = (table.c.ancestor_concept_id, table.c.descendant_concept_id)
+    elif table_name == "concept_relationship":
+        endpoints = (table.c.concept_id_1, table.c.concept_id_2)
+    elif table_name == "concept_synonym":
+        endpoints = (table.c.concept_id,)
+    elif table_name == "drug_strength":
+        endpoints = (table.c.drug_concept_id, table.c.ingredient_concept_id)
+    elif table_name == "source_to_concept_map":
+        return _membership_statement(
+            columns,
+            table,
+            temp_table,
+            (table.c.source_concept_id, table.c.target_concept_id),
+            extra_conditions=(
+                table.c.source_vocabulary_id.in_(sorted_vocabulary_ids),
+                table.c.target_vocabulary_id.in_(sorted_vocabulary_ids),
+            ),
         )
-    if table_name == "concept_relationship":
-        return sa.or_(
-            table.c.concept_id_1.in_(concept_ids),
-            table.c.concept_id_2.in_(concept_ids),
-        )
-    if table_name == "concept_synonym":
-        return table.c.concept_id.in_(concept_ids)
-    if table_name == "drug_strength":
-        return sa.or_(
-            table.c.drug_concept_id.in_(concept_ids),
-            table.c.ingredient_concept_id.in_(concept_ids),
-        )
-    if table_name == "source_to_concept_map":
-        return sa.or_(
-            table.c.source_vocabulary_id.in_(sorted(vocabulary_ids)),
-            table.c.target_vocabulary_id.in_(sorted(vocabulary_ids)),
-            table.c.source_concept_id.in_(concept_ids),
-            table.c.target_concept_id.in_(concept_ids),
-        )
-    raise ValueError(f"Unsupported vocabulary table {table_name!r}")
+    else:
+        raise ValueError(f"Unsupported vocabulary table {table_name!r}")
+
+    return _membership_statement(columns, table, temp_table, endpoints)
 
 
 def _serialise(value: Any) -> str:
@@ -264,12 +308,9 @@ def _serialise(value: Any) -> str:
 def _write_table(
     connection: sa.Connection,
     table: sa.Table,
-    predicate: sa.ColumnElement[bool] | None,
+    statement: sa.Select[Any],
     output_path: Path,
 ) -> int:
-    statement = sa.select(*_table_columns(table))
-    if predicate is not None:
-        statement = statement.where(predicate)
     primary_key = list(table.primary_key.columns)
     if primary_key:
         statement = statement.order_by(*primary_key)
@@ -342,16 +383,18 @@ def export_vocab_subset(subfolder_name: str, engine_string: str) -> dict[str, in
             file=sys.stderr,
         )
 
+        temp_table = _selected_concept_table(connection, concept_table, vocabulary_ids)
+
         for model in models:
             table = model.__table__
             if not inspector.has_table(model.__tablename__):
                 continue
-            predicate = _predicate_for_table(
-                model.__tablename__, table, concept_table, vocabulary_ids
+            statement = _statement_for_table(
+                model.__tablename__, table, temp_table, vocabulary_ids
             )
             output_path = output_dir / f"{model.__tablename__.upper()}.csv"
             row_counts[model.__tablename__] = _write_table(
-                connection, table, predicate, output_path
+                connection, table, statement, output_path
             )
             print(
                 f"Wrote {row_counts[model.__tablename__]:,} rows to {output_path}",

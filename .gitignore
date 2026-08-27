@@ -243,3 +243,4 @@ docker/
 !dash_config/
 dash_config/*
 !dash_config/export_vocab_subset.py
+!dash_config/import_to_sqlite.py

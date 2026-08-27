@@ -107,6 +107,16 @@ results_schema = "results"
 
 `dashboard_db` is declared `kind = "generic"` and `cdm_db` `kind = "cdm"`; oa-cohorts validates both at resolution time, so pointing `--cdm-db` at a generic entry fails with a clear error rather than at first query.
 
+### Local SQLite bundle
+
+After running `dash_config/export_vocab_subset.py`, the companion importer can build a local SQLite file from the Athena vocabulary files and the exported dashboard configuration:
+
+```bash
+python dash_config/import_to_sqlite.py 20260827 --output dash.db
+```
+
+Use `--dashboard-only` to omit the CDM vocabulary tables and create a file containing only the dashboard configuration. The importer creates a temporary stack `config.toml` so the logical `dashboard_db` and `cdm_db` resources both resolve to the same SQLite file; the temporary config is removed afterwards.
+
 `--database-url` remains available as a per-command override, and `ENGINE` can be set as a local fallback when no stack config file is present.
 
 Example:
@@ -117,4 +127,3 @@ docker compose up -d oa-cohorts
 docker compose exec oa-cohorts oa-cohorts --help
 docker compose exec oa-cohorts oa-cohorts import-config /app/dash_config
 ```
-
