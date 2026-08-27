@@ -298,9 +298,12 @@ def test_a_pre_0_9_0_database_does_not_match_the_models(pg_engine):
     result = check_schema(pg_engine)
 
     assert not result.is_clean
-    assert {c.column for c in result.sorted_changes()} == {
-        "report_create_date",
-        "report_edit_date",
+    # A floor rather than an equality: the date columns are what made 0002
+    # necessary, but every later model-changing revision adds its own columns to
+    # what a 0001 database drifts by. That head itself matches the models is
+    # asserted by test_check_is_clean_immediately_after_upgrade.
+    assert {"report_create_date", "report_edit_date"} <= {
+        c.column for c in result.sorted_changes()
     }, result.summary_line()
 
 
