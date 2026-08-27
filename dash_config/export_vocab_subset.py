@@ -2,11 +2,17 @@
 
 Usage::
 
-    python export_vocab_subset.py SUBFOLDER SQLALCHEMY_ENGINE
+    python export_vocab_subset.py 20260827_post_migration SQLALCHEMY_ENGINE
 
 The subfolder is resolved relative to this file's ``dash_config`` directory.
 The generated Athena-style vocabulary files are written below
 ``SUBFOLDER/vocabs``.
+
+Which concepts are needed is read from ``query_rule.csv`` and
+``phenotype_definition.csv`` only. Nothing about indicators, reports or the links between
+them reaches the vocabulary, so a config change that only alters labels, references or
+benchmarks produces an identical subset and the previous ``vocabs`` directory can be reused
+as-is.
 """
 
 from __future__ import annotations
@@ -36,6 +42,12 @@ from omop_alchemy.cdm.model.vocabulary import (
 from omop_semantics.runtime.default_valuesets import runtime
 
 CONFIG_ROOT = Path(__file__).resolve().parent
+
+#: Bundle schema versions this script understands. Kept in step with
+#: ``import_to_sqlite.SUPPORTED_BUNDLE_SCHEMA_VERSIONS``; see there for what each means.
+#: Neither version changes which concepts a config needs, so this is a guard against
+#: silently accepting a future shape rather than a branch point.
+SUPPORTED_BUNDLE_SCHEMA_VERSIONS = frozenset({1, 2})
 REQUIRED_VOCABULARY_MODELS = (
     Domain,
     Vocabulary,
@@ -80,6 +92,14 @@ def _find_bundle(config_dir: Path) -> Path:
         payload = json.loads(bundle.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError(f"Could not read config bundle {bundle}: {exc}") from exc
+
+    schema_version = payload.get("schema_version")
+    if schema_version not in SUPPORTED_BUNDLE_SCHEMA_VERSIONS:
+        supported = ", ".join(str(item) for item in sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS))
+        raise ValueError(
+            f"Config bundle {bundle} has schema_version {schema_version!r}; "
+            f"this script supports {supported}."
+        )
 
     scope = payload.get("scope")
     if (

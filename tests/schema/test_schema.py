@@ -18,11 +18,13 @@ from oa_cohorts.schema import (
     check_schema,
     create_owned_tables,
     current_revision,
+    downgrade,
     head_revision,
     history,
     is_uninitialised,
     migration_status,
     owned_table_names,
+    upgrade,
     upgrade_sql,
 )
 
@@ -237,11 +239,156 @@ def test_status_reports_an_unmanaged_database(sqlite_engine):
 def test_history_lists_every_revision_oldest_first():
     revisions = history()
 
-    assert [r.revision for r in revisions] == ["0001_baseline", "0002_report_date_columns"]
+    assert [r.revision for r in revisions] == [
+        "0001_baseline",
+        "0002_report_date_columns",
+        "0003_indicator_map_overrides",
+    ]
     assert revisions[0].down_revision is None
     assert not revisions[0].is_head
     assert revisions[-1].is_head
-    assert revisions[-1].down_revision == "0001_baseline"
+    assert revisions[-1].down_revision == "0002_report_date_columns"
+
+
+def test_revision_ids_fit_the_alembic_version_column():
+    """``alembic_version.version_num`` is VARCHAR(32).
+
+    A longer id applies its DDL and then fails writing the version row, but only on a
+    backend that enforces varchar length: SQLite truncates nothing and accepts it, so the
+    failure appears first on PostgreSQL, after the schema has already changed. Cheaper to
+    assert here.
+    """
+    too_long = {r.revision: len(r.revision) for r in history() if len(r.revision) > 32}
+
+    assert not too_long, f"revision ids exceed alembic_version.version_num: {too_long}"
+
+
+# --------------------------------------------------------------------------
+# 0003_indicator_map_overrides
+# --------------------------------------------------------------------------
+
+#: The columns 0003 adds, with the width each inherits from the indicator column it
+#: overrides.
+OVERRIDE_COLUMNS = {
+    "indicator_label_override": 250,
+    "indicator_reference_override": 100,
+    "benchmark_override": None,
+    "benchmark_unit_override": 20,
+}
+
+
+def _link_columns(engine: sa.Engine) -> dict[str, dict]:
+    return {c["name"]: c for c in sa.inspect(engine).get_columns("report_indicator_map")}
+
+
+def _seed_one_link(engine: sa.Engine) -> None:
+    """Insert the rows a report-indicator link needs, as a pre-0003 database would hold them."""
+    with engine.begin() as connection:
+        connection.execute(
+            sa.text(
+                "insert into measure (measure_id, name, combination, person_ep_override) "
+                "values (0, 'Full report cohort', 'rule_or', 0)"
+            )
+        )
+        connection.execute(
+            sa.text(
+                "insert into indicator "
+                "(indicator_id, indicator_description, numerator_measure_id, denominator_measure_id) "
+                "values (1, 'Presented at MDT meeting', 0, 0)"
+            )
+        )
+        connection.execute(
+            sa.text(
+                "insert into report (report_id, report_name, report_short_name, report_description, "
+                "report_create_date, report_edit_date, report_author) "
+                "values (1, 'Lung Cancer MDT', 'lung_mdt', 'd', '2024-05-15', '2024-05-15', 'GK')"
+            )
+        )
+        connection.execute(
+            sa.text("insert into report_indicator_map (report_id, indicator_id) values (1, 1)")
+        )
+
+
+def test_override_columns_arrive_only_with_the_revision(sqlite_engine):
+    upgrade(sqlite_engine, "0002_report_date_columns")
+
+    assert not OVERRIDE_COLUMNS.keys() & _link_columns(sqlite_engine).keys()
+
+    upgrade(sqlite_engine, "head")
+    columns = _link_columns(sqlite_engine)
+
+    assert OVERRIDE_COLUMNS.keys() <= columns.keys()
+    for name, width in OVERRIDE_COLUMNS.items():
+        assert columns[name]["nullable"], f"{name} must be nullable so NULL can mean inherit"
+        if width is not None:
+            assert columns[name]["type"].length == width
+
+
+def test_existing_links_inherit_after_the_revision(sqlite_engine):
+    """Applying 0003 must change no rendered output: every existing link inherits."""
+    upgrade(sqlite_engine, "0002_report_date_columns")
+    _seed_one_link(sqlite_engine)
+
+    upgrade(sqlite_engine, "head")
+
+    with sqlite_engine.connect() as connection:
+        row = connection.execute(sa.text("select * from report_indicator_map")).mappings().one()
+
+    assert [row[name] for name in OVERRIDE_COLUMNS] == [None] * len(OVERRIDE_COLUMNS)
+
+
+def test_overrides_round_trip(sqlite_engine):
+    upgrade(sqlite_engine, "head")
+    _seed_one_link(sqlite_engine)
+
+    with sqlite_engine.begin() as connection:
+        connection.execute(
+            sa.text(
+                "update report_indicator_map set "
+                "indicator_label_override = 'Presented at Lung MDT meeting', "
+                "indicator_reference_override = 'LUCAP 3.1', "
+                "benchmark_override = 85, "
+                "benchmark_unit_override = 'percent'"
+            )
+        )
+
+    with sqlite_engine.connect() as connection:
+        row = connection.execute(sa.text("select * from report_indicator_map")).mappings().one()
+
+    assert row["indicator_label_override"] == "Presented at Lung MDT meeting"
+    assert row["indicator_reference_override"] == "LUCAP 3.1"
+    assert row["benchmark_override"] == 85
+    assert row["benchmark_unit_override"] == "percent"
+
+
+def test_revision_downgrades_and_keeps_the_link(sqlite_engine):
+    """The columns go; the link they hung off does not."""
+    upgrade(sqlite_engine, "head")
+    _seed_one_link(sqlite_engine)
+
+    downgrade(sqlite_engine, "0002_report_date_columns")
+
+    assert not OVERRIDE_COLUMNS.keys() & _link_columns(sqlite_engine).keys()
+    with sqlite_engine.connect() as connection:
+        assert connection.execute(sa.text("select * from report_indicator_map")).all() == [(1, 1)]
+
+
+def test_migrated_schema_is_clean_at_the_new_head(sqlite_engine):
+    upgrade(sqlite_engine, "head")
+    result = check_schema(sqlite_engine)
+
+    assert current_revision(sqlite_engine) == head_revision()
+    assert result.is_clean, [str(c) for c in result.sorted_changes()]
+
+
+def test_the_revision_renders_offline(sqlite_engine):
+    """``copy_from`` exists so ``schema sql`` works without reflecting the live table."""
+    upgrade(sqlite_engine, "0002_report_date_columns")
+
+    sql = upgrade_sql(sqlite_engine, revision="head")
+
+    for name in OVERRIDE_COLUMNS:
+        assert f"ADD COLUMN {name}" in sql
 
 
 def test_upgrade_sql_emits_ddl_without_touching_the_database(sqlite_engine):

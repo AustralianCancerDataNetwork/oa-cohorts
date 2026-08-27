@@ -31,6 +31,15 @@ Read commands — `report-summary`, `indicator-summary`, `measure-summary` — p
 
 If a command fails with a database error regardless, the error is re-checked against the live schema and any mismatch reported as the likely cause, so a bare `no such column: report.report_owner` arrives with an explanation.
 
+## What an import does to a column your CSV does not have
+
+`import-config` upserts on primary key: a row whose non-key columns differ from the stored row is updated. Two rules govern the columns a file omits, and they matter most for `report_indicator_map`, whose override values are authored by hand and cannot be regenerated from anything.
+
+* **A column absent from the CSV is left alone.** The file has no opinion about it, so the stored value stands and the row does not count as replaced. 
+* **A column present but empty is set to `NULL`.** That is an instruction, and it is how a value is deliberately cleared through the transport.
+
+The distinction is the difference between "this export predates the column" and "this export wants the column cleared", which a plain empty-vs-missing comparison cannot tell apart. Before it existed, a narrow CSV imported against a database holding overrides emitted `UPDATE report_indicator_map SET  WHERE ...` — a bare SQL syntax error rather than either outcome.
+
 ## Enum values are not checked
 
 `schema check` uses Alembic's comparison, which inspects column types but never the set of values an existing enum accepts. Adding a member to `RuleTemporality`, or to any other rule enum, produces no revision and no warning — it fails when a row using the new value is written.
@@ -63,6 +72,10 @@ upgrade(engine)                                  # bring it to the current head
 revise(engine, "add referral temporality")
 ```
 Do not edit `0001_baseline.py` to track model changes. It is a frozen snapshot of the schema at the point migrations were introduced, and `schema check` reporting clean depends on it staying in step with the models it describes.
+Notes:
+
+* **Keep the revision id inside 32 characters.** `alembic_version.version_num` is `VARCHAR(32)`. A longer id applies its DDL and *then* fails writing the version row — and only on Postgres, since SQLite does not enforce varchar length. The result is a database whose schema has changed but whose recorded revision has not. `test_revision_ids_fit_the_alembic_version_column` guards this.
+* **`copy_from` needs the table as it is *before* the direction being run.** A revision that adds columns and drops them again needs two frozen shapes, not one: batch mode drops columns from the description it was given, so handing `downgrade` the pre-add shape fails with `KeyError` on the first column it cannot find. 
 
 ## Adopting a database older than the models
 

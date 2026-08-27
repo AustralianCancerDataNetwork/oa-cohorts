@@ -8,7 +8,7 @@ import sqlalchemy.orm as so
 from oa_cohorts.query.dash_cohort import DashCohortDef
 from oa_cohorts.query.indicator import Indicator
 from oa_cohorts.query.measure import Measure, MeasureRelationship
-from oa_cohorts.query.report import Report
+from oa_cohorts.query.report import Report, ReportIndicatorMap
 
 
 @dataclass(frozen=True)
@@ -103,7 +103,7 @@ def _load_indicator_usages(
                 Indicator.denominator_measure_id == measure_id,
             )
         )
-        .options(so.selectinload(Indicator.in_reports))
+        .options(so.selectinload(Indicator.report_links).selectinload(ReportIndicatorMap.report))
         .order_by(Indicator.indicator_id)
     )
     indicators = session.execute(stmt).scalars().unique().all()
@@ -111,17 +111,28 @@ def _load_indicator_usages(
     numerator: list[str] = []
     denominator: list[str] = []
     for indicator in indicators:
-        reports = ", ".join(
-            sorted(f"{report.report_name} ({report.report_short_name})" for report in indicator.in_reports)
-        )
-        report_suffix = f" [{reports}]" if reports else ""
-        label = f"{indicator.indicator_id}: {indicator.indicator_description}{report_suffix}"
+        label = f"{indicator.indicator_id}: {indicator.indicator_description}{_report_suffix(indicator)}"
         if indicator.numerator_measure_id == measure_id:
             numerator.append(label)
         if indicator.denominator_measure_id == measure_id:
             denominator.append(label)
 
     return tuple(numerator), tuple(denominator)
+
+
+def _report_suffix(indicator: Indicator) -> str:
+    entries = []
+    for link in indicator.report_links:
+        if link.report is None:
+            continue
+        entry = f"{link.report.report_name} ({link.report.report_short_name})"
+        if link.indicator_label_override is not None:
+            entry += f' as "{link.indicator_label_override}"'
+        entries.append(entry)
+
+    if not entries:
+        return ""
+    return f" [{', '.join(sorted(entries))}]"
 
 
 def _load_cohort_definition_usages(

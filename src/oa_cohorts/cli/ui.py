@@ -25,7 +25,12 @@ from ..schema import (
     SchemaCheckResult,
 )
 from .config_import import ImportProgressEvent, TableImportResult
-from .indicator_summary import IndicatorDetailSummary, IndicatorSummary, MeasureSummary
+from .indicator_summary import (
+    IndicatorDetailSummary,
+    IndicatorSummary,
+    MeasureSummary,
+    ReportPresentation,
+)
 from .measure_summary import MeasureDetailSummary
 from .report_summary import ReportSummary
 
@@ -497,15 +502,39 @@ def render_indicator_summaries(
     return table
 
 
+def _render_report_presentations(presentations: tuple[ReportPresentation, ...]) -> Table | str:
+    if not any(item.overridden for item in presentations):
+        return ", ".join(f"{i.report_name} ({i.report_short_name})" for i in presentations) or "-"
+
+    table = Table(box=box.SIMPLE, header_style="bold", pad_edge=False, show_edge=False)
+    table.add_column("Report")
+    table.add_column("Label")
+    table.add_column("Reference")
+    table.add_column("Benchmark")
+    table.add_column("Overrides")
+
+    for item in presentations:
+        table.add_row(
+            f"{item.report_name} ({item.report_short_name})",
+            item.label,
+            item.reference or "-",
+            item.benchmark_summary,
+            ", ".join(item.overridden) or "inherits",
+        )
+
+    return table
+
+
 def render_indicator_detail_summary(summary: IndicatorDetailSummary) -> Panel:
     grid = Table.grid(padding=(0, 2))
     grid.add_column(style="bold cyan")
     grid.add_column()
     grid.add_row("ID", str(summary.indicator_id))
+    # Canonical, not report-resolved: this view spans every report the indicator is in.
     grid.add_row("Description", summary.description)
     grid.add_row("Reference", summary.reference or "-")
-    grid.add_row("Reports", ", ".join(summary.report_memberships) or "-")
     grid.add_row("Benchmark", summary.benchmark_summary)
+    grid.add_row("Reports", _render_report_presentations(summary.presentations))
     grid.add_row("Numerator", _render_measure_summary(summary.numerator_measure))
     grid.add_row("Denominator", _render_measure_summary(summary.denominator_measure))
     return Panel.fit(grid, title="[bold]Indicator Summary[/bold]", border_style="green")

@@ -26,6 +26,7 @@ from oa_cohorts.schema import (
     check_schema,
     create_owned_tables,
     current_revision,
+    downgrade,
     head_revision,
     is_uninitialised,
     owned_table_names,
@@ -360,3 +361,124 @@ def test_0002_preserves_the_stored_dates(pg_engine):
             sa.text("SELECT report_create_date, report_edit_date FROM report WHERE report_id = 1")
         ).one()
     assert [str(value) for value in row] == ["2026-03-04", "2026-03-05"]
+
+
+# --------------------------------------------------------------------------
+# 0003_indicator_map_overrides
+# --------------------------------------------------------------------------
+
+#: Column name -> (data_type, character_maximum_length) it must land as. Lengths are
+#: included because they are load-bearing: each override has to hold whatever the
+#: indicator column it overrides can hold. ``_column_types`` reports ``data_type`` alone,
+#: so this section reads the width itself.
+OVERRIDE_COLUMN_TYPES = {
+    "indicator_label_override": ("character varying", 250),
+    "indicator_reference_override": ("character varying", 100),
+    "benchmark_override": ("integer", None),
+    "benchmark_unit_override": ("character varying", 20),
+}
+
+
+def _column_types_with_widths(engine: sa.Engine, table: str) -> dict[str, tuple[str, int | None]]:
+    with engine.connect() as connection:
+        rows = connection.execute(
+            sa.text(
+                "SELECT column_name, data_type, character_maximum_length "
+                "FROM information_schema.columns "
+                "WHERE table_name = :t AND table_schema = 'public'"
+            ),
+            {"t": table},
+        ).all()
+    return {name: (data_type, width) for name, data_type, width in rows}
+
+
+def _seed_one_link(engine: sa.Engine) -> None:
+    """A report-indicator link as a pre-0003 database would hold it.
+
+    ``rule_or`` rather than ``or``: the combination column is a native enum here, and its
+    labels are the enum member names.
+    """
+    with engine.begin() as connection:
+        connection.execute(
+            sa.text(
+                "INSERT INTO measure (measure_id, name, combination, person_ep_override) "
+                "VALUES (0, 'Full report cohort', 'rule_or', false)"
+            )
+        )
+        connection.execute(
+            sa.text(
+                "INSERT INTO indicator (indicator_id, indicator_description, "
+                "numerator_measure_id, denominator_measure_id) "
+                "VALUES (1, 'Presented at MDT meeting', 0, 0)"
+            )
+        )
+        connection.execute(
+            sa.text(
+                "INSERT INTO report (report_id, report_name, report_short_name, "
+                "report_description, report_create_date, report_edit_date, report_author) "
+                "VALUES (1, 'Lung Cancer MDT', 'lung_mdt', 'd', '2024-05-15', '2024-05-15', 'GK')"
+            )
+        )
+        connection.execute(
+            sa.text("INSERT INTO report_indicator_map (report_id, indicator_id) VALUES (1, 1)")
+        )
+
+
+def test_0003_adds_the_override_columns_with_the_right_types(pg_engine):
+    """Widths are load-bearing: each override must hold whatever its canonical column holds."""
+    upgrade(pg_engine, "0002_report_date_columns")
+    before = _column_types_with_widths(pg_engine, "report_indicator_map")
+    assert not OVERRIDE_COLUMN_TYPES.keys() & before.keys()
+
+    upgrade(pg_engine, "head")
+
+    types = _column_types_with_widths(pg_engine, "report_indicator_map")
+    assert {name: types[name] for name in OVERRIDE_COLUMN_TYPES} == OVERRIDE_COLUMN_TYPES
+    assert current_revision(pg_engine) == head_revision()
+    assert check_schema(pg_engine).is_clean
+
+
+def test_0003_records_its_revision(pg_engine):
+    """A revision id longer than ``alembic_version.version_num`` applies its DDL and then
+    fails on the version write -- and only here, because SQLite does not enforce the width.
+    """
+    upgrade(pg_engine, "head")
+
+    with pg_engine.connect() as connection:
+        stored = connection.execute(sa.text("SELECT version_num FROM alembic_version")).scalar_one()
+
+    assert stored == head_revision()
+
+
+def test_0003_leaves_existing_links_inheriting(pg_engine):
+    upgrade(pg_engine, "0002_report_date_columns")
+    _seed_one_link(pg_engine)
+
+    upgrade(pg_engine, "head")
+
+    with pg_engine.connect() as connection:
+        row = connection.execute(
+            sa.text("SELECT * FROM report_indicator_map WHERE report_id = 1")
+        ).mappings().one()
+    assert [row[name] for name in OVERRIDE_COLUMN_TYPES] == [None] * len(OVERRIDE_COLUMN_TYPES)
+
+
+def test_0003_downgrade_drops_the_columns_and_keeps_the_link(pg_engine):
+    upgrade(pg_engine, "head")
+    _seed_one_link(pg_engine)
+    with pg_engine.begin() as connection:
+        connection.execute(
+            sa.text(
+                "UPDATE report_indicator_map SET indicator_label_override = "
+                "'Presented at Lung MDT meeting' WHERE report_id = 1"
+            )
+        )
+
+    downgrade(pg_engine, "0002_report_date_columns")
+
+    types = _column_types_with_widths(pg_engine, "report_indicator_map")
+    assert not OVERRIDE_COLUMN_TYPES.keys() & types.keys()
+    with pg_engine.connect() as connection:
+        assert connection.execute(
+            sa.text("SELECT report_id, indicator_id FROM report_indicator_map")
+        ).all() == [(1, 1)]

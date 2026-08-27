@@ -1,6 +1,6 @@
 from ..output.query_plan import MeasureNode, QueryNode, QueryPlan, SubqueryNode
 from .dash_cohort import DashCohort, DashCohortDef, dash_cohort_def_map
-from .indicator import Indicator, report_indicator_map
+from .indicator import Indicator
 from .measure import Measure, MeasureRelationship, MeasureTemporalWindow
 from .phenotype import Phenotype, PhenotypeDefinition
 from .query_rule import (
@@ -13,7 +13,7 @@ from .query_rule import (
     ScalarRule,
     SubstringRule,
 )
-from .report import Report, ReportCohortMap
+from .report import Report, ReportCohortMap, ReportIndicatorMap
 from .subquery import Subquery, subquery_rule_map
 
 __all__ = [
@@ -36,11 +36,11 @@ __all__ = [
     "QueryRule",
     "Report",
     "ReportCohortMap",
+    "ReportIndicatorMap",
     "ScalarRule",
     "Subquery",
     "SubqueryNode",
     "SubstringRule",
     "dash_cohort_def_map",
-    "report_indicator_map",
     "subquery_rule_map",
 ]

@@ -5,11 +5,11 @@ Examples
 
 Build a SQLite file containing the dashboard tables and vocabulary::
 
-    python import_to_sqlite.py 20260827 --output dash.db
+    python import_to_sqlite.py 20260827_post_migration --output dash.db
 
 Build a dashboard-only SQLite file::
 
-    python import_to_sqlite.py 20260827 --output dashboard.db --dashboard-only
+    python import_to_sqlite.py 20260827_post_migration --output dashboard.db --dashboard-only
 
 """
 
@@ -28,6 +28,16 @@ import sqlalchemy as sa
 
 CONFIG_ROOT = Path(__file__).resolve().parent
 
+#: Bundle schema versions this script understands.
+#:
+#: 1 -- the original shape.
+#: 2 -- an indicator's report refs may carry per-report label, reference and benchmark
+#:      overrides, and ``report_indicator_map.csv`` may carry the matching columns. A v2
+#:      bundle whose indicators have no overrides is identical to a v1 bundle, so both
+#:      import the same way and there is nothing to branch on here -- the range exists so a
+#:      future version is refused loudly instead of importing as though it were understood.
+SUPPORTED_BUNDLE_SCHEMA_VERSIONS = frozenset({1, 2})
+
 
 def _find_bundle(config_dir: Path) -> Path:
     bundles = sorted(
@@ -44,6 +54,15 @@ def _find_bundle(config_dir: Path) -> Path:
         payload = json.loads(bundle.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError(f"Could not read config bundle {bundle}: {exc}") from exc
+
+    schema_version = payload.get("schema_version")
+    if schema_version not in SUPPORTED_BUNDLE_SCHEMA_VERSIONS:
+        supported = ", ".join(str(item) for item in sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS))
+        raise ValueError(
+            f"Config bundle {bundle} has schema_version {schema_version!r}; "
+            f"this script supports {supported}. A newer bundle may carry columns this "
+            "oa-cohorts cannot create, so it is refused rather than half-imported."
+        )
 
     scope = payload.get("scope")
     if (
@@ -187,6 +206,30 @@ def _resolve_configured_engines(
     return dashboard_engine, cdm_engine
 
 
+def _stamp_schema_head(engine: sa.Engine) -> str | None:
+    """Record the built schema at the Alembic head, and confirm it really matches.
+
+    ``check_schema`` first: stamping a schema that does not match the models would make the
+    mismatch permanent and invisible, which is the same reason ``schema bootstrap`` refuses
+    to adopt a drifted database. Here it should never fail -- the tables were just created
+    from those models -- so a failure means the models and the migrations disagree, and
+    saying so beats stamping regardless.
+    """
+    from oa_cohorts.schema import check_schema, head_revision, stamp
+
+    result = check_schema(engine)
+    if not result.is_clean:
+        differences = "; ".join(str(change) for change in result.sorted_changes())
+        raise RuntimeError(
+            "Refusing to stamp a schema that does not match the models. The tables were "
+            f"created from those models, so this indicates a packaging problem: {differences}"
+        )
+
+    revision = head_revision()
+    stamp(engine, revision)
+    return revision
+
+
 def import_bundle(
     subfolder_name: str,
     output_path: str | Path = "dash.db",
@@ -261,12 +304,19 @@ def import_bundle(
                     create_tables=True,
                 )
 
+            # create_tables built the schema from the current models, so it already matches
+            # head -- but with no alembic_version row every schema command would read it as
+            # unmanaged and refuse to upgrade it. Stamping records what was actually built.
+            revision = _stamp_schema_head(dashboard_engine)
+
             counts: dict[str, dict[str, int]] = {
                 "dashboard": {
                     result.table_name: result.inserted_rows + result.replaced_rows
                     for result in config_results
                 }
             }
+            if revision is not None:
+                print(f"stamped schema revision: {revision}")
 
             if cdm_engine is not None:
                 from omop_alchemy.maintenance.cli_vocab import load_vocab_source
