@@ -8,5 +8,40 @@ on:
 jobs:
   label-gate:
     uses: AustralianCancerDataNetwork/cava-devops/.github/workflows/label-gate.yml@main
-  build-test:
+  build-test-sqlite:
     uses: AustralianCancerDataNetwork/cava-devops/.github/workflows/build-test.yml@main
+    with:
+      ty-src: src/oa_cohorts
+  build-test-postgres:
+    uses: AustralianCancerDataNetwork/cava-devops/.github/workflows/build-test-postgres.yml@main
+    with:
+      ty-src: src/oa_cohorts
+      postgres-db: oa_cohorts_ci
+      setup-commands: |
+        uv run omop-config connections add ci_pg \
+          --dialect postgresql+psycopg \
+          --host localhost \
+          --port 5432 \
+          --user test \
+          --password test \
+          --database-name oa_cohorts_ci \
+          --test-only false
+        uv run omop-config connections add ci_pg_test \
+          --dialect postgresql+psycopg \
+          --host localhost \
+          --port 5432 \
+          --user test \
+          --password test \
+          --database-name oa_cohorts_test_ci \
+          --test-only true
+        uv run omop-config databases add dashboard_db \
+          --kind generic \
+          --connection ci_pg \
+          --schema-name public
+        uv run omop-config databases add test_dashboard_db \
+          --kind generic \
+          --connection ci_pg_test \
+          --schema-name public
+        uv run omop-config configure oa_cohorts \
+          --dashboard-db dashboard_db \
+          --test-dashboard-db test_dashboard_db

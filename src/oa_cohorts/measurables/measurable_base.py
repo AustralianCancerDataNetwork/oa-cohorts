@@ -6,11 +6,18 @@ from dataclasses import dataclass
 from typing import Any, ClassVar, TypeAlias
 
 import sqlalchemy as sa
+from sqlalchemy.orm.attributes import QueryableAttribute
 from sqlalchemy.sql import ColumnElement
 
 from ..core import RuleTarget, RuleTemporality
 
 SQLCol: TypeAlias = sa.Column[Any] | ColumnElement[Any]
+
+#: What a measurable spec is allowed to name. ``QueryableAttribute`` covers the
+#: mapped-class case (``SomeMV.person_id``); ``ColumnElement`` covers plain Core
+#: columns and hand-built SQL expressions, which the derived window measurables
+#: and the test fixtures both use.
+_COLUMN_LIKE: tuple[type, ...] = (QueryableAttribute, ColumnElement)
 
 class MeasurableDomain(str, enum.Enum):
     dx = "dx"
@@ -45,6 +52,36 @@ class MeasurableSpec:
     temporality_map: Mapping[RuleTemporality, str] | None = None
     valid_targets: set[RuleTarget] | None = None
 
+    def _resolve(self, cls: type[Any], field: str, attr: str) -> SQLCol:
+        """Resolve one declared attribute name to a column on ``cls``.
+
+        Both failure modes are caught here rather than downstream. A name that
+        does not exist is obvious enough on its own, but a name that resolves to
+        a method or a plain value binds silently and only fails much later when
+        the query builder calls ``.label()`` on it — a long way from the
+        declaration that caused it.
+        """
+        try:
+            resolved = getattr(cls, attr)
+        except AttributeError:
+            available = sorted(
+                name for name in dir(cls)
+                if not name.startswith("_") and isinstance(getattr(cls, name, None), _COLUMN_LIKE)
+            )
+            raise AttributeError(
+                f"{cls.__name__}.__measurable__ declares {field}={attr!r}, "
+                f"which is not an attribute of {cls.__name__}. "
+                f"Available columns: {', '.join(available) or '(none)'}"
+            ) from None
+
+        if not isinstance(resolved, _COLUMN_LIKE):
+            raise TypeError(
+                f"{cls.__name__}.__measurable__ declares {field}={attr!r}, which resolves to "
+                f"{type(resolved).__name__} rather than a column. Measurable specs must name "
+                "mapped columns or SQL expressions."
+            )
+        return resolved
+
     def bind(self, cls: type[Any]) -> BoundMeasurableSpec:
         """
         Resolve declared attribute names against a concrete measurable class.
@@ -53,20 +90,36 @@ class MeasurableSpec:
         with synthetic SQL expressions. Downstream query logic must therefore
         explicitly check whether a measurable supports concept, numeric, string,
         or predicate filtering before building the corresponding rule.
+
+        Called from ``MeasurableBase.__init_subclass__``, so every declared
+        measurable is validated at import time rather than when a report first
+        tries to compile it.
         """
         return BoundMeasurableSpec(
             domain=self.domain,
             label=self.label,
-            episode_id_col=getattr(cls, self.episode_id_attr),
-            person_id_col=getattr(cls, self.person_id_attr),
-            event_date_col=getattr(cls, self.event_date_attr),
-            value_numeric_col=getattr(cls, self.value_numeric_attr) if self.value_numeric_attr else None,
-            value_concept_col=getattr(cls, self.value_concept_attr) if self.value_concept_attr else None,
-            value_string_col=getattr(cls, self.value_string_attr) if self.value_string_attr else None,
-            value_predicate_col=getattr(cls, self.value_predicate_attr) if self.value_predicate_attr else None,
+            episode_id_col=self._resolve(cls, "episode_id_attr", self.episode_id_attr),
+            person_id_col=self._resolve(cls, "person_id_attr", self.person_id_attr),
+            event_date_col=self._resolve(cls, "event_date_attr", self.event_date_attr),
+            value_numeric_col=(
+                self._resolve(cls, "value_numeric_attr", self.value_numeric_attr)
+                if self.value_numeric_attr else None
+            ),
+            value_concept_col=(
+                self._resolve(cls, "value_concept_attr", self.value_concept_attr)
+                if self.value_concept_attr else None
+            ),
+            value_string_col=(
+                self._resolve(cls, "value_string_attr", self.value_string_attr)
+                if self.value_string_attr else None
+            ),
+            value_predicate_col=(
+                self._resolve(cls, "value_predicate_attr", self.value_predicate_attr)
+                if self.value_predicate_attr else None
+            ),
             temporality_map={
-                k: getattr(cls, v)
-                for k, v in (self.temporality_map or {}).items()
+                temporality: self._resolve(cls, f"temporality_map[{temporality.name}]", attr)
+                for temporality, attr in (self.temporality_map or {}).items()
             },
             valid_targets=self.valid_targets,
         )

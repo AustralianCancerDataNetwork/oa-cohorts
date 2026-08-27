@@ -8,7 +8,7 @@ import sqlalchemy.orm as so
 from orm_loader.helpers import Base
 from typer.testing import CliRunner
 
-from oa_cohorts.cli import app, main
+from oa_cohorts.cli import app, main, runtime
 from oa_cohorts.cli.config_import import (
     CONFIG_IMPORT_SPECS,
     _clean_row,
@@ -494,11 +494,11 @@ def test_cli_main_imports_configs_using_package_config_engine(monkeypatch, tmp_p
     config_dir = _build_config_dir(tmp_path / "config")
     database_path = tmp_path / "config.db"
 
-    def fake_get_engine(cls, **engine_kwargs):
+    def fake_get_engine(**engine_kwargs):
         return sa.create_engine(f"sqlite:///{database_path}", **engine_kwargs)
 
     monkeypatch.delenv("ENGINE", raising=False)
-    monkeypatch.setattr(OaCohortsConfig, "get_engine", classmethod(fake_get_engine))
+    monkeypatch.setattr(runtime, "create_dashboard_engine", fake_get_engine)
 
     status = main(
         [
@@ -590,11 +590,11 @@ def test_report_summary_cli_reports_when_schema_has_not_been_loaded(tmp_path):
 
 
 def test_report_summary_cli_renders_runtime_config_error(monkeypatch):
-    def _raise_not_found(cls, **engine_kwargs):
+    def _raise_not_found(**engine_kwargs):
         raise FileNotFoundError("missing config")
 
     monkeypatch.delenv("ENGINE", raising=False)
-    monkeypatch.setattr(OaCohortsConfig, "get_engine", classmethod(_raise_not_found))
+    monkeypatch.setattr(runtime, "create_dashboard_engine", _raise_not_found)
 
     runner = CliRunner()
     result = runner.invoke(app, ["report-summary"])

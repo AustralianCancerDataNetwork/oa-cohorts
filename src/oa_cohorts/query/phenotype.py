@@ -62,9 +62,6 @@ class Phenotype(HTMLRenderable, Base):
 
 class PhenotypeDefinition(HTMLRenderable, Base):
     __tablename__ = 'phenotype_definition'
-    __table_args__ = (
-        sa.UniqueConstraint("phenotype_id", "query_concept_id"),
-    )
 
     phenotype_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('phenotype.phenotype_id'), primary_key=True)
     id = so.synonym('phenotype_id')

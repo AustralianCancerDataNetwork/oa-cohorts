@@ -238,3 +238,8 @@ notebooks/
 docker/
 .dockerignore
 *.db
+
+# Keep dashboard exports local, but track the vocabulary subset exporter.
+!dash_config/
+dash_config/*
+!dash_config/export_vocab_subset.py
