@@ -3,8 +3,10 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
+import sqlalchemy as sa
 import sqlalchemy.orm as so
 
+from ..errors import reraise_schema_error
 from ..query.measure import MeasureExecutor, MeasureMember
 from ..query.report import Report
 from .person_demography import DemographyFilter
@@ -86,7 +88,11 @@ class ReportRunner:
             restrict_to_person_ids=cohort_person_ids
         )
 
-        self._demography_rows = self.db.execute(stmt).scalars().all()
+        try:
+            self._demography_rows = self.db.execute(stmt).scalars().all()
+        except sa.exc.DBAPIError as exc:
+            reraise_schema_error(exc, context=f"Report '{self.report.report_short_name}' demography lookup")
+            raise
         return self._demography_rows
 
     def collect_report_cohort_members(self) -> list[MeasureMember]:

@@ -9,6 +9,7 @@ import sqlalchemy.orm as so
 from orm_loader.helpers import Base
 
 from ..core import ResultDateSource, RuleCombination, WindowPickStrategy
+from ..errors import MissingMaterializedViewError, reraise_schema_error
 from ..core.executability import ExecStatus, MeasureExecCheck
 from ..core.html_utils import (
     HTMLChild,
@@ -738,7 +739,11 @@ class MeasureExecutor:
             sq = sql.subquery()
             sql = sa.select(sq).where(sq.c.person_id.in_(people))
 
-        rows = self.db.execute(sql).all()
+        try:
+            rows = self.db.execute(sql).all()
+        except sa.exc.DBAPIError as exc:
+            reraise_schema_error(exc, context=f"Measure '{measure.name}' (ID {measure.measure_id})")
+            raise
         rows_typed = [MeasureMember.from_row(r) for r in rows]
         self._cache[measure.measure_id] = rows_typed
         measure._members = rows_typed

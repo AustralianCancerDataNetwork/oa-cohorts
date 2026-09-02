@@ -9,7 +9,9 @@ from oa_cohorts.measurables.measurable_base import (
     MeasurableDomain,
     MeasurableSpec,
 )
-from oa_cohorts.query.measure import MeasureExecutor, MeasureSQLCompiler
+from oa_cohorts import errors as errors_module
+from oa_cohorts.query.measure import MeasureExecutor, MeasureSQLCompiler, MissingMaterializedViewError
+from tests.db_error_helpers import fake_undefined_table_error
 from oa_cohorts.query.query_rule import ScalarRule
 from oa_cohorts.query.subquery import Subquery
 
@@ -50,6 +52,37 @@ def test_measure_members_without_execution(db, measure_leaf):
 
     with pytest.raises(RuntimeError, match="has not been executed"):
         executor.members(measure_leaf)
+
+
+def test_measure_execute_raises_missing_materialized_view_error(db, measure_leaf, monkeypatch):
+    def raise_undefined_table(stmt):
+        raise fake_undefined_table_error("primary_diagnosis_condition_mv")
+
+    monkeypatch.setattr(db, "execute", raise_undefined_table)
+    monkeypatch.setattr(
+        errors_module, "_classify_relation", lambda name: MissingMaterializedViewError
+    )
+
+    executor = MeasureExecutor(db)
+
+    with pytest.raises(MissingMaterializedViewError, match="primary_diagnosis_condition_mv") as exc_info:
+        executor.execute(measure_leaf)
+
+    assert exc_info.value.relation_name == "primary_diagnosis_condition_mv"
+    assert "leaf" in exc_info.value.context
+
+
+def test_measure_execute_reraises_undefined_table_for_unknown_relation(db, measure_leaf, monkeypatch):
+    def raise_undefined_table(stmt):
+        raise fake_undefined_table_error("some_other_table")
+
+    monkeypatch.setattr(db, "execute", raise_undefined_table)
+    monkeypatch.setattr(errors_module, "_classify_relation", lambda name: None)
+
+    executor = MeasureExecutor(db)
+
+    with pytest.raises(sa.exc.ProgrammingError):
+        executor.execute(measure_leaf)
 
 
 def test_measure_executor_force_refresh(db, measure_leaf):
