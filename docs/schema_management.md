@@ -2,6 +2,21 @@
 
 The dashboard database holds the tables that describe reports, indicators, measures, subqueries, and rules. Those tables are versioned with Alembic, and `oa-cohorts schema` is the interface to them.
 
+## Rebuilding and refreshing clinical materialized views
+
+Clinical materialized views are defined by `omop-constructs` in the CDM database. The dashboard-table migrations described below manage report configuration tables; `oa-cohorts schema upgrade` does not replace those clinical view definitions.
+
+If source data changes while the view definition stays the same, refresh the affected views in dependency order and update their statistics. For an individual view, the operator commands are:
+
+```sql
+REFRESH MATERIALIZED VIEW schema_name.view_name;
+ANALYZE schema_name.view_name;
+```
+
+Replace the example schema and view names with the verified target. Installing a new package does not change definitions already stored in PostgreSQL, and a refresh uses the stored definition.
+
+If a definition changes, rebuild the affected views and their dependent objects during an approved maintenance window. Preserve their definitions, ownership, grants and custom indexes for restoration or rollback; drop dependents before the views they reference, then recreate in dependency order. **ANALYZE each populated view immediately after creating it**, before building its dependents. Check the release's rebuild scope and verify the report results before reopening report jobs.
+
 ## Getting started
 
 The current schema is the baseline. To bring a database under management:

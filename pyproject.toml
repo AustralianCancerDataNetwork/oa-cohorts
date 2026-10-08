@@ -10,9 +10,9 @@ requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.13",
     "oa-configurator>=1.2.1,<2",
-    "omop-constructs>=0.7.0,<1",
-    "omop-alchemy[postgres]>=1.1,<2",
-    "orm-loader>=1.1,<2",
+    "omop-constructs>=0.8.0,<1",
+    "omop-alchemy[postgres]>=1.2.1,<2",
+    "orm-loader>=1.2.0,<2",
     "rich>=13.0",
     "typer>=0.12",
 ]
