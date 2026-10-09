@@ -4,6 +4,7 @@ import re
 
 import psycopg.errors as pg_errors
 import sqlalchemy as sa
+from sqlalchemy.exc import DBAPIError
 
 _UNDEFINED_RELATION_RE = re.compile(r'relation "([^"]+)" does not exist')
 _UNDEFINED_COLUMN_RE = re.compile(r'column "([^"]+)" does not exist')
@@ -108,7 +109,7 @@ def _classify_relation(relation_name: str) -> type[MissingRelationError] | None:
     return None
 
 
-def reraise_schema_error(exc: sa.exc.DBAPIError, *, context: str) -> None:
+def reraise_schema_error(exc: DBAPIError, *, context: str) -> None:
     """Re-raise *exc* as a typed :class:`OaCohortsSchemaError` if it's a recognized case.
 
     Returns normally (does nothing) otherwise -- callers are expected to
