@@ -3,13 +3,14 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import date
+from graphlib import CycleError, TopologicalSorter
 
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 from orm_loader.helpers import Base
+from sqlalchemy.exc import DBAPIError
 
 from ..core import ResultDateSource, RuleCombination, WindowPickStrategy
-from ..errors import MissingMaterializedViewError, reraise_schema_error
 from ..core.executability import ExecStatus, MeasureExecCheck
 from ..core.html_utils import (
     HTMLChild,
@@ -20,8 +21,12 @@ from ..core.html_utils import (
     table,
     td,
 )
+from ..errors import (  # noqa: F401 -- compatible error re-export
+    MissingMaterializedViewError,
+    reraise_schema_error,
+)
 from .subquery import Subquery
-from .typing import COMBINATION_SQL, SQLQuery
+from .typing import COMBINATION_SQL, SQLQuery, _first_member_query
 
 
 @dataclass(frozen=True)
@@ -219,6 +224,7 @@ class Measure(HTMLRenderable, Base):
             assert cfg is not None
             min_d = _fmt_days_offset(cfg.window_min_days) if cfg.window_min_days is not None else "open"
             max_d = _fmt_days_offset(cfg.window_max_days) if cfg.window_max_days is not None else "open"
+            anchor = cfg.anchor_measure or self.subquery
             candidate_name = (
                 cfg.candidate_measure.name if cfg.candidate_measure else str(cfg.candidate_measure_id)
             )
@@ -226,7 +232,7 @@ class Measure(HTMLRenderable, Base):
                 "ID": self.measure_id,
                 "Name": self.name,
                 "Kind": RawHTML("<span class='badge temporal_window'>TEMPORAL WINDOW</span>"),
-                "Anchor": self.subquery.name if self.subquery else RawHTML("<i>missing</i>"),
+                "Anchor": anchor.name if anchor else RawHTML("<i>missing</i>"),
                 "Candidate": candidate_name,
                 "Window": f"{min_d} .. {max_d}",
                 "Pick": (cfg.window_pick_strategy or WindowPickStrategy.earliest).value,
@@ -258,11 +264,12 @@ class Measure(HTMLRenderable, Base):
             )
             return blocks
 
-        if self.is_temporal_window:
-            cfg = self.window_config
-            if self.subquery:
+        cfg = self.window_config
+        if cfg is not None:
+            anchor = cfg.anchor_measure or self.subquery
+            if anchor is not None:
                 blocks.append(RawHTML("<div class='subquery-section-title'>Anchor</div>"))
-                blocks.append(self.subquery)
+                blocks.append(anchor)
             if cfg and cfg.candidate_measure:
                 blocks.append(RawHTML("<div class='subquery-section-title'>Candidate</div>"))
                 blocks.append(cfg.candidate_measure)
@@ -396,6 +403,9 @@ class MeasureTemporalWindow(Base):
     measure_id: so.Mapped[int] = so.mapped_column(
         sa.ForeignKey("measure.measure_id"), primary_key=True
     )
+    anchor_measure_id: so.Mapped[int | None] = so.mapped_column(
+        sa.ForeignKey("measure.measure_id"), nullable=True
+    )
     candidate_measure_id: so.Mapped[int] = so.mapped_column(
         sa.ForeignKey("measure.measure_id"), nullable=False
     )
@@ -412,9 +422,68 @@ class MeasureTemporalWindow(Base):
     measure: so.Mapped[Measure] = so.relationship(
         "Measure", foreign_keys=[measure_id], back_populates="window_config"
     )
+    anchor_measure: so.Mapped[Measure | None] = so.relationship(
+        "Measure", foreign_keys=[anchor_measure_id]
+    )
     candidate_measure: so.Mapped[Measure] = so.relationship(
         "Measure", foreign_keys=[candidate_measure_id]
     )
+
+
+def _window_dependencies(measure: Measure) -> list[Measure]:
+    cfg = measure.window_config
+    if cfg is None:
+        raise ValueError(f"Measure {measure.measure_id} has no temporal-window configuration")
+    anchor = getattr(cfg, "anchor_measure", None)
+    if getattr(cfg, "anchor_measure_id", None) is not None and anchor is None:
+        raise ValueError(f"Measure {measure.measure_id} has a missing anchor measure")
+    if (measure.subquery is not None) == (anchor is not None):
+        raise ValueError(
+            f"Measure {measure.measure_id} requires exactly one anchor: subquery or measure"
+        )
+    if cfg.candidate_measure is None:
+        raise ValueError(f"Measure {measure.measure_id} has a missing candidate measure")
+    if (
+        cfg.window_min_days is not None
+        and cfg.window_max_days is not None
+        and cfg.window_min_days > cfg.window_max_days
+    ):
+        raise ValueError(f"Measure {measure.measure_id} has reversed window bounds")
+    return [cfg.candidate_measure] if anchor is None else [cfg.candidate_measure, anchor]
+
+
+def _temporal_anchor_query(measure: Measure, *, ep_override: bool) -> SQLQuery:
+    """Select the earliest date AFTER a measure anchor's own predicates run."""
+    anchor = getattr(measure.window_config, "anchor_measure", None)
+    if anchor is None:
+        subquery = measure.subquery
+        if subquery is None:
+            raise ValueError(f"Measure {measure.measure_id} has no temporal anchor subquery")
+        return subquery.get_subquery_first(ep_override=ep_override)
+    return _first_member_query(MeasureSQLCompiler(anchor).sql_any(ep_override=ep_override))
+
+
+def _validate_measure_dependencies(measure: Measure) -> None:
+    """Check anchor contracts and cycles without compiling SQL or executing CDM queries."""
+    nodes = {}
+    graph = {}
+    pending = [measure]
+    while pending:
+        node = pending.pop()
+        identity = id(node)
+        if identity in nodes:
+            continue
+        nodes[identity] = node
+        dependencies = list(node.children)
+        if node.is_temporal_window:
+            dependencies.extend(_window_dependencies(node))
+        graph[identity] = [id(dependency) for dependency in dependencies]
+        pending.extend(dependencies)
+    try:
+        tuple(TopologicalSorter(graph).static_order())
+    except CycleError as error:
+        cycle = [nodes[identity].measure_id for identity in error.args[1]]
+        raise ValueError(f"Measure dependency cycle: {cycle}") from error
 
 
 def _days_offset(n: int) -> sa.ColumnElement:
@@ -480,6 +549,7 @@ class MeasureSQLCompiler:
         ).subquery()
 
     def sql_any(self, *, ep_override: bool = False) -> SQLQuery:
+        _validate_measure_dependencies(self.measure)
         if self.measure.is_temporal_window:
             return self._sql_temporal_window_any(ep_override=ep_override)
         if self.measure.subquery is None and not self.measure.children:
@@ -499,13 +569,12 @@ class MeasureSQLCompiler:
         return self.sql_first(ep_override=ep_override)
 
     def sql_undated(self, *, ep_override: bool = False) -> SQLQuery:
+        _validate_measure_dependencies(self.measure)
         if self.measure.is_temporal_window:
             raise NotImplementedError(
                 f"Measure {self.measure.measure_id!r} ({self.measure.name!r}) is a "
                 "temporal_window measure and does not support undated output. "
-                "Temporal_window measures should only be used as leaves of rule_or "
-                "combination or as standalone numerator/denominator measures — "
-                "not inside AND-combination composites."
+                "Use the dated ANY or FIRST variants, including in dated composites."
             )
         if self.measure.subquery is None and not self.measure.children:
             raise ValueError(f"Measure {self.measure.measure_id} has no subquery and no children")
@@ -518,6 +587,7 @@ class MeasureSQLCompiler:
         return self._combine([c.sql_undated(ep_override=ep_override) for c in children])
 
     def sql_first(self, *, ep_override: bool = False) -> SQLQuery:
+        _validate_measure_dependencies(self.measure)
         if self.measure.is_temporal_window:
             return self._sql_temporal_window_first(ep_override=ep_override)
         if self.measure.subquery is None and not self.measure.children:
@@ -557,19 +627,8 @@ class MeasureSQLCompiler:
     def _sql_temporal_window_any(self, *, ep_override: bool = False) -> SQLQuery:
         cfg = self.measure.window_config
         assert cfg is not None
-        if cfg.candidate_measure is None:
-            raise ValueError(
-                f"Temporal window measure {self.measure.measure_id} references "
-                f"candidate_measure_id={cfg.candidate_measure_id} which could not be loaded."
-            )
-        if self.measure.subquery is None:
-            raise ValueError(
-                f"Temporal window measure {self.measure.measure_id} has no subquery (anchor)."
-            )
-
-        # Step 1: anchor — deduplicated to earliest row per resolver
         anchor_sq = self._normalise(
-            self.measure.subquery.get_subquery_first(ep_override=ep_override)
+            _temporal_anchor_query(self.measure, ep_override=ep_override)
         )
 
         # Step 2: candidate — all qualifying rows
@@ -669,13 +728,8 @@ class MeasureSQLCompiler:
         return _canonical(rn_sq).where(rn_sq.c._rn == 1)
 
     def _sql_temporal_window_first(self, *, ep_override: bool = False) -> SQLQuery:
-        inner = self._sql_temporal_window_any(ep_override=ep_override).subquery()
-        return sa.select(
-            inner.c.person_id,
-            inner.c.episode_id,
-            inner.c.measure_resolver,
-            sa.func.min(inner.c.measure_date).label("measure_date"),
-        ).group_by(inner.c.person_id, inner.c.episode_id, inner.c.measure_resolver)
+        return _first_member_query(self._sql_temporal_window_any(ep_override=ep_override))
+
 
 
 class MeasureExecutor:
@@ -741,7 +795,7 @@ class MeasureExecutor:
 
         try:
             rows = self.db.execute(sql).all()
-        except sa.exc.DBAPIError as exc:
+        except DBAPIError as exc:
             reraise_schema_error(exc, context=f"Measure '{measure.name}' (ID {measure.measure_id})")
             raise
         rows_typed = [MeasureMember.from_row(r) for r in rows]

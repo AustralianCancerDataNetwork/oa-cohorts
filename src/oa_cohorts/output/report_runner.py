@@ -3,8 +3,8 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
-import sqlalchemy as sa
 import sqlalchemy.orm as so
+from sqlalchemy.exc import DBAPIError
 
 from ..errors import reraise_schema_error
 from ..query.measure import MeasureExecutor, MeasureMember
@@ -90,7 +90,7 @@ class ReportRunner:
 
         try:
             self._demography_rows = self.db.execute(stmt).scalars().all()
-        except sa.exc.DBAPIError as exc:
+        except DBAPIError as exc:
             reraise_schema_error(exc, context=f"Report '{self.report.report_short_name}' demography lookup")
             raise
         return self._demography_rows

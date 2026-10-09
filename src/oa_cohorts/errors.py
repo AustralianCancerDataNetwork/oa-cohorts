@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 
 import psycopg.errors as pg_errors
-import sqlalchemy as sa
+from sqlalchemy.exc import DBAPIError
 
 _UNDEFINED_RELATION_RE = re.compile(r'relation "([^"]+)" does not exist')
 _UNDEFINED_COLUMN_RE = re.compile(r'column "([^"]+)" does not exist')
@@ -93,7 +93,7 @@ def _classify_relation(relation_name: str) -> type[MissingRelationError] | None:
         from omop_constructs.bootstrap import list_cdm_matview_names
 
         matview_names = list_cdm_matview_names()
-    except Exception:
+    except Exception:  # noqa: BLE001 -- classifier must not mask the original database error
         # Loading the full construct registry imports every registered CDM
         # construct module -- a heavier, more side-effecting operation than
         # the other two checks. If it fails for any reason, this classifier
@@ -108,7 +108,7 @@ def _classify_relation(relation_name: str) -> type[MissingRelationError] | None:
     return None
 
 
-def reraise_schema_error(exc: sa.exc.DBAPIError, *, context: str) -> None:
+def reraise_schema_error(exc: DBAPIError, *, context: str) -> None:
     """Re-raise *exc* as a typed :class:`OaCohortsSchemaError` if it's a recognized case.
 
     Returns normally (does nothing) otherwise -- callers are expected to

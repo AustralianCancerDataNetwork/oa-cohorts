@@ -9,7 +9,6 @@ from oa_cohorts.errors import (
     SchemaNotBootstrappedError,
     reraise_schema_error,
 )
-
 from tests.db_error_helpers import (
     fake_permission_denied_error,
     fake_undefined_column_error,

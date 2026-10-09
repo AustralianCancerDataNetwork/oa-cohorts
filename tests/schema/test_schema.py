@@ -243,11 +243,12 @@ def test_history_lists_every_revision_oldest_first():
         "0001_baseline",
         "0002_report_date_columns",
         "0003_indicator_map_overrides",
+        "0004_window_measure_anchor",
     ]
     assert revisions[0].down_revision is None
     assert not revisions[0].is_head
     assert revisions[-1].is_head
-    assert revisions[-1].down_revision == "0002_report_date_columns"
+    assert revisions[-1].down_revision == "0003_indicator_map_overrides"
 
 
 def test_revision_ids_fit_the_alembic_version_column():
@@ -528,3 +529,25 @@ def test_enum_label_changes_are_not_detected(sqlite_engine):
         assert check_schema(sqlite_engine).is_clean
     finally:
         column_type.enums = original
+
+
+def test_measure_anchor_upgrade_preserves_existing_windows(sqlite_engine):
+    upgrade(sqlite_engine, "0003_indicator_map_overrides")
+    with sqlite_engine.begin() as connection:
+        connection.execute(sa.text("INSERT INTO measure (measure_id,name,combination,person_ep_override) VALUES (1,'window','or',0),(2,'candidate','or',0)"))
+        connection.execute(sa.text("INSERT INTO measure_temporal_window (measure_id,candidate_measure_id,window_min_days,window_max_days,require_same_resolver) VALUES (1,2,0,14,1)"))
+    upgrade(sqlite_engine)
+    with sqlite_engine.connect() as connection:
+        assert tuple(connection.execute(sa.text("SELECT anchor_measure_id,candidate_measure_id,window_min_days,window_max_days FROM measure_temporal_window")).one()) == (None,2,0,14)
+    downgrade(sqlite_engine, "0003_indicator_map_overrides")
+    assert "anchor_measure_id" not in {c["name"] for c in sa.inspect(sqlite_engine).get_columns("measure_temporal_window")}
+
+
+def test_measure_anchor_downgrade_refuses_config_loss(sqlite_engine):
+    upgrade(sqlite_engine)
+    with sqlite_engine.begin() as connection:
+        connection.execute(sa.text("INSERT INTO measure (measure_id,name,combination,person_ep_override) VALUES (1,'window','or',0),(2,'candidate','or',0)"))
+        connection.execute(sa.text("INSERT INTO measure_temporal_window (measure_id,anchor_measure_id,candidate_measure_id,require_same_resolver) VALUES (1,2,2,1)"))
+    with pytest.raises(ValueError, match="Remove measure-anchor configuration"):
+        downgrade(sqlite_engine, "0003_indicator_map_overrides")
+    assert current_revision(sqlite_engine) == head_revision()

@@ -3,17 +3,21 @@ from types import SimpleNamespace
 import pytest
 import sqlalchemy as sa
 
+from oa_cohorts import errors as errors_module
 from oa_cohorts.core import RuleMatcher, RuleTarget, RuleTemporality, ThresholdDirection
 from oa_cohorts.measurables.measurable_base import (
     MeasurableBase,
     MeasurableDomain,
     MeasurableSpec,
 )
-from oa_cohorts import errors as errors_module
-from oa_cohorts.query.measure import MeasureExecutor, MeasureSQLCompiler, MissingMaterializedViewError
-from tests.db_error_helpers import fake_undefined_table_error
+from oa_cohorts.query.measure import (
+    MeasureExecutor,
+    MeasureSQLCompiler,
+    MissingMaterializedViewError,
+)
 from oa_cohorts.query.query_rule import ScalarRule
 from oa_cohorts.query.subquery import Subquery
+from tests.db_error_helpers import fake_undefined_table_error
 
 referral_events = sa.table(
     "referral_events",

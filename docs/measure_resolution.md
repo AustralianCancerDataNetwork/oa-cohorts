@@ -81,7 +81,7 @@ This is expressed via `MeasureTemporalWindow`, a separate config table with a 1:
 
 **Anchor and candidate**
 
-The measure's own `subquery_id` defines the anchor event. A separate `candidate_measure_id` points to another measure whose events are evaluated relative to that anchor. The anchor is deduplicated to one row per resolver (earliest event) before the join.
+The anchor uses exactly one source: the measure's `subquery_id`, or `MeasureTemporalWindow.anchor_measure_id` pointing to another dated measure. A separate `candidate_measure_id` identifies the events evaluated relative to that anchor. A measure anchor runs its own filters first; only then is its earliest returned date selected per `(person_id, episode_id, measure_resolver)`. Existing subquery anchors keep their earliest-event behaviour. Missing references, two anchor sources, reversed bounds and dependency cycles are rejected before SQL compilation. 
 
 **Window bounds**
 

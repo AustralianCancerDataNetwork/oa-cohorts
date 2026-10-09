@@ -57,5 +57,6 @@ nav:
     - Example execution: example_execution.md
   - Outputs:
     - Measure Resolution: measure_resolution.md
+    - Episode Attachment: episode_attachment.md
   - Operations:
     - Schema Management: schema_management.md

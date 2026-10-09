@@ -27,6 +27,8 @@ class MeasureDetailSummary:
     numerator_indicator_usages: tuple[str, ...]
     denominator_indicator_usages: tuple[str, ...]
     cohort_definition_usages: tuple[str, ...]
+    anchor_measure_name: str | None = None
+    candidate_measure_name: str | None = None
 
 
 def has_measure_summary_tables(session: so.Session) -> bool:
@@ -63,6 +65,9 @@ def load_measure_detail_summary(
     cohort_definition_usages = _load_cohort_definition_usages(session, measure_id=measure_id)
 
     subquery = measure.subquery
+    window_config = measure.window_config
+    anchor_measure = window_config.anchor_measure if window_config is not None else None
+    candidate_measure = window_config.candidate_measure if window_config is not None else None
     return MeasureDetailSummary(
         measure_id=measure.measure_id,
         name=measure.name,
@@ -82,6 +87,8 @@ def load_measure_detail_summary(
         numerator_indicator_usages=numerator_indicator_usages,
         denominator_indicator_usages=denominator_indicator_usages,
         cohort_definition_usages=cohort_definition_usages,
+        anchor_measure_name=anchor_measure.name if anchor_measure is not None else None,
+        candidate_measure_name=candidate_measure.name if candidate_measure is not None else None,
     )
 
 
@@ -166,6 +173,8 @@ def _load_cohort_definition_usages(
 def _measure_kind(measure: Measure) -> str:
     if measure.measure_id == 0:
         return "full cohort"
+    if measure.is_temporal_window:
+        return "temporal window"
     if measure.subquery is not None and not measure.child_links:
         return "leaf"
     if measure.child_links:

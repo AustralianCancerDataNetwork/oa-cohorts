@@ -10,6 +10,24 @@ Every executable unit ultimately resolves to a set of [`MeasureMember`](measure_
 
 That canonical shape lets reports, indicators, and dashboards reuse the same underlying logic while preserving timing and episode alignment.
 
+Diagnosis-related measurements, procedures, and observations with valid explicit episode relationships retain those relationships. An unlinked event is assigned to one eligible episode of care by preferring an episode already started on the event date, then the nearest episode start, and finally the lowest episode identifier.
+
+For example, suppose a patient's first lung cancer episode starts on 10 January 2024 and remains active during ongoing care through 30 June 2026. A second primary lung cancer episode starts on 1 March 2026, and an unlinked spirometry result is recorded on 10 March 2026. Both episodes are eligible and have already started, so the ranked fallback assigns the result to the second episode because its start is nearest to the measurement date. A valid explicit relationship bypasses this fallback: a relationship to the first episode assigns the result there, while valid relationships to both episodes retain both clinical assertions. The unlinked result therefore contributes one episode-specific cohort row rather than one row for every overlapping episode.
+
+```mermaid
+flowchart LR
+    first["First primary episode<br/>10 Jan 2024–30 Jun 2026<br/>active during ongoing care"] --> eligible{"Eligible for the<br/>10 Mar 2026 result?"}
+    second["Second primary episode<br/>starts 1 Mar 2026"] --> eligible
+    result["Unlinked spirometry<br/>10 Mar 2026"] --> eligible
+    eligible --> started["Both episodes have started"]
+    started --> nearest["Choose the nearest start"]
+    nearest --> selected["Assign to second episode<br/>9 days from its start"]
+    selected --> member["Emit one episode-specific<br/>cohort row"]
+    result -. "valid explicit relationships bypass fallback" .-> explicit["Emit every explicitly<br/>linked episode"]
+```
+
+Note that if there has been a change to materialized-view definitions, installing the Python packages does not alter materialized-view definitions already stored in the database. You will need to rebuild any changed materialised views before running reports. Rebuild their dependent views in dependency order and ANALYZE each immediately after creating it. Refreshing a materialized view updates its data but does not replace its definition. See [Rebuilding and refreshing clinical materialized views](schema_management.md#rebuilding-and-refreshing-clinical-materialized-views) for the schema maintenance guidance.
+
 ---
 
 ## Conceptual Layers
