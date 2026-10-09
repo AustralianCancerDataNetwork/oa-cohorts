@@ -550,6 +550,10 @@ def render_measure_detail_summary(summary: MeasureDetailSummary) -> Panel:
     grid.add_row("Combination", summary.combination)
     grid.add_row("Episode override", "yes" if summary.person_ep_override else "no")
     grid.add_row("Subquery", _format_subquery_summary(summary))
+    if summary.anchor_measure_name is not None:
+        grid.add_row("Anchor measure", summary.anchor_measure_name)
+    if summary.candidate_measure_name is not None:
+        grid.add_row("Candidate measure", summary.candidate_measure_name)
     grid.add_row("Parents", ", ".join(summary.parent_measure_names) or "-")
     grid.add_row("Children", ", ".join(summary.child_measure_names) or "-")
     grid.add_row("Numerator in", _format_usage_lines(summary.numerator_indicator_usages))

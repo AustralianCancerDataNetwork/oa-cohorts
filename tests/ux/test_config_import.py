@@ -964,3 +964,30 @@ def test_measure_summary_cli_reports_missing_measure(tmp_path):
 
     assert result.exit_code == 0
     assert "No measure was found for measure_id=99." in result.stdout
+
+
+def test_csv_import_loads_measure_anchor(tmp_path):
+    from oa_cohorts.query.measure import Measure
+    engine = sa.create_engine("sqlite://")
+    config_dir = _build_config_dir(tmp_path / "config")
+    _write_csv(config_dir / "measure_temporal_window.csv",
+        ["measure_id", "anchor_measure_id", "candidate_measure_id", "window_min_days", "window_max_days", "require_same_resolver"],
+        [{"measure_id": 3, "anchor_measure_id": 1, "candidate_measure_id": 2, "window_min_days": -90, "window_max_days": 30, "require_same_resolver": True}])
+    with so.Session(engine) as session:
+        import_config_directory(config_dir, session)
+        measure = session.get(Measure, 3)
+        assert measure.window_config.anchor_measure.measure_id == 1
+        assert measure.window_config.candidate_measure.measure_id == 2
+
+
+def test_csv_import_rejects_cycle_atomically(tmp_path):
+    import pytest
+    engine = sa.create_engine("sqlite://")
+    config_dir = _build_config_dir(tmp_path / "config")
+    _write_csv(config_dir / "measure_temporal_window.csv",
+        ["measure_id", "anchor_measure_id", "candidate_measure_id", "require_same_resolver"],
+        [{"measure_id": 3, "anchor_measure_id": 3, "candidate_measure_id": 2, "require_same_resolver": True}])
+    with so.Session(engine) as session:
+        with pytest.raises(ValueError, match="Measure dependency cycle"):
+            import_config_directory(config_dir, session)
+        assert session.scalar(sa.text("SELECT count(*) FROM measure")) == 0

@@ -13,6 +13,7 @@ from ..core.html_utils import HTMLChild, HTMLRenderable, RawHTML, esc
 from ..measurables import MeasurableBase, get_measurable_registry
 from ..measurables.measurable_base import SQLCol
 from .query_rule import QueryRule
+from .typing import _first_member_query
 
 SQLQuery: TypeAlias = Select[Any] | CompoundSelect[Any]
 
@@ -227,21 +228,7 @@ class Subquery(HTMLRenderable, Base):
         Return earliest qualifying date per person/episode/measure_resolver.
         Used for AND logic across child measures.
         """
-        sq = self.get_subquery_any(ep_override=ep_override).subquery()
-
-        return (
-            sa.select(
-                sq.c.person_id,
-                sq.c.episode_id,
-                sq.c.measure_resolver,
-                sa.func.min(sq.c.measure_date).label("measure_date"),
-            )
-            .group_by(
-                sq.c.person_id,
-                sq.c.episode_id,
-                sq.c.measure_resolver,
-            )
-        )
+        return _first_member_query(self.get_subquery_any(ep_override=ep_override))
 
     def __repr__(self) -> str:
         header = f"<Subquery {self.name!r} target={self.target.value} temporal={self.temporality.value}>"

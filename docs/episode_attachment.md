@@ -23,15 +23,15 @@ Two top-level diagnoses for one patient are treated as true second primaries, so
 |---|---|
 | Recorded event links | Keep every link that matches the event, its type, the episode and the patient; suppress date-window fallback for that event |
 | Date-window attachment | Choose one eligible episode of care; nested diagnoses are not fallback candidates |
-| Window | From 90 days before the episode starts to its recorded end date, or start + 365 days when no end is recorded; extending it for nested diagnoses remains open |
+| Window | From 90 days before the episode starts to its recorded end date, or start + 365 days when no end is recorded; extend its end to the latest nested-diagnosis window end when that is later |
 | Measure criteria | Apply exclusions as exclusions; combine AND and EXCEPT on the complete patient-and-episode member identity |
 | Indicator evaluation | Use one shared calculation for every output; whole-cohort matching grain remains open |
 
 ### Step 1: how a clinical event finds an episode
 
 1. **Recorded links.** Validate each recorded relationship against the event ID, kind of event, episode and patient. Keep every valid relationship, including relationships to nested diagnoses and relationships outside the date window. An event can retain several valid links. It does not also enter date-window fallback.
-2. **Date window.** For an event without a valid recorded link, consider the patient's episodes of care whose windows contain the event date. Each window starts **90 days before** the episode starts and closes at its recorded **end date**, or **365 days after** its start when the end date is absent. How to cover later nested diagnoses is open (question 1).
-3. **Choosing one.** Prefer candidates that had already started on the event date, then choose the most recent start. If none had started, choose the nearest upcoming start. Resolve equal starts using the lower episode number. Attribution before diagnosis and policies for different kinds of event remain open (questions 4 and 5).
+2. **Date window.** For an event without a valid recorded link, consider the patient's episodes of care whose windows contain the event date. Each window starts **90 days before** the episode starts and closes at the **later of its own window end and the latest window end of its nested diagnoses**. Each episode's window ends on its recorded end date, or **365 days after its start** when no end is recorded. A later progression or metastasis therefore extends eligibility for the same cancer. The start of the root window stays unchanged;
+3. **Choosing one.** Prefer candidates that had already started on the event date, then choose the most recent start. If none had started, choose the nearest upcoming start. Resolve equal starts using the lower episode number. When the nearest eligible already-started episode began at least 365 days before the event, choose the earliest eligible upcoming episode starting within 60 days after the event, breaking equal starts by the lowest episode ID. Both thresholds are inclusive. A more recent started episode blocks this override, and a same-day start is already started. No concept list is used. 
 4. **No candidate.** The event has no diagnosis-episode attachment through this route, so an indicator using these diagnosis-linked event views cannot use it.
 
 ```mermaid
@@ -44,7 +44,10 @@ flowchart TD
     eligible -- "Yes" --> started{"Any candidate already started<br/>on the event date?"}
     started -- "Yes" --> recent["Keep those already started;<br/>choose the most recent start"]
     started -- "No" --> nearest["Choose the nearest upcoming start"]
-    recent --> tie["Equal start dates:<br/>lower episode number"]
+    recent --> override{"Started winner at least 365 days old<br/>and upcoming start within 60 days?"}
+    override -- "Yes" --> upcoming["Choose the earliest eligible upcoming start"]
+    override -- "No" --> tie
+    upcoming --> tie["Equal start dates:<br/>lower episode number"]
     nearest --> tie
     tie --> one["Attach to one episode of care"]
 ```
@@ -60,8 +63,8 @@ For specialist visits, the 1.0 target is a separate ranking by tier, distance fr
 
 ### Worked example 1: one cancer with a later nested diagnosis
 
-- **E1** is a lung episode of care diagnosed 10 March 2025, with no recorded end date. Under the stated window rule, its window runs from 10 December 2024 to 10 March 2026.
-- **P1** is brain metastases recorded beneath the lung diagnosis from 1 September 2025. It can receive valid recorded links but is not a date-window candidate.
+- **E1** is a lung episode of care diagnosed 10 March 2025, with no recorded end date. Its own window runs from 10 December 2024 to 10 March 2026. P1 extends its upper bound to 1 September 2026.
+- **P1** is brain metastases recorded beneath the lung diagnosis from 1 September 2025, with no recorded end date. Its own window ends on 1 September 2026. It can receive valid recorded links but is not a date-window candidate.
 
 ```mermaid
 gantt
@@ -69,7 +72,7 @@ gantt
     dateFormat YYYY-MM-DD
     axisFormat %b %Y
     section Episode windows
-    E1 lung episode of care       :e1, 2024-12-10, 2026-03-10
+    E1 lung episode of care       :e1, 2024-12-10, 2026-09-01
     P1 nested (recorded links only) :done, p1, 2025-09-01, 2026-09-01
     section Events
     GP referral                   :milestone, 2025-02-20, 0d
@@ -85,7 +88,7 @@ gantt
 | ECOG A, 25 Mar 2025 | E1 | Its date is inside E1's window |
 | Chemotherapy careplan recorded against the brain-metastases diagnosis | P1 | Whether this treatment counts for E1 is question 3 |
 | ECOG B, 15 Oct 2025 | E1 | P1 is not a date-window candidate |
-| ECOG C, 20 Apr 2026 | No attachment | E1's window has closed; extending it for P1 is question 1 |
+| ECOG C, 20 Apr 2026 | E1 | P1 extends E1's window through 1 September 2026 |
 
 For the E1 cohort row:
 
@@ -96,7 +99,7 @@ For the E1 cohort row:
 | Stage III NSCLC with ECOG 0–2 | Defined denominator | Met if stage III is on E1 and its ECOG evidence meets the criterion and date window |
 | Stage III NSCLC who received systemic therapy | Defined denominator | Treatment on P1 does not meet direct episode matching for E1; whether it should count is question 3 |
 
-ECOG C demonstrates the unresolved window question. It occurs during the same cancer's later care, but after E1's 365-day window closes. Keeping only episodes of care as fallback candidates leaves it unattached unless E1's window is extended to cover later nested diagnoses. This extension needs a clinical decision.
+ECOG C demonstrates Q1: it occurs after E1's own 365-day horizon but inside the extended window. It reaches E1 through date-window fallback. P1 contributes its window end, but its start never competes with another primary's start in the ranking. If E1's own end already covers P1, extension does not shorten it.
 
 ### Worked example 2: two lung primaries
 
@@ -121,13 +124,13 @@ gantt
 | Event | Attachment under the stated rules | Why |
 |---|---|---|
 | GP referral 1, 10 May 2025 | E1 | Only E1's window contains it |
-| GP referral 2 for the new lesion, 5 Feb 2026 | E1 | Both windows contain it, but only E1 had started |
+| GP referral 2 for the new lesion, 5 Feb 2026 | E1 | Both windows contain it, but E1 is less than 365 days old, so Q4 does not override it |
 | Spirometry, 10 Mar 2026 | E2 | Both had started; E2 has the more recent start |
 | MDT presentation, 12 Mar 2026 | E2 | As for spirometry |
 
-The spirometry and MDT attach once, to E2. The referral for the new lesion attaches to E1 under the already-started preference, so it cannot start an E2 referral-to-specialist or referral-to-treatment calculation through episode-aligned matching. Whether a pre-diagnosis event should prefer the upcoming diagnosis is question 4.
+The spirometry and MDT attach once, to E2. The referral for the new lesion attaches to E1 under the already-started preference, so it cannot start an E2 referral-to-specialist or referral-to-treatment calculation through episode-aligned matching. Q4 keeps this result because E1 is less than 365 days old at the referral. If E1 instead began on 1 June 2024 and remained eligible, that 5 February referral would attach to E2: E1 is then at least 365 days old and E2 begins within 60 days. A valid explicit link to E1 still takes precedence.
 
-Ranking by dates alone does not establish which cancer an event concerns. If E2 were a prostate primary, the lung MDT would still attach to E2 under this rule. Whether attachment should use the kind or content of an event is question 5.
+Ranking by dates alone does not establish which cancer an event concerns. If E2 were a prostate primary, the lung MDT would still attach to E2 under this rule. Q5 keeps attachment independent of the kind or content of an event.
 
 ## Part 2: for developers
 
@@ -140,3 +143,8 @@ View-definition changes require a rebuild, followed by immediate ANALYZE in depe
 ### Measure and indicator contract (`oa-cohorts`)
 
 <!-- table TODO once completed -->
+
+## Diagnosis-time evidence windows
+
+[Temporal measure composition](measure_resolution.md) explains the measure-based
+anchor.

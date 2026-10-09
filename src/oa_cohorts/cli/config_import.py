@@ -28,6 +28,7 @@ from ..query import (
     dash_cohort_def_map,
     subquery_rule_map,
 )
+from ..query.measure import _validate_measure_dependencies
 
 RowTransform = Callable[[Any], Any]
 ImportProgressCallback = Callable[["ImportProgressEvent"], None]
@@ -231,8 +232,7 @@ def _delete_existing_row(
 
 
 def _table_exists(session: so.Session, table: sa.Table) -> bool:
-    bind = session.get_bind()
-    inspector = sa.inspect(bind)
+    inspector = sa.inspect(session.connection())
     return inspector.has_table(table.name, schema=table.schema)
 
 
@@ -349,7 +349,6 @@ def _sync_table(
 
         if inserted_rows:
             session.execute(sa.insert(spec.table), inserted_rows)
-        session.commit()
 
     _emit_progress(
         progress_callback,
@@ -444,6 +443,38 @@ CONFIG_IMPORT_SPECS: tuple[TableImportSpec, ...] = (
 )
 
 
+def _import_config_tables(
+    config_path: Path,
+    session: so.Session,
+    *,
+    dedupe: bool,
+    dry_run: bool,
+    progress_callback: ImportProgressCallback | None,
+) -> list[TableImportResult]:
+    results = []
+    table_count = len(CONFIG_IMPORT_SPECS)
+    for index, spec in enumerate(CONFIG_IMPORT_SPECS, start=1):
+        try:
+            path = spec.resolve_path(config_path)
+        except FileNotFoundError:
+            if spec.optional:
+                continue
+            raise
+        results.append(
+            _sync_table(
+                session,
+                spec,
+                path,
+                table_index=index,
+                table_count=table_count,
+                dedupe=dedupe,
+                dry_run=dry_run,
+                progress_callback=progress_callback,
+            )
+        )
+    return results
+
+
 def import_config_directory(
     config_path: Path,
     session: so.Session,
@@ -474,25 +505,20 @@ def import_config_directory(
         detail=f"Preparing config import for {table_count} table(s)",
         dry_run=dry_run,
     )
-    for index, spec in enumerate(CONFIG_IMPORT_SPECS, start=1):
-        try:
-            path = spec.resolve_path(config_path)
-        except FileNotFoundError:
-            if spec.optional:
-                continue
-            raise
-        results.append(
-            _sync_table(
-                session,
-                spec,
-                path,
-                table_index=index,
-                table_count=table_count,
-                dedupe=dedupe,
-                dry_run=dry_run,
-                progress_callback=progress_callback,
-            )
+    try:
+        results = _import_config_tables(
+            config_path, session, dedupe=dedupe, dry_run=dry_run,
+            progress_callback=progress_callback,
         )
+        if not dry_run:
+            session.expire_all()
+            for measure in session.scalars(sa.select(Measure)).unique():
+                _validate_measure_dependencies(measure)
+            session.commit()
+    except Exception:
+        if not dry_run:
+            session.rollback()
+        raise
     _emit_progress(
         progress_callback,
         phase="complete",

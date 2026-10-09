@@ -14,6 +14,8 @@ from tests.conftest import FakeMeasure, FakeSubquery
 class FakeWindowConfig:
     candidate_measure: object
     candidate_measure_id: int = 99
+    anchor_measure_id: int | None = None
+    anchor_measure: object | None = None
     window_min_days: int | None = None
     window_max_days: int | None = None
     window_pick_strategy: WindowPickStrategy | None = None

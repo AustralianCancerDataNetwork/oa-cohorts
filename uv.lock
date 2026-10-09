@@ -1334,8 +1334,8 @@ requires-dist = [
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.8" },
     { name = "myst-parser", marker = "extra == 'docs'" },
     { name = "oa-configurator", specifier = ">=1.2.1,<2" },
-    { name = "omop-alchemy", extras = ["postgres"], specifier = ">=1.2.1,<2" },
-    { name = "omop-constructs", specifier = ">=0.8.0,<1" },
+    { name = "omop-alchemy", extras = ["postgres"], specifier = ">=1.2.2,<2" },
+    { name = "omop-constructs", specifier = ">=0.9.0,<1" },
     { name = "orm-loader", specifier = ">=1.2.0,<2" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.3" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0" },
@@ -1368,7 +1368,7 @@ wheels = [
 
 [[package]]
 name = "omop-alchemy"
-version = "1.2.1"
+version = "1.2.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "oa-configurator" },
@@ -1380,9 +1380,9 @@ dependencies = [
     { name = "typer" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/87/94/60f7843da2ba55c3d3b6adc6be79c55a69d271e8baa3509f8c89033cf569/omop_alchemy-1.2.1.tar.gz", hash = "sha256:b79c0a5c845ef1bd7530171718f7a7fed7336e7f585488016af2fa4ffb17327f", size = 694546, upload-time = "2026-10-06T06:59:33.212Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/23/b7/d5a374d6907acdbf31a99bd2213b5b18a011bcf3e9a650ab5dab6876d3ac/omop_alchemy-1.2.2.tar.gz", hash = "sha256:c886e8afd9bc1f50a6473b695431e1690a88e63498c98f62ea69174eebbd6466", size = 696983, upload-time = "2026-10-08T23:33:21.114Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/35/26/b1d08996d96baf25af14c06d89c9738d634ba31272a3b58f9c3455076d06/omop_alchemy-1.2.1-py3-none-any.whl", hash = "sha256:25e6831979fe96c18fe3a76daa26561ac2de32e64c8ac16931b7af110cc882cf", size = 279797, upload-time = "2026-10-06T06:59:31.573Z" },
+    { url = "https://files.pythonhosted.org/packages/5b/16/d9cf8c1fa1a27372fefd1d962acf5282d3542c18a8624a0594762c32f310/omop_alchemy-1.2.2-py3-none-any.whl", hash = "sha256:3a67a3b4ca99ce7aa4af201f4df851db4d4a23542658cfc2beb0f846743d20a6", size = 280663, upload-time = "2026-10-08T23:33:19.228Z" },
 ]
 
 [package.optional-dependencies]
@@ -1392,7 +1392,7 @@ postgres = [
 
 [[package]]
 name = "omop-constructs"
-version = "0.8.0"
+version = "0.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "oa-configurator" },
@@ -1401,9 +1401,9 @@ dependencies = [
     { name = "orm-loader" },
     { name = "sqlalchemy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f5/0a/bb24023a1c55227ca45ff167c1e534b6bbfd20c6ccd60781c19d8e8cdcf6/omop_constructs-0.8.0.tar.gz", hash = "sha256:465865a6492a0d89cd0f3b38b4dfdb0beae55b7dfea03b83586a2f5319ac949c", size = 268555, upload-time = "2026-10-08T02:30:58.247Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/21/54/f3c6d6a49f18ecc51201a8398e1df8d621ed81e5b86bab656cdb8f0d3e2c/omop_constructs-0.9.0.tar.gz", hash = "sha256:7929765eb37cae115120195dc099efb998b8ce7e3a6001e969fb61dcf1cf73ec", size = 272809, upload-time = "2026-10-09T11:19:19.921Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d0/54/e7993096c437d6cd229d14fbbe5529e43e5c7d7d408d17c066ae1834bb71/omop_constructs-0.8.0-py3-none-any.whl", hash = "sha256:17a06b4cfa9e3b44fe9f5d18d9f5bdffe3ce173a54fb27d0d74cde2e85ce7f18", size = 100106, upload-time = "2026-10-08T02:30:56.914Z" },
+    { url = "https://files.pythonhosted.org/packages/78/4b/815d1431af35050385759cdf4288edbce5ceb9fe768be8647ad87abdc370/omop_constructs-0.9.0-py3-none-any.whl", hash = "sha256:f29626f0f60fc0226c1b7411ceb3bd18df4910cf65044661a3062c183de99b57", size = 101048, upload-time = "2026-10-09T11:19:18.138Z" },
 ]
 
 [[package]]
