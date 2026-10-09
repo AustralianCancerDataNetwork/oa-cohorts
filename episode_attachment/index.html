@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://AustralianCancerDataNetwork.github.io/oa-cohorts/measurables/">
+        <link rel="canonical" href="https://AustralianCancerDataNetwork.github.io/oa-cohorts/episode_attachment/">
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../measure_resolution/">
       
       
-        <link rel="next" href="../query_rule_definitions/">
+        <link rel="next" href="../schema_management/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Measurables - OA Cohorts</title>
+        <title>Episode Attachment - OA Cohorts</title>
       
     
     
@@ -70,7 +70,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#measurable-abstraction" class="md-skip">
+        <a href="#episode-attachment-and-measure-resolution" class="md-skip">
           Skip to content
         </a>
       
@@ -106,7 +106,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Measurables
+              Episode Attachment
             
           </span>
         </div>
@@ -250,8 +250,6 @@
       
   
   
-    
-  
   
   
     
@@ -264,11 +262,13 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
         
           
           <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
@@ -289,7 +289,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -304,37 +304,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Measurables
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../measurables/" class="md-nav__link">
         
   
   
@@ -350,125 +323,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#canonical-output-contract" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Canonical Output Contract
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#measurablespec" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        MeasurableSpec
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#binding" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Binding
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#which-rule-types-need-which-columns" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Which Rule Types Need Which Columns
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#episode-requirement" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Episode Requirement
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#current-measurable-families" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Current Measurable Families
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#current-target-registry" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Current Target Registry
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#diagnosis-targets" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Diagnosis Targets
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#string-backed-filters" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        String-backed Filters
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -602,8 +456,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -614,13 +470,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
           <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
@@ -641,7 +495,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -684,10 +538,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../episode_attachment/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Episode Attachment
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -703,6 +584,59 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#part-1-for-clinicians" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 1: for clinicians
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-2-for-developers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part 2: for developers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#diagnosis-time-evidence-windows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diagnosis-time evidence windows
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -831,10 +765,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#canonical-output-contract" class="md-nav__link">
+  <a href="#part-1-for-clinicians" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Canonical Output Contract
+        Part 1: for clinicians
       
     </span>
   </a>
@@ -842,10 +776,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#measurablespec" class="md-nav__link">
+  <a href="#part-2-for-developers" class="md-nav__link">
     <span class="md-ellipsis">
       
-        MeasurableSpec
+        Part 2: for developers
       
     </span>
   </a>
@@ -853,76 +787,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#binding" class="md-nav__link">
+  <a href="#diagnosis-time-evidence-windows" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Binding
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#which-rule-types-need-which-columns" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Which Rule Types Need Which Columns
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#episode-requirement" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Episode Requirement
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#current-measurable-families" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Current Measurable Families
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#current-target-registry" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Current Target Registry
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#diagnosis-targets" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Diagnosis Targets
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#string-backed-filters" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        String-backed Filters
+        Diagnosis-time evidence windows
       
     </span>
   </a>
@@ -972,10 +840,10 @@
     
     
       <li class="md-path__item">
-        <a href="./" class="md-path__link">
+        <a href="../measure_resolution/" class="md-path__link">
           
   <span class="md-ellipsis">
-    Inputs
+    Outputs
   </span>
 
         </a>
@@ -997,277 +865,230 @@
   
 
 
-<h1 id="measurable-abstraction"><code>Measurable</code> Abstraction<a class="headerlink" href="#measurable-abstraction" title="Permanent link">&para;</a></h1>
-<p>The <code>Measurable</code> layer is the bridge between the generic query engine and the underlying ORM or materialised-view schema.</p>
-<p>It tells the engine:</p>
-<ul>
-<li>which ORM class to query for a given <code>RuleTarget</code></li>
-<li>which columns identify the person, episode, and event date</li>
-<li>which optional columns support concept, numeric, string, or predicate-style filtering</li>
-</ul>
-<p>The query engine never hard-codes source-table column names directly. It relies on the measurable contract instead.</p>
-<h2 id="canonical-output-contract">Canonical Output Contract<a class="headerlink" href="#canonical-output-contract" title="Permanent link">&para;</a></h2>
-<p>Every measurable must be able to emit rows in the canonical measure-member shape:</p>
+<h1 id="episode-attachment-and-measure-resolution">Episode attachment and measure resolution<a class="headerlink" href="#episode-attachment-and-measure-resolution" title="Permanent link">&para;</a></h1>
+<p>The first part explains the intended rules for clinicians. The second part records their developer contracts and implementation status. The examples apply the rules below and identify results that depend on an unresolved decision.</p>
+<h2 id="part-1-for-clinicians">Part 1: for clinicians<a class="headerlink" href="#part-1-for-clinicians" title="Permanent link">&para;</a></h2>
+<h3 id="the-unit-of-a-report">The unit of a report<a class="headerlink" href="#the-unit-of-a-report" title="Permanent link">&para;</a></h3>
+<p>A report row describes one patient's cancer from its diagnosis: one <strong>episode of care</strong> per top-level MOSAIQ diagnosis. A diagnosis recorded under another diagnosis is a <strong>nested diagnosis</strong>. It belongs to the same cancer and does not create a cohort row under the primary-diagnosis assumption below.</p>
+<p>Treatment careplans, surgery and diagnosis details reach an episode through the diagnosis recorded in the source. Measurements, assessments, procedures and observations use valid recorded episode links when available; otherwise they use the date-window rules below. Specialist visits have a separate attachment rule.</p>
+<div class="admonition note">
+<p class="admonition-title">Assumption: cohorts select through the primary diagnosis</p>
+<p>Every leaf measure reachable from a cohort definition must select through the <strong>primary diagnosis</strong> (<code>dx_primary</code>). Under this assumption, each cohort row identifies an episode of care. A nested diagnosis is not a cohort row even when its diagnosis codes match the cohort definition.</p>
+<p>Cohorts defined through any diagnosis (<code>dx_any</code>), stage (<code>dx_stage</code>) or metastasis (<code>dx_mets</code>) can select nested diagnoses and need a different cohort contract. Enforcing the primary-diagnosis restriction during configuration import is not yet decided.</p>
+</div>
+<p>Two top-level diagnoses for one patient are treated as true second primaries, so the patient can have two cohort rows. Duplicate entry of one cancer as two top-level diagnoses is assumed to be managed through clinical data review; these rules do not merge those diagnoses.</p>
+<h3 id="attachment-rules">Attachment rules<a class="headerlink" href="#attachment-rules" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th>Column</th>
-<th>Meaning</th>
+<th>Area</th>
+<th>Behaviour</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>person_id</code></td>
-<td>individual identifier</td>
+<td>Recorded event links</td>
+<td>Keep every link that matches the event, its type, the episode and the patient; suppress date-window fallback for that event</td>
 </tr>
 <tr>
-<td><code>episode_id</code></td>
-<td>clinical episode</td>
+<td>Date-window attachment</td>
+<td>Choose one eligible episode of care; nested diagnoses are not fallback candidates</td>
 </tr>
 <tr>
-<td><code>measure_resolver</code></td>
-<td>alignment key used for higher-level joins</td>
+<td>Window</td>
+<td>From 90 days before the episode starts to its recorded end date, or start + 365 days when no end is recorded; extend its end to the latest nested-diagnosis window end when that is later</td>
 </tr>
 <tr>
-<td><code>measure_date</code></td>
-<td>date on which the measurable event qualifies</td>
+<td>Measure criteria</td>
+<td>Apply exclusions as exclusions; combine AND and EXCEPT on the complete patient-and-episode member identity</td>
+</tr>
+<tr>
+<td>Indicator evaluation</td>
+<td>Use one shared calculation for every output; whole-cohort matching grain remains open</td>
 </tr>
 </tbody>
 </table>
-<p><code>MeasurableBase.table_selectables()</code> and <code>filter_table_dated()</code> produce this shape for subqueries and measures.</p>
-<h2 id="measurablespec"><code>MeasurableSpec</code><a class="headerlink" href="#measurablespec" title="Permanent link">&para;</a></h2>
-<p><code>MeasurableSpec</code> is the declarative mapping attached to each measurable class.</p>
-<p>Required attributes:</p>
+<h3 id="step-1-how-a-clinical-event-finds-an-episode">Step 1: how a clinical event finds an episode<a class="headerlink" href="#step-1-how-a-clinical-event-finds-an-episode" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Recorded links.</strong> Validate each recorded relationship against the event ID, kind of event, episode and patient. Keep every valid relationship, including relationships to nested diagnoses and relationships outside the date window. An event can retain several valid links. It does not also enter date-window fallback.</li>
+<li><strong>Date window.</strong> For an event without a valid recorded link, consider the patient's episodes of care whose windows contain the event date. Each window starts <strong>90 days before</strong> the episode starts and closes at the <strong>later of its own window end and the latest window end of its nested diagnoses</strong>. Each episode's window ends on its recorded end date, or <strong>365 days after its start</strong> when no end is recorded. A later progression or metastasis therefore extends eligibility for the same cancer. The start of the root window stays unchanged;</li>
+<li><strong>Choosing one.</strong> Prefer candidates that had already started on the event date, then choose the most recent start. If none had started, choose the nearest upcoming start. Resolve equal starts using the lower episode number. When the nearest eligible already-started episode began at least 365 days before the event, choose the earliest eligible upcoming episode starting within 60 days after the event, breaking equal starts by the lowest episode ID. Both thresholds are inclusive. A more recent started episode blocks this override, and a same-day start is already started. No concept list is used. </li>
+<li><strong>No candidate.</strong> The event has no diagnosis-episode attachment through this route, so an indicator using these diagnosis-linked event views cannot use it.</li>
+</ol>
+<div  class="mermaid">flowchart TD
+    event["Clinical event"] --> linked{"Any recorded link matching<br/>the event type, episode and patient?"}
+    linked -- "Yes" --> recorded["Keep every valid recorded relationship<br/>(may include nested diagnoses)<br/>and stop"]
+    linked -- "No" --> window["Candidates: the patient's episodes of care<br/>whose windows contain the event date"]
+    window --> eligible{"Any eligible candidate?"}
+    eligible -- "No" --> none["No diagnosis-episode attachment"]
+    eligible -- "Yes" --> started{"Any candidate already started<br/>on the event date?"}
+    started -- "Yes" --> recent["Keep those already started;<br/>choose the most recent start"]
+    started -- "No" --> nearest["Choose the nearest upcoming start"]
+    recent --> override{"Started winner at least 365 days old<br/>and upcoming start within 60 days?"}
+    override -- "Yes" --> upcoming["Choose the earliest eligible upcoming start"]
+    override -- "No" --> tie
+    upcoming --> tie["Equal start dates:<br/>lower episode number"]
+    nearest --> tie
+    tie --> one["Attach to one episode of care"]
+</div>
+<p>For specialist visits, the 1.0 target is a separate ranking by tier, distance from the episode start in either direction, and stable episode ID. The exact 180-day boundary still needs to be settled and tested.</p>
+<h3 id="step-2-how-the-report-decides-whether-a-patient-qualifies">Step 2: how the report decides whether a patient qualifies<a class="headerlink" href="#step-2-how-the-report-decides-whether-a-patient-qualifies" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Cohort.</strong> Create one cohort row per episode of care that meets the cohort definition, dated at diagnosis. This depends on the primary-diagnosis assumption above.</li>
+<li><strong>Criteria inside a measure.</strong> A rule set with inclusions and exclusions selects rows that meet an inclusion and no exclusion. OR combines qualifying members without duplicating their identity. AND requires evidence for the same patient and episode. EXCEPT retains members selected by its first child that are not selected by the other children; unsupported combinations must be rejected rather than evaluated as AND.</li>
+<li><strong>Denominator and numerator.</strong> For a <strong>defined denominator</strong>, both denominator and numerator must align with the cohort's episode of care. For a <strong>whole-cohort</strong> indicator, whether qualifying evidence must align with the same episode of care or can match at patient level remains open (question 2). Evidence must satisfy the indicator's date window in either case.</li>
+<li><strong>One calculation.</strong> A shared evaluator determines eligibility, anchors, windows and null-date handling. Every output serialises the same result.</li>
+</ol>
+<h3 id="worked-example-1-one-cancer-with-a-later-nested-diagnosis">Worked example 1: one cancer with a later nested diagnosis<a class="headerlink" href="#worked-example-1-one-cancer-with-a-later-nested-diagnosis" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>domain</code></li>
-<li><code>label</code></li>
-<li><code>person_id_attr</code></li>
-<li><code>episode_id_attr</code></li>
-<li><code>event_date_attr</code></li>
+<li><strong>E1</strong> is a lung episode of care diagnosed 10 March 2025, with no recorded end date. Its own window runs from 10 December 2024 to 10 March 2026. P1 extends its upper bound to 1 September 2026.</li>
+<li><strong>P1</strong> is brain metastases recorded beneath the lung diagnosis from 1 September 2025, with no recorded end date. Its own window ends on 1 September 2026. It can receive valid recorded links but is not a date-window candidate.</li>
 </ul>
-<p>Optional value attributes:</p>
-<ul>
-<li><code>value_concept_attr</code></li>
-<li><code>value_numeric_attr</code></li>
-<li><code>value_string_attr</code></li>
-<li><code>value_predicate_attr</code></li>
-</ul>
-<p>Optional control fields:</p>
-<ul>
-<li><code>temporality_map</code></li>
-<li><code>valid_targets</code></li>
-</ul>
-<p>The spec stores attribute names, not SQLAlchemy columns. Those names are resolved against the concrete class at bind time.</p>
-<h2 id="binding">Binding<a class="headerlink" href="#binding" title="Permanent link">&para;</a></h2>
-<p>When a class subclasses <code>MeasurableBase</code> and defines:</p>
-<div class="highlight"><pre><span></span><code><span class="n">__measurable__</span> <span class="o">=</span> <span class="n">MeasurableSpec</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-</code></pre></div>
-<p>the class is automatically bound to a <code>BoundMeasurableSpec</code> via <code>__init_subclass__</code>.</p>
-<p>Binding rules:</p>
-<ul>
-<li>required columns are resolved immediately</li>
-<li>unsupported optional value channels remain <code>None</code></li>
-<li>no fake SQL constants are injected for missing value channels</li>
-</ul>
-<p>That last point is intentional. A measurable that does not support concept filtering should expose <code>value_concept_col = None</code>, and the query layer should decide whether that is acceptable for the rules being executed.</p>
-<h2 id="which-rule-types-need-which-columns">Which Rule Types Need Which Columns<a class="headerlink" href="#which-rule-types-need-which-columns" title="Permanent link">&para;</a></h2>
-<p>The current query engine resolves measurable fields like this:</p>
+<div  class="mermaid">gantt
+    title One cancer with a later nested diagnosis
+    dateFormat YYYY-MM-DD
+    axisFormat %b %Y
+    section Episode windows
+    E1 lung episode of care       :e1, 2024-12-10, 2026-09-01
+    P1 nested (recorded links only) :done, p1, 2025-09-01, 2026-09-01
+    section Events
+    GP referral                   :milestone, 2025-02-20, 0d
+    ECOG A                        :milestone, 2025-03-25, 0d
+    Chemotherapy starts (P1 careplan) :milestone, 2025-09-20, 0d
+    ECOG B                        :milestone, 2025-10-15, 0d
+    ECOG C                        :milestone, 2026-04-20, 0d
+</div>
 <table>
 <thead>
 <tr>
-<th>Rule style</th>
-<th>Required measurable column</th>
+<th>Event</th>
+<th>Attachment under the stated rules</th>
+<th>Reason or unresolved decision</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>exact / hierarchy / hierarchy exclusion / presence / absence</td>
-<td><code>value_concept_attr</code></td>
+<td>GP referral, 20 Feb 2025</td>
+<td>E1</td>
+<td>Its date is inside E1's window</td>
 </tr>
 <tr>
-<td>substring</td>
-<td><code>value_string_attr</code></td>
+<td>ECOG A, 25 Mar 2025</td>
+<td>E1</td>
+<td>Its date is inside E1's window</td>
 </tr>
 <tr>
-<td>predicate</td>
-<td><code>value_predicate_attr</code></td>
+<td>Chemotherapy careplan recorded against the brain-metastases diagnosis</td>
+<td>P1</td>
+<td>Whether this treatment counts for E1 is question 3</td>
 </tr>
 <tr>
-<td>scalar threshold</td>
-<td><code>value_numeric_attr</code></td>
+<td>ECOG B, 15 Oct 2025</td>
+<td>E1</td>
+<td>P1 is not a date-window candidate</td>
 </tr>
 <tr>
-<td>scalar threshold with <code>concept_id != 0</code></td>
-<td><code>value_numeric_attr</code> and <code>value_concept_attr</code></td>
+<td>ECOG C, 20 Apr 2026</td>
+<td>E1</td>
+<td>P1 extends E1's window through 1 September 2026</td>
 </tr>
 </tbody>
 </table>
-<h3 id="scalar-only-measurables">Scalar-only measurables<a class="headerlink" href="#scalar-only-measurables" title="Permanent link">&para;</a></h3>
-<p>Derived window measurables can legitimately expose only a numeric column.</p>
-<p>Examples in the current codebase:</p>
-<ul>
-<li><code>ReferralToSpecialistWindowMeasurable</code></li>
-<li>window-style derived thresholds generally driven by <code>ScalarRule</code></li>
-</ul>
-<p>These measurables work when the scalar rule is threshold-only, meaning <code>concept_id = 0</code>.</p>
-<p>They do <strong>not</strong> support concept-constrained scalar filtering. If a scalar rule with <code>concept_id != 0</code> targets such a measurable, subquery compilation raises a targeted error explaining that <code>value_concept_attr</code> is required for concept filtering.</p>
-<h2 id="episode-requirement">Episode Requirement<a class="headerlink" href="#episode-requirement" title="Permanent link">&para;</a></h2>
-<p>This project assumes an episode-linked oncology data model.</p>
-<p>Why that matters:</p>
-<ul>
-<li>a person can have multiple disease episodes</li>
-<li>diagnosis, treatment, and modifier rows must align to the correct episode</li>
-<li>composite <code>AND</code> logic joins on <code>measure_resolver</code>, which is usually the episode id</li>
-</ul>
-<p>Without an episode-level resolver:</p>
-<ul>
-<li><code>AND</code> logic would collapse to person-level intersection</li>
-<li>cross-episode contamination would become possible</li>
-<li>time-based qualification would be harder to interpret clinically</li>
-</ul>
-<h2 id="current-measurable-families">Current Measurable Families<a class="headerlink" href="#current-measurable-families" title="Permanent link">&para;</a></h2>
-<p>The shipped registry currently maps targets into a small set of measurable families:</p>
-<ul>
-<li>diagnosis measurables: any-diagnosis, primary-diagnosis, staging, metastasis</li>
-<li>event measurables: measurements, procedures, observations</li>
-<li>treatment measurables: surgery, chemotherapy, radiotherapy, intent, derived windows</li>
-<li>person measurables: death-linked person demography rows</li>
-</ul>
-<h2 id="current-target-registry">Current Target Registry<a class="headerlink" href="#current-target-registry" title="Permanent link">&para;</a></h2>
-<p>The authoritative supported set is the measurable registry, not the <code>RuleTarget</code> enum by itself.
-Some enum members are reserved for future design work and do not currently resolve to a shipped measurable.</p>
-<p>Current registry:</p>
+<p>For the E1 cohort row:</p>
 <table>
 <thead>
 <tr>
-<th>Target</th>
-<th>Measurable</th>
-<th>Intended use</th>
+<th>Indicator</th>
+<th>Kind</th>
+<th>Result under the stated rules</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>dx_any</code></td>
-<td><code>AnyConditionMeasurable</code></td>
-<td>any diagnosis row attached to an episode</td>
+<td>ECOG documented</td>
+<td>Whole cohort</td>
+<td>Met: ECOG A is on E1</td>
 </tr>
 <tr>
-<td><code>dx_primary</code></td>
-<td><code>PrimaryDiagnosisEpisodeMeasurable</code></td>
-<td>diagnosis rows anchored to the primary diagnosis episode</td>
+<td>Received systemic therapy</td>
+<td>Whole cohort</td>
+<td>Depends on whole-cohort matching and treatment on nested diagnoses (questions 2 and 3)</td>
 </tr>
 <tr>
-<td><code>dx_stage</code></td>
-<td><code>StagedConditionMeasurable</code></td>
-<td>staging modifiers linked to diagnosis episodes</td>
+<td>Stage III NSCLC with ECOG 0–2</td>
+<td>Defined denominator</td>
+<td>Met if stage III is on E1 and its ECOG evidence meets the criterion and date window</td>
 </tr>
 <tr>
-<td><code>dx_mets</code></td>
-<td><code>MetsConditionMeasurable</code></td>
-<td>metastatic disease modifiers linked to diagnosis episodes</td>
-</tr>
-<tr>
-<td><code>tx_surgical</code></td>
-<td><code>SurgicalMeasurable</code></td>
-<td>cancer-related surgical procedures</td>
-</tr>
-<tr>
-<td><code>tx_current_episode</code></td>
-<td><code>AllCurrentTreatmentMeasurable</code></td>
-<td>treatment-start summary for the current diagnosis episode</td>
-</tr>
-<tr>
-<td><code>tx_chemotherapy</code></td>
-<td><code>ChemoTreatmentMeasurable</code></td>
-<td>chemotherapy treatment episodes</td>
-</tr>
-<tr>
-<td><code>tx_radiotherapy</code></td>
-<td><code>RTTreatmentMeasurable</code></td>
-<td>radiotherapy treatment episodes</td>
-</tr>
-<tr>
-<td><code>intent_sact</code></td>
-<td><code>IntentChemoMeasurable</code></td>
-<td>systemic therapy intent flags</td>
-</tr>
-<tr>
-<td><code>intent_rt</code></td>
-<td><code>IntentRTMeasurable</code></td>
-<td>radiotherapy intent flags</td>
-</tr>
-<tr>
-<td><code>tx_to_death_window</code></td>
-<td><code>TxDaysBeforeDeath</code></td>
-<td>derived days from treatment to death</td>
-</tr>
-<tr>
-<td><code>dx_to_tx_window</code></td>
-<td><code>TxDaysToStartTreatment</code></td>
-<td>derived days from diagnosis to treatment start</td>
-</tr>
-<tr>
-<td><code>tx_concurrent</code></td>
-<td><code>TxConcurrentChemoRT</code></td>
-<td>concurrent chemo-radiotherapy predicate</td>
-</tr>
-<tr>
-<td><code>referral_to_specialist_window</code></td>
-<td><code>ReferralToSpecialistWindowMeasurable</code></td>
-<td>derived referral-to-specialist interval</td>
-</tr>
-<tr>
-<td><code>meas_concept</code></td>
-<td><code>MeasurementMeasurable</code></td>
-<td>diagnosis-linked measurements</td>
-</tr>
-<tr>
-<td><code>proc_concept</code></td>
-<td><code>ProcedureMeasurable</code></td>
-<td>diagnosis-linked procedures</td>
-</tr>
-<tr>
-<td><code>obs_concept</code></td>
-<td><code>ObserveMeasurable</code></td>
-<td>diagnosis-linked observations</td>
-</tr>
-<tr>
-<td><code>ev_visit</code></td>
-<td><code>VisitSpecialtyMeasurable</code></td>
-<td>diagnosis-linked specialty visits</td>
-</tr>
-<tr>
-<td><code>demog_death</code></td>
-<td><code>DeathMeasurable</code></td>
-<td>death-linked person rows</td>
+<td>Stage III NSCLC who received systemic therapy</td>
+<td>Defined denominator</td>
+<td>Treatment on P1 does not meet direct episode matching for E1; whether it should count is question 3</td>
 </tr>
 </tbody>
 </table>
-<h2 id="diagnosis-targets">Diagnosis Targets<a class="headerlink" href="#diagnosis-targets" title="Permanent link">&para;</a></h2>
-<p>For clinical users, the most important distinction is between the two diagnosis concept targets:</p>
+<p>ECOG C demonstrates Q1: it occurs after E1's own 365-day horizon but inside the extended window. It reaches E1 through date-window fallback. P1 contributes its window end, but its start never competes with another primary's start in the ranking. If E1's own end already covers P1, extension does not shorten it.</p>
+<h3 id="worked-example-2-two-lung-primaries">Worked example 2: two lung primaries<a class="headerlink" href="#worked-example-2-two-lung-primaries" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>dx_any</code> asks whether a diagnosis row is present on the episode being evaluated</li>
-<li><code>dx_primary</code> asks whether the diagnosis belongs to the patient's primary diagnosis episode anchor</li>
+<li><strong>E1</strong> is the first lung primary, diagnosed 1 June 2025, with a recorded end of 30 June 2026. Its window runs from 3 March 2025 to 30 June 2026.</li>
+<li><strong>E2</strong> is the second lung primary, diagnosed 1 March 2026, with no recorded end date. Its window runs from 1 December 2025 to 1 March 2027.</li>
 </ul>
-<p><code>dx_primary</code> is intended for cohort definitions that should be stable at the start of the primary episode of care, rather than changing because later progression or metastatic episodes carry related diagnosis coding.</p>
-<p>That design is deliberate. It lets the same reporting engine support both:</p>
-<ul>
-<li>broad episode-level diagnosis logic</li>
-<li>primary-diagnosis anchored cohort logic</li>
-</ul>
-<p>without forcing report authors to invent bespoke SQL or special-case post-processing.</p>
-<h2 id="string-backed-filters">String-backed Filters<a class="headerlink" href="#string-backed-filters" title="Permanent link">&para;</a></h2>
-<p><code>SubstringRule</code> works against the measurable's <code>value_string_attr</code>, but those string fields are not all the same kind of data.</p>
-<p>Current examples include:</p>
-<ul>
-<li>diagnosis code strings such as <code>condition_code</code></li>
-<li>derived labels such as <code>stage_label</code></li>
-<li>event labels such as <code>event_label</code></li>
-<li>treatment names such as <code>surgery_name</code>, <code>regimen_concept</code>, and <code>course_concept</code></li>
-<li>provider specialty labels such as <code>provider_specialty</code></li>
-</ul>
-<p>That is why the measurable contract matters: the rule engine only knows that it is applying a substring filter to the target's declared string field.</p>
-<p>See <code>src/oa_cohorts/measurables/measurable_resolver.py</code> for the authoritative target-to-class registry.</p>
+<div  class="mermaid">gantt
+    title Two lung primaries
+    dateFormat YYYY-MM-DD
+    axisFormat %b %Y
+    section Episode windows
+    E1 first lung primary         :e1, 2025-03-03, 2026-06-30
+    E2 second lung primary        :e2, 2025-12-01, 2027-03-01
+    section Events
+    GP referral 1                 :milestone, 2025-05-10, 0d
+    GP referral 2 (new lesion)    :milestone, 2026-02-05, 0d
+    Spirometry                    :milestone, 2026-03-10, 0d
+    MDT presentation              :milestone, 2026-03-12, 0d
+</div>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Attachment under the stated rules</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GP referral 1, 10 May 2025</td>
+<td>E1</td>
+<td>Only E1's window contains it</td>
+</tr>
+<tr>
+<td>GP referral 2 for the new lesion, 5 Feb 2026</td>
+<td>E1</td>
+<td>Both windows contain it, but E1 is less than 365 days old, so Q4 does not override it</td>
+</tr>
+<tr>
+<td>Spirometry, 10 Mar 2026</td>
+<td>E2</td>
+<td>Both had started; E2 has the more recent start</td>
+</tr>
+<tr>
+<td>MDT presentation, 12 Mar 2026</td>
+<td>E2</td>
+<td>As for spirometry</td>
+</tr>
+</tbody>
+</table>
+<p>The spirometry and MDT attach once, to E2. The referral for the new lesion attaches to E1 under the already-started preference, so it cannot start an E2 referral-to-specialist or referral-to-treatment calculation through episode-aligned matching. Q4 keeps this result because E1 is less than 365 days old at the referral. If E1 instead began on 1 June 2024 and remained eligible, that 5 February referral would attach to E2: E1 is then at least 365 days old and E2 begins within 60 days. A valid explicit link to E1 still takes precedence.</p>
+<p>Ranking by dates alone does not establish which cancer an event concerns. If E2 were a prostate primary, the lung MDT would still attach to E2 under this rule. Q5 keeps attachment independent of the kind or content of an event.</p>
+<h2 id="part-2-for-developers">Part 2: for developers<a class="headerlink" href="#part-2-for-developers" title="Permanent link">&para;</a></h2>
+<h3 id="attachment-contract-omop-constructs">Attachment contract (<code>omop-constructs</code>)<a class="headerlink" href="#attachment-contract-omop-constructs" title="Permanent link">&para;</a></h3>
+<!-- table TODO once completed -->
+
+<p>View-definition changes require a rebuild, followed by immediate ANALYZE in dependency order. See <a href="../schema_management/#rebuilding-and-refreshing-clinical-materialized-views">Rebuilding and refreshing clinical materialized views</a>.</p>
+<h3 id="measure-and-indicator-contract-oa-cohorts">Measure and indicator contract (<code>oa-cohorts</code>)<a class="headerlink" href="#measure-and-indicator-contract-oa-cohorts" title="Permanent link">&para;</a></h3>
+<!-- table TODO once completed -->
+
+<h2 id="diagnosis-time-evidence-windows">Diagnosis-time evidence windows<a class="headerlink" href="#diagnosis-time-evidence-windows" title="Permanent link">&para;</a></h2>
+<p><a href="../measure_resolution/">Temporal measure composition</a> explains the measure-based
+anchor.</p>
 
 
 

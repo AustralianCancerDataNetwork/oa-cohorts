@@ -601,6 +601,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="episode_attachment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Episode Attachment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -779,6 +807,19 @@
 <div class="highlight"><pre><span></span><code>{person_id, episode_id, measure_resolver, measure_date}
 </code></pre></div>
 <p>That canonical shape lets reports, indicators, and dashboards reuse the same underlying logic while preserving timing and episode alignment.</p>
+<p>Diagnosis-related measurements, procedures, and observations with valid explicit episode relationships retain those relationships. An unlinked event is assigned to one eligible episode of care by preferring an episode already started on the event date, then the nearest episode start, and finally the lowest episode identifier.</p>
+<p>For example, suppose a patient's first lung cancer episode starts on 10 January 2024 and remains active during ongoing care through 30 June 2026. A second primary lung cancer episode starts on 1 March 2026, and an unlinked spirometry result is recorded on 10 March 2026. Both episodes are eligible and have already started, so the ranked fallback assigns the result to the second episode because its start is nearest to the measurement date. A valid explicit relationship bypasses this fallback: a relationship to the first episode assigns the result there, while valid relationships to both episodes retain both clinical assertions. The unlinked result therefore contributes one episode-specific cohort row rather than one row for every overlapping episode.</p>
+<div  class="mermaid">flowchart LR
+    first["First primary episode<br/>10 Jan 2024–30 Jun 2026<br/>active during ongoing care"] --> eligible{"Eligible for the<br/>10 Mar 2026 result?"}
+    second["Second primary episode<br/>starts 1 Mar 2026"] --> eligible
+    result["Unlinked spirometry<br/>10 Mar 2026"] --> eligible
+    eligible --> started["Both episodes have started"]
+    started --> nearest["Choose the nearest start"]
+    nearest --> selected["Assign to second episode<br/>9 days from its start"]
+    selected --> member["Emit one episode-specific<br/>cohort row"]
+    result -. "valid explicit relationships bypass fallback" .-> explicit["Emit every explicitly<br/>linked episode"]
+</div>
+<p>Note that if there has been a change to materialized-view definitions, installing the Python packages does not alter materialized-view definitions already stored in the database. You will need to rebuild any changed materialised views before running reports. Rebuild their dependent views in dependency order and ANALYZE each immediately after creating it. Refreshing a materialized view updates its data but does not replace its definition. See <a href="schema_management/#rebuilding-and-refreshing-clinical-materialized-views">Rebuilding and refreshing clinical materialized views</a> for the schema maintenance guidance.</p>
 <hr />
 <h2 id="conceptual-layers">Conceptual Layers<a class="headerlink" href="#conceptual-layers" title="Permanent link">&para;</a></h2>
 <h3 id="layer-6-report">Layer 6: Report<a class="headerlink" href="#layer-6-report" title="Permanent link">&para;</a></h3>

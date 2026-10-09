@@ -16,7 +16,7 @@
         <link rel="prev" href="../example_execution/">
       
       
-        <link rel="next" href="../schema_management/">
+        <link rel="next" href="../episode_attachment/">
       
       
         
@@ -603,6 +603,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../episode_attachment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Episode Attachment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -875,7 +903,7 @@
 <p>A third measure kind handles cases where qualification depends on the relationship between two events — specifically, whether event B occurs within a defined window relative to event A.</p>
 <p>This is expressed via <code>MeasureTemporalWindow</code>, a separate config table with a 1:1 relationship to <code>Measure</code> (enforced by primary key). A measure with a <code>window_config</code> row is a temporal window measure.</p>
 <p><strong>Anchor and candidate</strong></p>
-<p>The measure's own <code>subquery_id</code> defines the anchor event. A separate <code>candidate_measure_id</code> points to another measure whose events are evaluated relative to that anchor. The anchor is deduplicated to one row per resolver (earliest event) before the join.</p>
+<p>The anchor uses exactly one source: the measure's <code>subquery_id</code>, or <code>MeasureTemporalWindow.anchor_measure_id</code> pointing to another dated measure. A separate <code>candidate_measure_id</code> identifies the events evaluated relative to that anchor. A measure anchor runs its own filters first; only then is its earliest returned date selected per <code>(person_id, episode_id, measure_resolver)</code>. Existing subquery anchors keep their earliest-event behaviour. Missing references, two anchor sources, reversed bounds and dependency cycles are rejected before SQL compilation. </p>
 <p><strong>Window bounds</strong></p>
 <p><code>window_min_days</code> and <code>window_max_days</code> are optional. <code>NULL</code> means unbounded on that side. Negative values are valid — a candidate event occurring before the anchor can still qualify when it falls within the configured bounds. The emitted result remains the canonical <code>MeasureMember</code> row shape described above, so downstream comparison is based on the resolved <code>measure_date</code> selected by the window logic rather than on a separately emitted delta column.</p>
 <p><strong>Pick strategy</strong> (<code>window_pick_strategy</code>)</p>

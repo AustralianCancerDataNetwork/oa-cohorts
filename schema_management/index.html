@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://AustralianCancerDataNetwork.github.io/oa-cohorts/schema_management/">
       
       
-        <link rel="prev" href="../measure_resolution/">
+        <link rel="prev" href="../episode_attachment/">
       
       
       
@@ -532,6 +532,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../episode_attachment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Episode Attachment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -660,6 +688,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#rebuilding-and-refreshing-clinical-materialized-views" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rebuilding and refreshing clinical materialized views
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#getting-started" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -777,6 +816,17 @@
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#rebuilding-and-refreshing-clinical-materialized-views" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rebuilding and refreshing clinical materialized views
+      
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#getting-started" class="md-nav__link">
@@ -925,6 +975,14 @@
 
 <h1 id="schema-management">Schema Management<a class="headerlink" href="#schema-management" title="Permanent link">&para;</a></h1>
 <p>The dashboard database holds the tables that describe reports, indicators, measures, subqueries, and rules. Those tables are versioned with Alembic, and <code>oa-cohorts schema</code> is the interface to them.</p>
+<h2 id="rebuilding-and-refreshing-clinical-materialized-views">Rebuilding and refreshing clinical materialized views<a class="headerlink" href="#rebuilding-and-refreshing-clinical-materialized-views" title="Permanent link">&para;</a></h2>
+<p>Clinical materialized views are defined by <code>omop-constructs</code> in the CDM database. The dashboard-table migrations described below manage report configuration tables; <code>oa-cohorts schema upgrade</code> does not replace those clinical view definitions.</p>
+<p>If source data changes while the view definition stays the same, refresh the affected views in dependency order and update their statistics. For an individual view, the operator commands are:</p>
+<div class="highlight"><pre><span></span><code><span class="n">REFRESH</span><span class="w"> </span><span class="n">MATERIALIZED</span><span class="w"> </span><span class="k">VIEW</span><span class="w"> </span><span class="k">schema_name</span><span class="p">.</span><span class="n">view_name</span><span class="p">;</span>
+<span class="k">ANALYZE</span><span class="w"> </span><span class="k">schema_name</span><span class="p">.</span><span class="n">view_name</span><span class="p">;</span>
+</code></pre></div>
+<p>Replace the example schema and view names with the verified target. Installing a new package does not change definitions already stored in PostgreSQL, and a refresh uses the stored definition.</p>
+<p>If a definition changes, rebuild the affected views and their dependent objects during an approved maintenance window. Preserve their definitions, ownership, grants and custom indexes for restoration or rollback; drop dependents before the views they reference, then recreate in dependency order. <strong>ANALYZE each populated view immediately after creating it</strong>, before building its dependents. Check the release's rebuild scope and verify the report results before reopening report jobs.</p>
 <h2 id="getting-started">Getting started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h2>
 <p>The current schema is the baseline. To bring a database under management:</p>
 <div class="highlight"><pre><span></span><code>oa-cohorts<span class="w"> </span>schema<span class="w"> </span>bootstrap
