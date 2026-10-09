@@ -7,6 +7,7 @@ from graphlib import CycleError, TopologicalSorter
 
 import sqlalchemy as sa
 import sqlalchemy.orm as so
+from sqlalchemy.exc import DBAPIError
 from orm_loader.helpers import Base
 
 from ..core import ResultDateSource, RuleCombination, WindowPickStrategy
@@ -263,8 +264,8 @@ class Measure(HTMLRenderable, Base):
             )
             return blocks
 
-        if self.is_temporal_window:
-            cfg = self.window_config
+        cfg = self.window_config
+        if cfg is not None:
             anchor = cfg.anchor_measure or self.subquery
             if anchor is not None:
                 blocks.append(RawHTML("<div class='subquery-section-title'>Anchor</div>"))
@@ -431,6 +432,8 @@ class MeasureTemporalWindow(Base):
 
 def _window_dependencies(measure: Measure) -> list[Measure]:
     cfg = measure.window_config
+    if cfg is None:
+        raise ValueError(f"Measure {measure.measure_id} has no temporal-window configuration")
     anchor = getattr(cfg, "anchor_measure", None)
     if getattr(cfg, "anchor_measure_id", None) is not None and anchor is None:
         raise ValueError(f"Measure {measure.measure_id} has a missing anchor measure")
@@ -453,7 +456,10 @@ def _temporal_anchor_query(measure: Measure, *, ep_override: bool) -> SQLQuery:
     """Select the earliest date AFTER a measure anchor's own predicates run."""
     anchor = getattr(measure.window_config, "anchor_measure", None)
     if anchor is None:
-        return measure.subquery.get_subquery_first(ep_override=ep_override)
+        subquery = measure.subquery
+        if subquery is None:
+            raise ValueError(f"Measure {measure.measure_id} has no temporal anchor subquery")
+        return subquery.get_subquery_first(ep_override=ep_override)
     return _first_member_query(MeasureSQLCompiler(anchor).sql_any(ep_override=ep_override))
 
 
@@ -789,7 +795,7 @@ class MeasureExecutor:
 
         try:
             rows = self.db.execute(sql).all()
-        except sa.exc.DBAPIError as exc:
+        except DBAPIError as exc:
             reraise_schema_error(exc, context=f"Measure '{measure.name}' (ID {measure.measure_id})")
             raise
         rows_typed = [MeasureMember.from_row(r) for r in rows]
