@@ -7,8 +7,8 @@ from graphlib import CycleError, TopologicalSorter
 
 import sqlalchemy as sa
 import sqlalchemy.orm as so
-from sqlalchemy.exc import DBAPIError
 from orm_loader.helpers import Base
+from sqlalchemy.exc import DBAPIError
 
 from ..core import ResultDateSource, RuleCombination, WindowPickStrategy
 from ..core.executability import ExecStatus, MeasureExecCheck

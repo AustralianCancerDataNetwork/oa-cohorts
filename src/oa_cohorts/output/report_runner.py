@@ -3,7 +3,6 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
-import sqlalchemy as sa
 import sqlalchemy.orm as so
 from sqlalchemy.exc import DBAPIError
 
