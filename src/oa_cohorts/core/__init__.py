@@ -1,4 +1,5 @@
 from .enums import (
+    IndicatorGrain,
     ReportStatus,
     ResultDateSource,
     RuleCombination,
@@ -10,6 +11,7 @@ from .enums import (
 )
 
 __all__ = [
+    "IndicatorGrain",
     "ReportStatus",
     "ResultDateSource",
     "RuleCombination",

@@ -4,6 +4,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
+from ..core import IndicatorGrain
+
 
 class MeasureSummary(BaseModel):
     id: int
@@ -12,6 +14,8 @@ class MeasureSummary(BaseModel):
 
 
 class IndicatorPayload(BaseModel):
+
+    grain: IndicatorGrain = IndicatorGrain.episode
 
     indicator_id: int
     indicator_description: str
@@ -92,6 +96,7 @@ class PivotCohortRow(BaseModel):
 
 
 class PivotIndicatorRow(BaseModel):
+    grain: IndicatorGrain = IndicatorGrain.episode
     person_id: int
     measure_resolver: int
 

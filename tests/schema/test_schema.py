@@ -244,11 +244,12 @@ def test_history_lists_every_revision_oldest_first():
         "0002_report_date_columns",
         "0003_indicator_map_overrides",
         "0004_window_measure_anchor",
+        "0005_indicator_grain",
     ]
     assert revisions[0].down_revision is None
     assert not revisions[0].is_head
     assert revisions[-1].is_head
-    assert revisions[-1].down_revision == "0003_indicator_map_overrides"
+    assert revisions[-1].down_revision == "0004_window_measure_anchor"
 
 
 def test_revision_ids_fit_the_alembic_version_column():
@@ -550,4 +551,4 @@ def test_measure_anchor_downgrade_refuses_config_loss(sqlite_engine):
         connection.execute(sa.text("INSERT INTO measure_temporal_window (measure_id,anchor_measure_id,candidate_measure_id,require_same_resolver) VALUES (1,2,2,1)"))
     with pytest.raises(ValueError, match="Remove measure-anchor configuration"):
         downgrade(sqlite_engine, "0003_indicator_map_overrides")
-    assert current_revision(sqlite_engine) == head_revision()
+    assert current_revision(sqlite_engine) == "0004_window_measure_anchor"

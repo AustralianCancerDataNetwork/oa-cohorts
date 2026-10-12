@@ -1335,7 +1335,7 @@ requires-dist = [
     { name = "myst-parser", marker = "extra == 'docs'" },
     { name = "oa-configurator", specifier = ">=1.2.1,<2" },
     { name = "omop-alchemy", extras = ["postgres"], specifier = ">=1.2.2,<2" },
-    { name = "omop-constructs", specifier = ">=0.9.0,<1" },
+    { name = "omop-constructs", specifier = ">=0.10.0,<1" },
     { name = "orm-loader", specifier = ">=1.2.0,<2" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.3" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0" },
@@ -1392,7 +1392,7 @@ postgres = [
 
 [[package]]
 name = "omop-constructs"
-version = "0.9.0"
+version = "0.10.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "oa-configurator" },
@@ -1401,9 +1401,9 @@ dependencies = [
     { name = "orm-loader" },
     { name = "sqlalchemy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/21/54/f3c6d6a49f18ecc51201a8398e1df8d621ed81e5b86bab656cdb8f0d3e2c/omop_constructs-0.9.0.tar.gz", hash = "sha256:7929765eb37cae115120195dc099efb998b8ce7e3a6001e969fb61dcf1cf73ec", size = 272809, upload-time = "2026-10-09T11:19:19.921Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/02/8c/a1092685631bceff32ec84060cac972ab1c5c26e8697e9bcd8dbf2b33bd9/omop_constructs-0.10.0.tar.gz", hash = "sha256:3737c6fffd36690cc2bf256a4f30dd2c6648b1c3b745585b64ad0250125939a8", size = 276294, upload-time = "2026-10-11T02:57:35.231Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/78/4b/815d1431af35050385759cdf4288edbce5ceb9fe768be8647ad87abdc370/omop_constructs-0.9.0-py3-none-any.whl", hash = "sha256:f29626f0f60fc0226c1b7411ceb3bd18df4910cf65044661a3062c183de99b57", size = 101048, upload-time = "2026-10-09T11:19:18.138Z" },
+    { url = "https://files.pythonhosted.org/packages/8e/84/a1c3de0f049b735ab6cd9664cc18521341c458f2a8b5dd57897f2669350e/omop_constructs-0.10.0-py3-none-any.whl", hash = "sha256:f91554d843f2489c22053bb44146abec8072957717e9ca923b32a17a86874853", size = 100000, upload-time = "2026-10-11T02:57:33.626Z" },
 ]
 
 [[package]]

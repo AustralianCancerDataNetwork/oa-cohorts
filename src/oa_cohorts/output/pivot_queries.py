@@ -4,6 +4,19 @@ from collections.abc import Sequence
 from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING
 
+from ..core import IndicatorGrain
+from ..query.indicator_members import (
+    IndicatorMemberResult,
+    MemberKey,
+    cohort_anchor_dates,
+    indicator_grain,
+    member_key,
+    members_by_key,
+    reduce_patient_results,
+)
+from ..query.indicator_members import (
+    dedupe_members as _dedupe_members,
+)
 from ..query.measure import MeasureExecutor, MeasureMember
 from ..query.report import Report, ReportIndicatorMap
 from .report_payload import (
@@ -39,19 +52,6 @@ def collect_report_cohort_members(report: Report, executor: MeasureExecutor) -> 
     return members
 
 
-def _dedupe_members(members: Sequence[MeasureMember]) -> list[MeasureMember]:
-    seen: set[MeasureMember] = set()
-    out: list[MeasureMember] = []
-
-    for member in members:
-        if member in seen:
-            continue
-        seen.add(member)
-        out.append(member)
-
-    return out
-
-
 def _coerce_date(value: date | datetime | None) -> date | None:
     if value is None:
         return None
@@ -66,43 +66,6 @@ def _pick_earliest_date(current: date | None, candidate: date | None) -> date | 
     if candidate is None:
         return current
     return min(current, candidate)
-
-
-def _build_person_resolved_numerator_dates(
-    members: Sequence[MeasureMember],
-    *,
-    valid_people: set[int],
-) -> dict[int, date | None]:
-    numerator_dates: dict[int, date | None] = {}
-
-    for member in members:
-        if member.person_id not in valid_people:
-            continue
-        numerator_dates[member.person_id] = _pick_earliest_date(
-            numerator_dates.get(member.person_id),
-            _coerce_date(member.measure_date),
-        )
-
-    return numerator_dates
-
-
-def _build_resolver_resolved_numerator_dates(
-    members: Sequence[MeasureMember],
-    *,
-    valid_keys: set[tuple[int, int]],
-) -> dict[tuple[int, int], date | None]:
-    numerator_dates: dict[tuple[int, int], date | None] = {}
-
-    for member in members:
-        key = (member.person_id, member.measure_resolver)
-        if key not in valid_keys:
-            continue
-        numerator_dates[key] = _pick_earliest_date(
-            numerator_dates.get(key),
-            _coerce_date(member.measure_date),
-        )
-
-    return numerator_dates
 
 
 def _indicator_window(indicator, side: str) -> tuple[int | None, int | None]:
@@ -140,42 +103,30 @@ def _member_within_indicator_window(
     return not (before_window or after_window)
 
 
-def _cohort_anchor_dates_by_key(
-    cohort_members: Sequence[MeasureMember],
-) -> dict[tuple[int, int], date | None]:
-    """Use the earliest in-scope cohort membership date as the resolver anchor."""
-    anchors: dict[tuple[int, int], date | None] = {}
-    for member in cohort_members:
-        key = (member.person_id, member.measure_resolver)
-        candidate = _coerce_date(member.measure_date)
-        current = anchors.get(key)
-        if current is None:
-            anchors[key] = candidate
-        elif candidate is not None:
-            anchors[key] = min(current, candidate)
-    return anchors
+def _cohort_anchor_dates_by_key(cohort_members: Sequence[MeasureMember]):
+    return cohort_anchor_dates(cohort_members)
 
 
-def _earliest_numerator_date_for_person_anchor(
+def _earliest_numerator_date_for_member_anchor(
     indicator,
     members: Sequence[MeasureMember],
     *,
-    person_id: int,
+    member: MeasureMember,
     anchor_date: date | datetime | None,
 ) -> date | None:
-    """Find the earliest numerator date for a person that satisfies the anchor window."""
+    """Find the earliest dated evidence for this complete cancer key and anchor."""
     earliest: date | None = None
-    for member in members:
-        if member.person_id != person_id:
+    for candidate in members:
+        if member_key(candidate) is None or member_key(candidate) != member_key(member):
             continue
         if not _member_within_indicator_window(
             indicator,
             side="numerator",
-            member_date=member.measure_date,
+            member_date=candidate.measure_date,
             anchor_date=anchor_date,
         ):
             continue
-        earliest = _pick_earliest_date(earliest, _coerce_date(member.measure_date))
+        earliest = _pick_earliest_date(earliest, _coerce_date(candidate.measure_date))
     return earliest
 
 
@@ -183,14 +134,14 @@ def _build_windowed_resolver_numerator_dates(
     indicator,
     members: Sequence[MeasureMember],
     *,
-    anchor_dates_by_key: dict[tuple[int, int], date | None],
-    valid_keys: set[tuple[int, int]],
-) -> dict[tuple[int, int], date | None]:
+    anchor_dates_by_key: dict[MemberKey, date | None],
+    valid_keys: set[MemberKey],
+) -> dict[MemberKey, date | None]:
     """Build earliest numerator dates after applying resolver-specific cohort anchors."""
-    numerator_dates: dict[tuple[int, int], date | None] = {}
+    numerator_dates: dict[MemberKey, date | None] = {}
     for member in members:
-        key = (member.person_id, member.measure_resolver)
-        if key not in valid_keys:
+        key = member_key(member)
+        if key is None or key not in valid_keys:
             continue
         if not _member_within_indicator_window(
             indicator,
@@ -255,7 +206,7 @@ def build_pivot_indicators(
                         )
                     ]
                 )
-                numerator_members = ind.numerator_measure.members(executor)
+                numerator_members_by_key = members_by_key(ind.numerator_measure.members(executor))
             else:
                 # Explicit denominator measures remain resolver-specific, but
                 # their dated eligibility is still anchored to report cohort
@@ -264,53 +215,56 @@ def build_pivot_indicators(
                     mm
                     for mm in ind.denominator_measure.members(executor)
                     if mm.measure_date is not None
-                    and (mm.person_id, mm.measure_resolver) in cohort_anchor_dates
+                    and member_key(mm) in cohort_anchor_dates
                     and _member_within_indicator_window(
                         ind,
                         side="denominator",
                         member_date=mm.measure_date,
-                        anchor_date=cohort_anchor_dates.get((mm.person_id, mm.measure_resolver)),
+                        anchor_date=cohort_anchor_dates.get(member_key(mm)),
                     )
                 ])
                 numerator_dates_by_key = _build_windowed_resolver_numerator_dates(
                     ind,
                     ind.numerator_measure.members(executor),
                     anchor_dates_by_key=cohort_anchor_dates,
-                    valid_keys={(member.person_id, member.measure_resolver) for member in denominator_members},
+                    valid_keys={member_key(member) for member in denominator_members},
                 )
 
+            episode_results = []
             for mm in denominator_members:
-                # Whole-cohort denominators should not emit both "pass" and "fail"
-                # rows for the same person when a numerator event is linked to only
-                # one of several in-scope episodes. With dynamic windows turned
-                # on, each row still evaluates against its own cohort anchor
-                # date, so different episodes for the same person can diverge.
+                # A whole-cohort row can pass only on evidence for its own cancer.
                 if ind.denominator_measure_id == 0:
-                    numerator_date = _earliest_numerator_date_for_person_anchor(
+                    numerator_date = _earliest_numerator_date_for_member_anchor(
                         ind,
-                        numerator_members,
-                        person_id=mm.person_id,
+                        numerator_members_by_key.get(member_key(mm), ()),
+                        member=mm,
                         anchor_date=mm.measure_date,
                     )
                     numerator_value = numerator_date is not None
                 else:
-                    key = (mm.person_id, mm.measure_resolver)
+                    key = member_key(mm)
                     numerator_date = numerator_dates_by_key.get(key)
                     numerator_value = key in numerator_dates_by_key
 
-                rows.append(
-                    PivotIndicatorRow(
-                        person_id=mm.person_id,
-                        measure_resolver=mm.measure_resolver,
-                        numerator_date=numerator_date,
-                        denominator_date=_coerce_date(mm.measure_date),
-                        numerator_measure_id=ind.numerator_measure.measure_id,
-                        denominator_measure_id=ind.denominator_measure.measure_id,
-                        indicator=ind.indicator_id,
-                        numerator_value=numerator_value,
-                        denominator_value=True,
-                    )
+                episode_results.append(IndicatorMemberResult(mm, numerator_value, numerator_date))
+
+            grain = indicator_grain(ind)
+            results = reduce_patient_results(episode_results) if grain == IndicatorGrain.patient else episode_results
+            rows.extend(
+                PivotIndicatorRow(
+                    person_id=result.denominator.person_id,
+                    measure_resolver=result.denominator.measure_resolver,
+                    grain=grain,
+                    numerator_date=result.numerator_date,
+                    denominator_date=_coerce_date(result.denominator.measure_date),
+                    numerator_measure_id=ind.numerator_measure.measure_id,
+                    denominator_measure_id=ind.denominator_measure.measure_id,
+                    indicator=ind.indicator_id,
+                    numerator_value=result.numerator_value,
+                    denominator_value=True,
                 )
+                for result in results
+            )
         except Exception as e:
             if strict:
                 raise
@@ -390,6 +344,7 @@ def _build_indicator_payload(link: ReportIndicatorMap) -> IndicatorPayload:
         indicator_id=ind.indicator_id,
         indicator_description=ind.indicator_description,
         indicator_reference=ind.indicator_reference,
+        grain=indicator_grain(ind),
         display_label=link.label,
         display_reference=link.reference,
         display_benchmark=link.benchmark,

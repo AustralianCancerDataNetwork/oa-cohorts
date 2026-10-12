@@ -147,6 +147,8 @@ def _clean_row(raw_row: dict[str, str], spec: TableImportSpec) -> dict[str, Any]
         transformed = spec.value_transforms.get(key, lambda item: item)(value)
         cleaned[key] = _coerce_value(available_columns[key], transformed)
 
+    if spec.table.name == "indicator" and "grain" in cleaned and cleaned["grain"] is None:
+        raise ValueError("Indicator grain must be episode or patient; omit the column to use the default")
     missing = _required_columns(spec.table) - cleaned.keys()
     if missing:
         raise ValueError(
