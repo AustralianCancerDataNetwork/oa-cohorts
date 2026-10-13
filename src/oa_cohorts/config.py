@@ -75,25 +75,14 @@ def create_dashboard_engine(
 
 
 def create_cdm_engine(stack: StackConfig | None = None) -> sa.Engine:
-    """Create a SQLAlchemy engine for the shared OMOP CDM database.
-
-    Construction is delegated to omop-alchemy rather than done here with
-    ``resolved.create_engine()``. Its ``create_cdm_engine`` also registers the
-    engine's vocabulary cache identity, which is what lets concept-set
-    expansions be shared between engines reading the same vocabulary dataset.
-    omop-alchemy exports ``vocabulary_identity`` "precisely so that packages
-    building their own engines compose the identity the same way -- two
-    spellings of one dataset would produce two cache entries that each look
-    authoritative". Building the engine here would silently opt every
-    oa-cohorts caller out of that cache, and would duplicate the safety
-    conditions that decide when sharing is unsafe.
+    """Create the primary engine for the shared OMOP CDM database.
 
     Only the *resolved database* crosses the boundary. omop-alchemy's own
     ``OmopAlchemyConfig`` is documented as internal to that package, so this
     resolves oa-cohorts' own ``cdm_db`` field and hands over the result.
 
-    Takes no engine kwargs: the vocabulary identity is registered against the
-    engine omop-alchemy returns, so the engine has to be the one it built.
+    A colocated vocabulary is required because query compilation reads both
+    vocabulary models and omop-constructs materialized views.
     """
     resolver, config = _resolver_and_config(stack)
     name = config.cdm_db or CONVENTIONAL_CDM_DB
@@ -117,13 +106,12 @@ def create_cdm_engine(stack: StackConfig | None = None) -> sa.Engine:
             "--cdm-db <name>' to a database declared kind = \"cdm\"."
         )
 
-    # Deferred: importing omop_alchemy.config runs omop-alchemy's package init
-    # (~125ms). Every CLI invocation imports this module, but only report
-    # execution touches the CDM, so the cost belongs on this call and not on
-    # `oa-cohorts schema check`.
-    from omop_alchemy.config import create_cdm_engine as _omop_alchemy_cdm_engine
+    from omop_alchemy.config import create_cdm_engines as _omop_alchemy_cdm_engines
+    from omop_constructs.config import require_colocated_vocabulary
 
-    return _omop_alchemy_cdm_engine(resolved)
+    require_colocated_vocabulary(resolved)
+    primary, _vocab = _omop_alchemy_cdm_engines(resolved)
+    return primary
 
 
 __all__ = [

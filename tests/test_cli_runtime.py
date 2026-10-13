@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 import sqlalchemy as sa
 from oa_configurator import (
@@ -20,7 +22,11 @@ from oa_cohorts.config import (
 )
 
 
-def _stack(*, databases: dict[str, object], tools: dict[str, dict] | None = None) -> StackConfig:
+def _stack(
+    *,
+    databases: Mapping[str, GenericDatabaseConfig | CDMDatabaseConfig],
+    tools: dict[str, dict] | None = None,
+) -> StackConfig:
     """A stack config backed by one in-memory SQLite connection."""
     return StackConfig(
         connections={"local": ConnectionConfig(dialect="sqlite", database_name=":memory:")},
@@ -29,12 +35,12 @@ def _stack(*, databases: dict[str, object], tools: dict[str, dict] | None = None
     )
 
 
-DASHBOARD_ONLY = {"dashboard_db": GenericDatabaseConfig(connection="local", schema_name="public")}
+DASHBOARD_ONLY = {"dashboard_db": GenericDatabaseConfig(connection="local")}
 DASHBOARD_AND_CDM = {
     **DASHBOARD_ONLY,
-    "cdm_db": CDMDatabaseConfig(connection="local", schema_name="omop", vocab_schema="omop"),
+    "cdm_db": CDMDatabaseConfig(connection="local"),
     "cdm_reporting": CDMDatabaseConfig(
-        connection="local", schema_name="reporting", vocab_schema="omop"
+        connection="local"
     ),
 }
 
@@ -217,7 +223,7 @@ def test_conventional_fallback_still_requires_a_cdm_database() -> None:
     stack = _stack(
         databases={
             **DASHBOARD_ONLY,
-            CONVENTIONAL_CDM_DB: GenericDatabaseConfig(connection="local", schema_name="public"),
+            CONVENTIONAL_CDM_DB: GenericDatabaseConfig(connection="local"),
         },
     )
 
@@ -225,26 +231,41 @@ def test_conventional_fallback_still_requires_a_cdm_database() -> None:
         create_cdm_engine(stack)
 
 
-def test_cdm_engine_registers_the_vocabulary_cache_identity(monkeypatch) -> None:
-    """Construction must go through omop-alchemy, not resolved.create_engine().
-
-    omop-alchemy's create_cdm_engine also registers the engine's vocabulary
-    identity, which is what lets concept-set expansions be shared between
-    engines reading the same dataset. Building the engine here instead would
-    silently opt every caller out of that cache.
-    """
+def test_cdm_engine_uses_omop_alchemy_engine_pair(monkeypatch) -> None:
+    """The compatibility wrapper returns the primary engine from the 2.0 pair."""
     import omop_alchemy.config as omop_alchemy_config
 
     seen: list[object] = []
-    real = omop_alchemy_config.create_cdm_engine
+    real = omop_alchemy_config.create_cdm_engines
 
     def spy(resolved):
         seen.append(resolved)
         return real(resolved)
 
-    monkeypatch.setattr(omop_alchemy_config, "create_cdm_engine", spy)
+    monkeypatch.setattr(omop_alchemy_config, "create_cdm_engines", spy)
 
     engine = create_cdm_engine(_stack(databases=DASHBOARD_AND_CDM))
 
     assert isinstance(engine, sa.Engine)
-    assert len(seen) == 1, "oa-cohorts built the CDM engine itself"
+    assert len(seen) == 1, "oa-cohorts did not use omop-alchemy's engine pair"
+
+
+def test_cdm_engine_rejects_split_vocabulary_before_sql(monkeypatch, tmp_path) -> None:
+    stack = StackConfig(
+        connections={
+            "primary": ConnectionConfig(dialect="sqlite", database_name=str(tmp_path / "primary.sqlite")),
+            "vocab": ConnectionConfig(dialect="sqlite", database_name=str(tmp_path / "vocab.sqlite")),
+            "dashboard": ConnectionConfig(dialect="sqlite", database_name=":memory:"),
+        },
+        databases={
+            "dashboard_db": GenericDatabaseConfig(connection="dashboard"),
+            "cdm_db": CDMDatabaseConfig(connection="primary", vocab_connection="vocab"),
+        },
+    )
+    monkeypatch.setattr(
+        "omop_alchemy.config.create_cdm_engines",
+        lambda *_args, **_kwargs: pytest.fail("split-vocabulary guard ran after engine creation"),
+    )
+
+    with pytest.raises(ConfigurationError, match="split-vocabulary deployments are unsupported"):
+        create_cdm_engine(stack)

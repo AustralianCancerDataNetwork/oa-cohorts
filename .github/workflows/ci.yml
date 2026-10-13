@@ -13,9 +13,10 @@ jobs:
     with:
       ty-src: src/oa_cohorts
   build-test-postgres:
-    uses: AustralianCancerDataNetwork/cava-devops/.github/workflows/build-test-postgres.yml@main
+    uses: AustralianCancerDataNetwork/cava-devops/.github/workflows/build-test-postgres-v2.yml@main
     with:
       ty-src: src/oa_cohorts
+      postgres-image: postgres:17
       postgres-db: oa_cohorts_ci
       setup-commands: |
         uv run omop-config connections add ci_pg \
@@ -34,12 +35,10 @@ jobs:
           --password test \
           --database-name oa_cohorts_test_ci \
           --test-only true
-        uv run omop-config databases add dashboard_db \
-          --kind generic \
+        uv run omop-config databases add generic dashboard_db \
           --connection ci_pg \
           --schema-name public
-        uv run omop-config databases add test_dashboard_db \
-          --kind generic \
+        uv run omop-config databases add generic test_dashboard_db \
           --connection ci_pg_test \
           --schema-name public
         uv run omop-config configure oa_cohorts \

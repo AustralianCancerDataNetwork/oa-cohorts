@@ -6,6 +6,7 @@ from typing import Any, Protocol, Union
 import sqlalchemy as sa
 from oa_configurator import get_logger
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.exc import SQLAlchemyError
 
 from .executability import ExecStatus
 
@@ -149,24 +150,47 @@ class HTMLRenderable:
             cls=" ".join(block_classes),
         )
 
-def render_sql(expr: sa.ClauseElement) -> str:
+def render_sql(
+    expr: sa.ClauseElement,
+    schema_translate_map: Mapping[object, str | None] | None = None,
+) -> str:
     """
     Render a SQLAlchemy expression to SQL text with bound params inlined.
-    Intended for debugging / display only.
+    Intended for debugging / display only. Callers with an engine can pass its
+    ``schema_translate_map`` from ``engine.get_execution_options()``.
     """
     try:
-        compiled = expr.compile(
-            dialect=postgresql.dialect(),
-            compile_kwargs={"literal_binds": True},
+        dialect = postgresql.dialect()
+        schema_translate_map = (
+            {"primary": None, "vocab": None}
+            if schema_translate_map is None
+            else schema_translate_map
         )
-        return str(compiled)
-    except Exception as e:
+
+        compiled = expr.compile(
+            dialect=dialect,
+            compile_kwargs={"literal_binds": True},
+            schema_translate_map=schema_translate_map,
+        )
+        sql = str(compiled)
+        for role, schema in schema_translate_map.items():
+            tag = getattr(role, "value", role)
+            placeholder = f"__[SCHEMA_{tag}]"
+            if schema:
+                sql = sql.replace(placeholder, dialect.identifier_preparer.quote_schema(schema))
+            else:
+                sql = sql.replace(f"{placeholder}.", "")
+        return sql
+    except SQLAlchemyError as e:
         return f"SQL render failed: {e}"
 
 
-def sql_block(expr: sa.ClauseElement) -> RawHTML:
+def sql_block(
+    expr: sa.ClauseElement,
+    schema_translate_map: Mapping[object, str | None] | None = None,
+) -> RawHTML:
     """
     Convenience wrapper to render SQL in a styled <pre> block.
     """
-    sql = render_sql(expr)
+    sql = render_sql(expr, schema_translate_map)
     return RawHTML(f"<pre class='sql-preview'>{esc(sql)}</pre>")

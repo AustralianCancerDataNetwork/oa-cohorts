@@ -4,7 +4,9 @@ from collections.abc import Iterator
 
 import pytest
 import sqlalchemy as sa
+from oa_configurator.testing import isolated_test_database
 
+from oa_cohorts.config import OaCohortsConfig
 from oa_cohorts.schema.metadata import owned_table_names, owned_tables
 
 
@@ -31,33 +33,18 @@ def _reset_owned_table_cache() -> Iterator[None]:
     owned_table_names.cache_clear()
 
 
-@pytest.fixture(scope="session")
-def pg_url() -> str:
-    """URL of the throwaway Postgres dashboard database, or skip.
-
-    ``resolve_test_database`` reads ``[tools.oa_cohorts].test_dashboard_db``
-    directly rather than through ``get_config()``, so a CI runner with no
-    production databases configured still resolves it. It skips when the field
-    is unset and fails if it resolves to a connection that is not
-    ``test_only`` — the guard that keeps this destructive suite off a real
-    dashboard database.
-    """
-    from oa_configurator.pytest_plugin import (
-        ensure_test_db_exists,
-        ensure_test_user_exists,
-        resolve_test_database,
-    )
-
-    from oa_cohorts.config import OaCohortsConfig
-
-    url = resolve_test_database(OaCohortsConfig, "test_dashboard_db")
-    ensure_test_user_exists(url)
-    ensure_test_db_exists(url)
-    return url
+@pytest.fixture
+def pg_db(request):
+    with isolated_test_database(
+        OaCohortsConfig,
+        "test_dashboard_db",
+        request=request,
+    ) as database:
+        yield database
 
 
 @pytest.fixture
-def pg_engine(pg_url) -> Iterator[sa.Engine]:
+def pg_engine(pg_db) -> Iterator[sa.Engine]:
     """A Postgres engine over an empty schema, torn down after each test.
 
     Function-scoped and schema-dropping because every test here is stateful:
@@ -65,7 +52,7 @@ def pg_engine(pg_url) -> Iterator[sa.Engine]:
     public CASCADE`` also clears the enum types and ``alembic_version``, which
     a table-level cleanup would leave behind.
     """
-    engine = sa.create_engine(pg_url, future=True)
+    engine = pg_db.committing_engine
 
     def _reset() -> None:
         with engine.begin() as connection:

@@ -2,7 +2,7 @@
 
 ```bash
 uv run pytest                 # everything; Postgres tests skip if unconfigured
-uv run pytest -m "not requires_database"   # explicitly SQLite-only
+uv run pytest -m "not postgresql"   # explicitly SQLite-only
 ```
 
 Nothing needs a database by default. The Postgres tests skip themselves with a
@@ -13,9 +13,9 @@ message naming what to configure.
 | Marker | Meaning |
 |--------|---------|
 | *(none)* | Runs on SQLite or in-process, no external dependencies |
-| `requires_database("test_dashboard_db")` | Needs a PostgreSQL database configured under that name |
+| `postgresql` | Needs the isolated test database configured as `test_dashboard_db` |
 
-`requires_database` comes from oa-configurator's pytest plugin. It skips when
+`isolated_test_database` from `oa_configurator.testing` skips when
 the named database is absent from your stack config, and **fails** when that
 database's connection is not marked `test_only`. These tests run
 `DROP SCHEMA public CASCADE` between cases, so that guard is the thing standing
@@ -70,7 +70,7 @@ creates it through `pg_admin`'s credentials on first use.
 connection without it is refused. And `--test-only false` on `pg_admin` is equally
 required: `dashboard_db` carries no `is_test`, so it is refused if it points at a
 `test_only` connection. The admin connection is also how the plugin finds credentials to
-create the test database — `pytest_plugin._find_admin_url` looks for a non-test-only
+create the test database — `oa_configurator.testing.isolated_test_database` looks for a non-test-only
 connection on the same host, and returns `None` if there isn't one, leaving both
 `ensure_test_*` helpers as silent no-ops.
 
@@ -89,7 +89,7 @@ touch "$OA_CONFIG_PATH" && chmod 600 "$OA_CONFIG_PATH"
 ### Running
 
 ```bash
-uv run pytest -m requires_database -v
+uv run pytest -m postgresql -v
 docker compose -f tests/docker-compose.yaml down
 ```
 

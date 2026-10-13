@@ -9,7 +9,7 @@ from orm_loader.helpers import Base
 from sqlalchemy.sql import CompoundSelect, Select
 
 from ..core import RuleTarget, RuleTemporality
-from ..core.html_utils import HTMLChild, HTMLRenderable, RawHTML, esc
+from ..core.html_utils import HTMLChild, HTMLRenderable, RawHTML, esc, render_sql
 from ..measurables import MeasurableBase, get_measurable_registry
 from ..measurables.measurable_base import SQLCol
 from .evidence import canonical_query
@@ -286,17 +286,4 @@ class Subquery(HTMLRenderable, Base):
         return blocks
 
     def _render_sql(self, stmt: sa.ClauseElement) -> str:
-        """
-        Render SQLAlchemy Select / CompoundSelect / ClauseElement to SQL string.
-        """
-        try:
-            from sqlalchemy.dialects import postgresql
-            dialect = postgresql.dialect()
-        except Exception:
-            dialect = sa.create_engine("sqlite://").dialect
-
-        compiled = stmt.compile(
-            dialect=dialect,
-            compile_kwargs={"literal_binds": True},
-        )
-        return str(compiled)
+        return render_sql(stmt)

@@ -1,19 +1,21 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import cast
 
 import pytest
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 from oa_cohorts.core import ResultDateSource, WindowPickStrategy
-from oa_cohorts.query.measure import MeasureSQLCompiler
+from oa_cohorts.core.executability import ExecStatus
+from oa_cohorts.query.measure import Measure, MeasureSQLCompiler, measure_dependencies
 from tests.conftest import FakeMeasure, FakeSubquery
 
 
 @dataclass
 class FakeWindowConfig:
-    candidate_measure: object
+    candidate_measure: object | None
     candidate_measure_id: int = 99
     anchor_measure_id: int | None = None
     anchor_measure: object | None = None
@@ -67,6 +69,115 @@ def test_null_bounds_produce_no_interval_predicate():
     )
     sql = str(MeasureSQLCompiler(m).sql_any().compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
     assert "INTERVAL" not in sql
+
+
+def test_measure_dependencies_exposes_temporal_candidate_and_anchor():
+    candidate = FakeMeasure(measure_id=99, name="candidate")
+    anchor = FakeMeasure(measure_id=100, name="anchor")
+    measure = FakeMeasure(
+        measure_id=1,
+        name="window",
+        window_config=FakeWindowConfig(
+            candidate_measure=candidate,
+            anchor_measure=anchor,
+            anchor_measure_id=anchor.measure_id,
+        ),
+    )
+
+    assert measure_dependencies(cast(Measure, measure)) == [candidate, anchor]
+    assert measure_dependencies(cast(Measure, FakeMeasure(measure_id=2, name="ordinary"))) == []
+
+
+def test_measure_dependencies_tolerates_a_dangling_candidate():
+    measure = FakeMeasure(
+        measure_id=1,
+        name="window",
+        window_config=FakeWindowConfig(candidate_measure=None),
+    )
+
+    assert measure_dependencies(cast(Measure, measure)) == []
+
+
+def test_measure_dependencies_includes_children_of_a_window():
+    child = FakeMeasure(measure_id=2, name="child")
+    candidate = FakeMeasure(measure_id=3, name="candidate")
+    anchor = FakeMeasure(measure_id=4, name="anchor")
+    measure = FakeMeasure(
+        measure_id=1,
+        name="window",
+        _children=[child],
+        window_config=FakeWindowConfig(candidate_measure=candidate, anchor_measure=anchor),
+    )
+
+    assert measure_dependencies(cast(Measure, measure)) == [child, candidate, anchor]
+
+
+def test_measure_dependency_closure_matches_validation_walk(monkeypatch):
+    import graphlib
+
+    import oa_cohorts.query.measure as measure_module
+
+    leaf = FakeMeasure(measure_id=5, name="leaf")
+    candidate = FakeMeasure(measure_id=3, name="candidate", _children=[leaf])
+    anchor = FakeMeasure(measure_id=4, name="anchor")
+    window = FakeMeasure(
+        measure_id=2,
+        name="window",
+        window_config=FakeWindowConfig(candidate_measure=candidate, anchor_measure=anchor),
+    )
+    root = FakeMeasure(measure_id=1, name="root", _children=[window])
+    walked: dict[int, list[int]] = {}
+    original_sorter = graphlib.TopologicalSorter
+
+    class RecordingSorter(original_sorter):
+        def __init__(self, graph):
+            walked.update(graph)
+            super().__init__(graph)
+
+    monkeypatch.setattr(measure_module, "TopologicalSorter", RecordingSorter)
+    measure_module._validate_measure_dependencies(cast(Measure, root))
+
+    closure = {id(root)}
+    pending = [root]
+    while pending:
+        current = pending.pop()
+        for dependency in measure_dependencies(cast(Measure, current)):
+            if id(dependency) not in closure:
+                closure.add(id(dependency))
+                pending.append(dependency)
+    assert closure == set(walked)
+
+
+def test_temporal_window_does_not_check_undated(monkeypatch):
+    measure = _make_measure(
+        [_row(1, 10, 10, "2024-01-01")],
+        [_row(1, 10, 10, "2024-02-01")],
+    )
+    calls = []
+
+    class Compiler:
+        def __init__(self, _measure):
+            pass
+
+        def sql_any(self):
+            calls.append("ANY")
+            return sa.select(1)
+
+        def sql_first(self):
+            calls.append("FIRST")
+            return sa.select(1)
+
+        def sql_undated(self):
+            calls.append("UNDATED")
+            return sa.select(1)
+
+    monkeypatch.setattr("oa_cohorts.query.measure.MeasureSQLCompiler", Compiler)
+    measure._render_sql = lambda _stmt: "SELECT 1"
+    check = Measure.is_executable(measure)
+
+    assert check.status is ExecStatus.PASS
+    assert check.not_applicable_variants == ("UNDATED",)
+    assert calls == ["ANY", "FIRST"]
 
 
 def test_both_bounds_use_signed_calendar_day_offsets():

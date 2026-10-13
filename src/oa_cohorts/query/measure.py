@@ -17,6 +17,7 @@ from ..core.html_utils import (
     HTMLRenderable,
     RawHTML,
     esc,
+    render_sql,
     sql_block,
     table,
     td,
@@ -201,8 +202,12 @@ class Measure(HTMLRenderable, Base):
         checks: list[tuple[str, Callable]] = [
             ("ANY", compiler.sql_any),
             ("FIRST", compiler.sql_first),
-            ("UNDATED", compiler.sql_undated),
         ]
+        not_applicable: tuple[str, ...] = ()
+        if not self.is_temporal_window:
+            checks.append(("UNDATED", compiler.sql_undated))
+        else:
+            not_applicable = ("UNDATED",)
 
         ok: list[str] = []
         failed: dict[str, str] = {}
@@ -227,6 +232,7 @@ class Measure(HTMLRenderable, Base):
             status=status,
             ok_variants=ok,
             failed_variants=failed,
+            not_applicable_variants=not_applicable,
         )
 
     def _html_css_class(self) -> str:
@@ -350,17 +356,7 @@ class Measure(HTMLRenderable, Base):
         return blocks
 
     def _render_sql(self, stmt: sa.ClauseElement) -> str:
-        try:
-            from sqlalchemy.dialects import postgresql
-            dialect = postgresql.dialect()
-        except ImportError:
-            dialect = sa.create_engine("sqlite://").dialect
-
-        compiled = stmt.compile(
-            dialect=dialect,
-            compile_kwargs={"literal_binds": True},
-        )
-        return str(compiled)
+        return render_sql(stmt)
 
     
 
@@ -466,6 +462,21 @@ class MeasureTemporalWindow(Base):
     candidate_measure: so.Mapped[Measure] = so.relationship(
         "Measure", foreign_keys=[candidate_measure_id]
     )
+
+
+def measure_dependencies(measure: Measure) -> list[Measure]:
+    """Return direct child and temporal-window dependencies without validation."""
+    dependencies = list(measure.children)
+    if measure.is_temporal_window:
+        config = measure.window_config
+        if config is not None:
+            for dependency in (
+                getattr(config, "candidate_measure", None),
+                getattr(config, "anchor_measure", None),
+            ):
+                if dependency is not None:
+                    dependencies.append(dependency)
+    return dependencies
 
 
 def _window_dependencies(measure: Measure) -> list[Measure]:

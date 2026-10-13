@@ -45,7 +45,10 @@ class MissingMaterializedViewError(MissingRelationError):
 class MissingCdmTableError(MissingRelationError):
     """The missing relation is a base OMOP CDM table owned by omop-alchemy."""
 
-    _REMEDIATION = "It is a base OMOP CDM table owned by omop-alchemy. Create it with: `omop-alchemy create-missing-tables`."
+    _REMEDIATION = (
+        "It is a base OMOP CDM table owned by omop-alchemy. Bootstrap the resolved CDM with "
+        "`omop-alchemy create-missing-tables`."
+    )
 
 
 class SchemaNotBootstrappedError(MissingRelationError):
@@ -86,7 +89,9 @@ def _classify_relation(relation_name: str) -> type[MissingRelationError] | None:
 
     from orm_loader.helpers import Base
 
-    if relation_name in Base.metadata.tables:
+    if relation_name in Base.metadata.tables or any(
+        table.name == relation_name for table in Base.metadata.tables.values()
+    ):
         return MissingCdmTableError
 
     try:

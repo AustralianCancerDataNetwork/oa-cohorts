@@ -11,15 +11,15 @@ Production is Postgres, and the two model fixes that motivated this package
 *only* appear on a real backend. ``test_check_is_clean_immediately_after_upgrade``
 is the test that would have caught them, and the one that catches the next.
 
-Every test here is marked ``requires_database("test_dashboard_db")``:
-oa-configurator's pytest plugin skips them when that database is not
-configured, and fails them if its connection is not marked ``test_only``.
+Every test here uses the isolated ``test_dashboard_db`` configured through
+``oa_configurator.testing``:
+the database helper skips them when the field is not configured, and fails
+them if its connection is not marked ``test_only``.
 See ``tests/README.md`` to run them locally.
 """
 
 from __future__ import annotations
 
-import pytest
 import sqlalchemy as sa
 
 from oa_cohorts.schema import (
@@ -34,8 +34,6 @@ from oa_cohorts.schema import (
 )
 from oa_cohorts.schema.bootstrap import bootstrap_query_schema
 from oa_cohorts.schema.enum_ops import sync_enum_labels
-
-pytestmark = pytest.mark.requires_database("test_dashboard_db")
 
 #: Enum types the baseline creates, with the column that uses each. Kept here
 #: rather than imported from the revision so a revision that quietly drops a

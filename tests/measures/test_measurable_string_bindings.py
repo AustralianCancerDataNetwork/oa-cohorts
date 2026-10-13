@@ -371,9 +371,12 @@ def test_death_uses_record_presence_and_date_fallback(monkeypatch, grain, dialec
     parsed = sa.engine.make_url(url)
     if dialect == "postgresql":
         assert parsed.host in ("localhost", "127.0.0.1") and parsed.port == 55433 and parsed.database == "postgres" and not parsed.query
-    with sa.create_engine(url).connect() as db:
+    engine_options = {
+        "schema_translate_map": {"primary": None, "vocab": None}
+    } if dialect == "sqlite" else {}
+    with sa.create_engine(url, execution_options=engine_options).connect() as db:
         db.exec_driver_sql("CREATE TEMPORARY TABLE person_demography_mv (person_id int, episode_id int, gender_concept_id int)")
-        db.exec_driver_sql("CREATE TEMPORARY TABLE death (person_id int PRIMARY KEY, death_date date, death_datetime timestamp)")
+        db.exec_driver_sql("CREATE TABLE death (person_id int PRIMARY KEY, death_date date, death_datetime timestamp)")
         # Patient 1 has two cancers. Patient 2 has gender but no death record.
         # Patient 3 has date-only death; patient 4 has a genuinely undated record.
         db.exec_driver_sql("INSERT INTO person_demography_mv VALUES (1,10,8507),(1,20,8507),(2,30,8507),(3,40,NULL),(4,50,8507)")

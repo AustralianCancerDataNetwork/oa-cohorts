@@ -71,6 +71,10 @@ Execution semantics:
 
 This is a working internal engine under active development. APIs may shift.
 
+## Hosting Requirements
+
+Clinical and vocabulary tables must be reachable through the same database connection. They may use separate schemas on that connection.
+
 ## Docker
 
 The repo includes a lightweight CLI container under `docker/docker-compose.yaml` that joins the external `cava-network`.
