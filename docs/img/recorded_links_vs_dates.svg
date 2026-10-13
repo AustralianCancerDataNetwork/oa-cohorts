@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="652" viewBox="0 0 800 652" role="img" aria-labelledby="title description">
+  <title id="title">Recorded links and date-based assignment can attach the same event differently</title>
+  <desc id="description">Two cancers are eligible for spirometry recorded on 10 March 2026. Without a valid recorded link it attaches to B, the more recently started cancer. A valid link to A attaches it to A instead. Valid links to both are retained.</desc>
+  <style>text { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; fill: #213047; }
+.heading { font-size: 24px; font-weight: 650; }
+.label { font-size: 20px; font-weight: 650; }
+.body { font-size: 19px; }
+.note { font-size: 18px; fill: #526174; }
+.small { font-size: 17px; fill: #526174; }
+.grid { stroke: #dce3ec; stroke-width: 1; }
+.axis { stroke: #526174; stroke-width: 1.5; }</style>
+  <rect width="800" height="652" rx="12" fill="#ffffff"/>
+  <text x="400" y="34" class="heading" text-anchor="middle">One spirometry result, two eligible cancers</text>
+  <text x="400" y="66" class="body" text-anchor="middle">Same patient · event recorded 10 March 2026</text>
+  <rect x="20" y="98" width="370" height="130" rx="10" fill="#edf5ff" stroke="#739bd0" stroke-width="1.5"/>
+  <text x="42" y="133" class="label">Cancer A</text>
+  <text x="42" y="170" class="body">Diagnosed 10 January 2024</text>
+  <text x="42" y="205" class="note">Still within its attachment window</text>
+  <rect x="410" y="98" width="370" height="130" rx="10" fill="#f5f0ff" stroke="#a18abb" stroke-width="1.5"/>
+  <text x="432" y="133" class="label">Cancer B</text>
+  <text x="432" y="170" class="body">Diagnosed 1 March 2026</text>
+  <text x="432" y="205" class="note">9 days before the spirometry</text>
+  <text x="400" y="270" class="label" text-anchor="middle">What changes when the recorded links change?</text>
+  <rect x="20" y="294" width="760" height="88" rx="10" fill="#f5f0ff" stroke="#a18abb" stroke-width="1.5"/>
+  <text x="42" y="330" class="label">No valid recorded link</text>
+  <text x="425" y="328" class="label">Cancer B</text>
+  <text x="425" y="359" class="note">Most recent start; both have started.</text>
+  <rect x="20" y="398" width="760" height="88" rx="10" fill="#edf5ff" stroke="#739bd0" stroke-width="1.5"/>
+  <text x="42" y="434" class="label">Valid link to A</text>
+  <text x="425" y="432" class="label">Cancer A</text>
+  <text x="425" y="463" class="note">Recorded link takes precedence.</text>
+  <rect x="20" y="502" width="760" height="88" rx="10" fill="#f7f8fa" stroke="#9ba5b2" stroke-width="1.5"/>
+  <text x="42" y="538" class="label">Valid links to A and B</text>
+  <text x="425" y="536" class="label">Both cancers</text>
+  <text x="425" y="567" class="note">Keep both recorded relationships.</text>
+  <text x="400" y="626" class="note" text-anchor="middle">Date-based assignment is used only when no valid recorded link exists.</text>
+</svg>

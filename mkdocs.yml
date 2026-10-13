@@ -30,6 +30,9 @@ markdown_extensions:
       permalink: true
       toc_depth: 2
 
+extra_css:
+  - stylesheets/figures.css
+
 extra_javascript:
   - https://unpkg.com/mermaid@10/dist/mermaid.min.js
   - js/mermaid-init.js
@@ -56,6 +59,7 @@ nav:
   - Execution:
     - Example execution: example_execution.md
   - Outputs:
+    - Evidence to Indicator: evidence_and_indicators.md
     - Measure Resolution: measure_resolution.md
     - Episode Attachment: episode_attachment.md
   - Operations:

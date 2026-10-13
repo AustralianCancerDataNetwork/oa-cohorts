@@ -1,0 +1,2703 @@
+{
+  "synthetic_only": true,
+  "cases": [
+    {
+      "id": "M01-and-first",
+      "family": "measure",
+      "reason": "Historical earliest completion: max(min(A),min(B)) = day 19; four witness pairs are not four FIRST rows.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "root:first": [
+          [
+            1,
+            10,
+            10,
+            19
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "a": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                9
+              ],
+              [
+                1,
+                10,
+                10,
+                40
+              ]
+            ]
+          },
+          "b": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                19
+              ],
+              [
+                1,
+                10,
+                10,
+                59
+              ]
+            ]
+          },
+          "root": {
+            "kind": "and",
+            "children": [
+              "a",
+              "b"
+            ]
+          }
+        },
+        "measure_checks": [
+          "root:first"
+        ]
+      }
+    },
+    {
+      "id": "M02-and-other-primary",
+      "family": "measure",
+      "reason": "One resolver may be shared by two cancers; episode identity must participate in AND.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "root:first": []
+      },
+      "current_runtime": {
+        "measures": {
+          "a": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                99,
+                9
+              ]
+            ]
+          },
+          "b": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                20,
+                99,
+                19
+              ]
+            ]
+          },
+          "root": {
+            "kind": "and",
+            "children": [
+              "a",
+              "b"
+            ]
+          }
+        },
+        "measure_checks": [
+          "root:first"
+        ]
+      }
+    },
+    {
+      "id": "M03-and-other-person",
+      "family": "measure",
+      "reason": "Resolver equality never authorizes cross-person evidence.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "root:first": []
+      },
+      "current_runtime": {
+        "measures": {
+          "a": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                99,
+                9
+              ]
+            ]
+          },
+          "b": {
+            "kind": "leaf",
+            "events": [
+              [
+                2,
+                20,
+                99,
+                19
+              ]
+            ]
+          },
+          "root": {
+            "kind": "and",
+            "children": [
+              "a",
+              "b"
+            ]
+          }
+        },
+        "measure_checks": [
+          "root:first"
+        ]
+      }
+    },
+    {
+      "id": "M04-or-any",
+      "family": "measure",
+      "reason": "Both ECOG alternatives remain available to downstream windows.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "root:any": [
+          [
+            1,
+            10,
+            10,
+            9
+          ],
+          [
+            1,
+            10,
+            10,
+            19
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "a": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                9
+              ]
+            ]
+          },
+          "b": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                19
+              ]
+            ]
+          },
+          "root": {
+            "kind": "or",
+            "children": [
+              "a",
+              "b"
+            ]
+          }
+        },
+        "measure_checks": [
+          "root:any"
+        ]
+      }
+    },
+    {
+      "id": "M05-or-first",
+      "family": "measure",
+      "reason": "FIRST OR is the earliest alternative, never an AND join.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "root:first": [
+          [
+            1,
+            10,
+            10,
+            9
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "a": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                9
+              ]
+            ]
+          },
+          "b": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                19
+              ]
+            ]
+          },
+          "root": {
+            "kind": "or",
+            "children": [
+              "a",
+              "b"
+            ]
+          }
+        },
+        "measure_checks": [
+          "root:first"
+        ]
+      }
+    },
+    {
+      "id": "M06-nested-and-or",
+      "family": "measure",
+      "reason": "A AND (B OR C) completes at day 19, while later witnesses remain reachable.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "root:first": [
+          [
+            1,
+            10,
+            10,
+            19
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "a": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                9
+              ],
+              [
+                1,
+                10,
+                10,
+                40
+              ]
+            ]
+          },
+          "b": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                19
+              ]
+            ]
+          },
+          "c": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                59
+              ]
+            ]
+          },
+          "choice": {
+            "kind": "or",
+            "children": [
+              "b",
+              "c"
+            ]
+          },
+          "root": {
+            "kind": "and",
+            "children": [
+              "a",
+              "choice"
+            ]
+          }
+        },
+        "measure_checks": [
+          "root:first"
+        ]
+      }
+    },
+    {
+      "id": "M07-or-duplicate",
+      "family": "measure",
+      "reason": "The same physical source event found twice produces one ANY member.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "root:any": [
+          [
+            1,
+            10,
+            10,
+            9
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "a": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                9,
+                "measurement:101"
+              ]
+            ]
+          },
+          "b": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                9,
+                "measurement:101"
+              ]
+            ]
+          },
+          "root": {
+            "kind": "or",
+            "children": [
+              "a",
+              "b"
+            ]
+          }
+        },
+        "measure_checks": [
+          "root:any"
+        ]
+      }
+    },
+    {
+      "id": "W01-inclusive",
+      "family": "measure",
+      "reason": "Inclusive [0,30] admits endpoints and rejects -1 and 31.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "w:any": [
+          [
+            1,
+            10,
+            10,
+            0
+          ],
+          [
+            1,
+            10,
+            10,
+            30
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "a": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                0
+              ]
+            ]
+          },
+          "b": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                -1
+              ],
+              [
+                1,
+                10,
+                10,
+                0
+              ],
+              [
+                1,
+                10,
+                10,
+                30
+              ],
+              [
+                1,
+                10,
+                10,
+                31
+              ]
+            ]
+          },
+          "w": {
+            "kind": "window",
+            "anchor": "a",
+            "candidate": "b",
+            "min": 0,
+            "max": 30,
+            "pick": "any",
+            "date_source": "candidate"
+          }
+        },
+        "measure_checks": [
+          "w:any"
+        ]
+      }
+    },
+    {
+      "id": "W02-earliest",
+      "family": "measure",
+      "reason": "Filter the candidate window before choosing earliest.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "w:any": [
+          [
+            1,
+            10,
+            10,
+            5
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "a": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                0
+              ]
+            ]
+          },
+          "b": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                -1
+              ],
+              [
+                1,
+                10,
+                10,
+                5
+              ],
+              [
+                1,
+                10,
+                10,
+                20
+              ]
+            ]
+          },
+          "w": {
+            "kind": "window",
+            "anchor": "a",
+            "candidate": "b",
+            "min": 0,
+            "max": 30,
+            "pick": "earliest",
+            "date_source": "candidate"
+          }
+        },
+        "measure_checks": [
+          "w:any"
+        ]
+      }
+    },
+    {
+      "id": "W02-latest",
+      "family": "measure",
+      "reason": "Filter the candidate window before choosing latest.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "w:any": [
+          [
+            1,
+            10,
+            10,
+            20
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "a": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                0
+              ]
+            ]
+          },
+          "b": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                5
+              ],
+              [
+                1,
+                10,
+                10,
+                20
+              ],
+              [
+                1,
+                10,
+                10,
+                31
+              ]
+            ]
+          },
+          "w": {
+            "kind": "window",
+            "anchor": "a",
+            "candidate": "b",
+            "min": 0,
+            "max": 30,
+            "pick": "latest",
+            "date_source": "candidate"
+          }
+        },
+        "measure_checks": [
+          "w:any"
+        ]
+      }
+    },
+    {
+      "id": "W02-closest",
+      "family": "measure",
+      "reason": "Filter the candidate window before choosing closest.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "w:any": [
+          [
+            1,
+            10,
+            10,
+            -2
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "a": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                0
+              ]
+            ]
+          },
+          "b": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                -10
+              ],
+              [
+                1,
+                10,
+                10,
+                -2
+              ],
+              [
+                1,
+                10,
+                10,
+                5
+              ]
+            ]
+          },
+          "w": {
+            "kind": "window",
+            "anchor": "a",
+            "candidate": "b",
+            "min": -5,
+            "max": 30,
+            "pick": "closest",
+            "date_source": "candidate"
+          }
+        },
+        "measure_checks": [
+          "w:any"
+        ]
+      }
+    },
+    {
+      "id": "W03-later-evidence",
+      "family": "measure",
+      "reason": "Global earliest assessment is outside the window; the later assessment must survive.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "w:any": [
+          [
+            1,
+            10,
+            10,
+            35
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "a": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                40
+              ]
+            ]
+          },
+          "b": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                0
+              ],
+              [
+                1,
+                10,
+                10,
+                35
+              ]
+            ]
+          },
+          "w": {
+            "kind": "window",
+            "anchor": "a",
+            "candidate": "b",
+            "min": -10,
+            "max": 0,
+            "pick": "earliest",
+            "date_source": "candidate"
+          }
+        },
+        "measure_checks": [
+          "w:any"
+        ]
+      }
+    },
+    {
+      "id": "W04-shared-resolver",
+      "family": "measure",
+      "reason": "A window cannot pair an anchor on cancer A with evidence on cancer B.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "w:any": []
+      },
+      "current_runtime": {
+        "measures": {
+          "a": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                99,
+                40
+              ]
+            ]
+          },
+          "b": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                20,
+                99,
+                35
+              ]
+            ]
+          },
+          "w": {
+            "kind": "window",
+            "anchor": "a",
+            "candidate": "b",
+            "min": -10,
+            "max": 0,
+            "pick": "any",
+            "date_source": "candidate"
+          }
+        },
+        "measure_checks": [
+          "w:any"
+        ]
+      }
+    },
+    {
+      "id": "W05-undated",
+      "family": "measure",
+      "reason": "An undated candidate cannot establish a bounded relationship.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "w:any": []
+      },
+      "current_runtime": {
+        "measures": {
+          "a": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                40
+              ]
+            ]
+          },
+          "b": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                null
+              ]
+            ]
+          },
+          "w": {
+            "kind": "window",
+            "anchor": "a",
+            "candidate": "b",
+            "min": -10,
+            "max": 0,
+            "pick": "any",
+            "date_source": "candidate"
+          }
+        },
+        "measure_checks": [
+          "w:any"
+        ]
+      }
+    },
+    {
+      "id": "W06-filter-anchor",
+      "family": "measure",
+      "reason": "An anchor measure must qualify its own predicate before becoming the parent anchor.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "w:any": [
+          [
+            1,
+            10,
+            10,
+            25
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "dx": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                0
+              ]
+            ]
+          },
+          "referral": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                -1
+              ],
+              [
+                1,
+                10,
+                10,
+                20
+              ]
+            ]
+          },
+          "valid_referral": {
+            "kind": "window",
+            "anchor": "dx",
+            "candidate": "referral",
+            "min": 0,
+            "max": 30,
+            "pick": "earliest",
+            "date_source": "candidate"
+          },
+          "contact": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                25
+              ]
+            ]
+          },
+          "w": {
+            "kind": "window",
+            "anchor": "valid_referral",
+            "candidate": "contact",
+            "min": 0,
+            "max": 10,
+            "pick": "any",
+            "date_source": "candidate"
+          }
+        },
+        "measure_checks": [
+          "w:any"
+        ]
+      }
+    },
+    {
+      "id": "I01-whole-cohort-two-primaries",
+      "family": "indicator",
+      "reason": "QI1/3/4/18 pattern: only the cancer owning the numerator passes.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "indicator_rows": [
+          [
+            1,
+            10,
+            true,
+            0,
+            5
+          ],
+          [
+            1,
+            20,
+            false,
+            20,
+            null
+          ]
+        ],
+        "api_eligible_units": [
+          [
+            1,
+            10,
+            10
+          ],
+          [
+            1,
+            20,
+            20
+          ]
+        ],
+        "api_passing_units": [
+          [
+            1,
+            10,
+            10
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "n": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                5
+              ]
+            ]
+          }
+        },
+        "indicator": {
+          "numerator": "n",
+          "denominator": "cohort",
+          "cohort": [
+            [
+              1,
+              10,
+              10,
+              0
+            ],
+            [
+              1,
+              20,
+              20,
+              20
+            ]
+          ],
+          "grain": "episode",
+          "windows": {}
+        }
+      }
+    },
+    {
+      "id": "I02-whole-shared-resolver",
+      "family": "indicator",
+      "reason": "Full member key protects same-person cancers sharing a resolver.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "indicator_rows": [
+          [
+            1,
+            99,
+            true,
+            0,
+            5
+          ],
+          [
+            1,
+            99,
+            false,
+            20,
+            null
+          ]
+        ],
+        "api_eligible_units": [
+          [
+            1,
+            10,
+            99
+          ],
+          [
+            1,
+            20,
+            99
+          ]
+        ],
+        "api_passing_units": [
+          [
+            1,
+            10,
+            99
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "n": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                99,
+                5
+              ]
+            ]
+          }
+        },
+        "indicator": {
+          "numerator": "n",
+          "denominator": "cohort",
+          "cohort": [
+            [
+              1,
+              10,
+              99,
+              0
+            ],
+            [
+              1,
+              20,
+              99,
+              20
+            ]
+          ],
+          "grain": "episode",
+          "windows": {}
+        }
+      }
+    },
+    {
+      "id": "I03-no-eligible-denominator",
+      "family": "indicator",
+      "reason": "Numerator on an ineligible cancer cannot create a pass.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "indicator_rows": [
+          [
+            1,
+            10,
+            false,
+            10,
+            null
+          ]
+        ],
+        "api_eligible_units": [
+          [
+            1,
+            10,
+            10
+          ]
+        ],
+        "api_passing_units": []
+      },
+      "current_runtime": {
+        "measures": {
+          "d": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                10
+              ]
+            ]
+          },
+          "n": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                20,
+                20,
+                15
+              ]
+            ]
+          }
+        },
+        "indicator": {
+          "numerator": "n",
+          "denominator": "d",
+          "cohort": [
+            [
+              1,
+              10,
+              10,
+              0
+            ],
+            [
+              1,
+              20,
+              20,
+              0
+            ]
+          ],
+          "grain": "episode",
+          "windows": {}
+        }
+      }
+    },
+    {
+      "id": "I04-repeated-denominator-dates",
+      "family": "indicator",
+      "reason": "Observed intent comparison: repeated qualifying dates for the same cancer must count once.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "indicator_rows": [
+          [
+            1,
+            10,
+            true,
+            10,
+            15
+          ]
+        ],
+        "api_eligible_units": [
+          [
+            1,
+            10,
+            10
+          ]
+        ],
+        "api_passing_units": [
+          [
+            1,
+            10,
+            10
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "d": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                10
+              ],
+              [
+                1,
+                10,
+                10,
+                30
+              ]
+            ]
+          },
+          "n": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                15
+              ]
+            ]
+          }
+        },
+        "indicator": {
+          "numerator": "n",
+          "denominator": "d",
+          "cohort": [
+            [
+              1,
+              10,
+              10,
+              0
+            ]
+          ],
+          "grain": "episode",
+          "windows": {}
+        }
+      }
+    },
+    {
+      "id": "I05-duplicate-evidence",
+      "family": "indicator",
+      "reason": "Exact duplicate source memberships do not inflate indicator rows.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "indicator_rows": [
+          [
+            1,
+            10,
+            true,
+            10,
+            15
+          ]
+        ],
+        "api_eligible_units": [
+          [
+            1,
+            10,
+            10
+          ]
+        ],
+        "api_passing_units": [
+          [
+            1,
+            10,
+            10
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "d": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                10
+              ],
+              [
+                1,
+                10,
+                10,
+                10
+              ]
+            ]
+          },
+          "n": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                15
+              ],
+              [
+                1,
+                10,
+                10,
+                15
+              ]
+            ]
+          }
+        },
+        "indicator": {
+          "numerator": "n",
+          "denominator": "d",
+          "cohort": [
+            [
+              1,
+              10,
+              10,
+              0
+            ]
+          ],
+          "grain": "episode",
+          "windows": {}
+        }
+      }
+    },
+    {
+      "id": "I06-cohort-relative",
+      "family": "indicator",
+      "reason": "Legacy numerator and denominator windows independently reference diagnosis: N day5 is allowed even though D day20.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "indicator_rows": [
+          [
+            1,
+            10,
+            true,
+            20,
+            5
+          ]
+        ],
+        "api_eligible_units": [
+          [
+            1,
+            10,
+            10
+          ]
+        ],
+        "api_passing_units": [
+          [
+            1,
+            10,
+            10
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "d": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                20
+              ]
+            ]
+          },
+          "n": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                5
+              ]
+            ]
+          }
+        },
+        "indicator": {
+          "numerator": "n",
+          "denominator": "d",
+          "cohort": [
+            [
+              1,
+              10,
+              10,
+              0
+            ]
+          ],
+          "grain": "episode",
+          "windows": {
+            "denominator_max_days_prior": 0,
+            "denominator_max_days_post": 60,
+            "numerator_max_days_prior": 0,
+            "numerator_max_days_post": 10
+          }
+        }
+      }
+    },
+    {
+      "id": "I07-relative-denominator-later",
+      "family": "indicator",
+      "reason": "Apply denominator window to all evidence before final reduction; early out-of-window D must not hide day20.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "indicator_rows": [
+          [
+            1,
+            10,
+            true,
+            20,
+            5
+          ]
+        ],
+        "api_eligible_units": [
+          [
+            1,
+            10,
+            10
+          ]
+        ],
+        "api_passing_units": [
+          [
+            1,
+            10,
+            10
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "d": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                -1
+              ],
+              [
+                1,
+                10,
+                10,
+                20
+              ]
+            ]
+          },
+          "n": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                5
+              ]
+            ]
+          }
+        },
+        "indicator": {
+          "numerator": "n",
+          "denominator": "d",
+          "cohort": [
+            [
+              1,
+              10,
+              10,
+              0
+            ]
+          ],
+          "grain": "episode",
+          "windows": {
+            "denominator_max_days_prior": 0,
+            "denominator_max_days_post": 60
+          }
+        }
+      }
+    },
+    {
+      "id": "I08-opportunity-window",
+      "family": "indicator",
+      "reason": "A reusable relative measure pairs assessment day35 with treatment day40 before indicator resolution.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "indicator_rows": [
+          [
+            1,
+            10,
+            true,
+            40,
+            35
+          ]
+        ],
+        "api_eligible_units": [
+          [
+            1,
+            10,
+            10
+          ]
+        ],
+        "api_passing_units": [
+          [
+            1,
+            10,
+            10
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "d": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                40
+              ]
+            ]
+          },
+          "assessment": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                0
+              ],
+              [
+                1,
+                10,
+                10,
+                35
+              ]
+            ]
+          },
+          "n": {
+            "kind": "window",
+            "anchor": "d",
+            "candidate": "assessment",
+            "min": -10,
+            "max": 0,
+            "pick": "any",
+            "date_source": "candidate"
+          }
+        },
+        "indicator": {
+          "numerator": "n",
+          "denominator": "d",
+          "cohort": [
+            [
+              1,
+              10,
+              10,
+              0
+            ]
+          ],
+          "grain": "episode",
+          "windows": {}
+        }
+      }
+    },
+    {
+      "id": "P01-disagreeing-primaries",
+      "family": "indicator",
+      "reason": "QI19: two eligible primaries, one passing, yields one passing patient.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "indicator_rows": [
+          [
+            1,
+            1,
+            true,
+            0,
+            25
+          ]
+        ],
+        "api_eligible_units": [
+          [
+            1,
+            null,
+            1
+          ]
+        ],
+        "api_passing_units": [
+          [
+            1,
+            null,
+            1
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "n": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                20,
+                20,
+                25
+              ]
+            ]
+          }
+        },
+        "indicator": {
+          "numerator": "n",
+          "denominator": "cohort",
+          "cohort": [
+            [
+              1,
+              10,
+              10,
+              0
+            ],
+            [
+              1,
+              20,
+              20,
+              20
+            ]
+          ],
+          "grain": "patient",
+          "windows": {}
+        }
+      }
+    },
+    {
+      "id": "P02-no-eligible-passing-cancer",
+      "family": "indicator",
+      "reason": "Patient reduction must not borrow a numerator from an ineligible primary.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "indicator_rows": [
+          [
+            1,
+            1,
+            false,
+            10,
+            null
+          ]
+        ],
+        "api_eligible_units": [
+          [
+            1,
+            null,
+            1
+          ]
+        ],
+        "api_passing_units": []
+      },
+      "current_runtime": {
+        "measures": {
+          "d": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                10
+              ]
+            ]
+          },
+          "n": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                20,
+                20,
+                25
+              ]
+            ]
+          }
+        },
+        "indicator": {
+          "numerator": "n",
+          "denominator": "d",
+          "cohort": [
+            [
+              1,
+              10,
+              10,
+              0
+            ],
+            [
+              1,
+              20,
+              20,
+              20
+            ]
+          ],
+          "grain": "patient",
+          "windows": {}
+        }
+      }
+    },
+    {
+      "id": "P03-both-fail",
+      "family": "indicator",
+      "reason": "Two eligible failures remain one patient failure.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "indicator_rows": [
+          [
+            1,
+            1,
+            false,
+            0,
+            null
+          ]
+        ],
+        "api_eligible_units": [
+          [
+            1,
+            null,
+            1
+          ]
+        ],
+        "api_passing_units": []
+      },
+      "current_runtime": {
+        "measures": {
+          "n": {
+            "kind": "leaf",
+            "events": []
+          }
+        },
+        "indicator": {
+          "numerator": "n",
+          "denominator": "cohort",
+          "cohort": [
+            [
+              1,
+              10,
+              10,
+              0
+            ],
+            [
+              1,
+              20,
+              20,
+              20
+            ]
+          ],
+          "grain": "patient",
+          "windows": {}
+        }
+      }
+    },
+    {
+      "id": "F01-distinct-same-day-events",
+      "family": "proposed capability",
+      "reason": "Retain distinct physical events even when their dates coincide.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "evidence_ids": [
+          [
+            "measurement",
+            101
+          ],
+          [
+            "measurement",
+            102
+          ]
+        ]
+      },
+      "proposed": {
+        "events": [
+          [
+            1,
+            10,
+            10,
+            9,
+            "measurement:101"
+          ],
+          [
+            1,
+            10,
+            10,
+            9,
+            "measurement:102"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "F02-same-treatment-intent",
+      "family": "proposed capability",
+      "reason": "Palliative RT cycle201 and curative SACT cycle202 do not establish curative RT.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "eligible_opportunities": []
+      },
+      "proposed": {
+        "rt_cycles": [
+          201
+        ],
+        "curative_intent_cycles": [
+          202
+        ],
+        "cancer": 10
+      }
+    },
+    {
+      "id": "F03-first-treatment-no-cherry-pick",
+      "family": "proposed capability",
+      "reason": "First eligible treatment day20 fails; later treatment day50 with assessment day45 must not rescue a first-treatment indicator.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "outcomes": [
+          [
+            1,
+            10,
+            false,
+            201,
+            null
+          ]
+        ]
+      },
+      "proposed": {
+        "treatments": [
+          [
+            201,
+            20
+          ],
+          [
+            202,
+            50
+          ]
+        ],
+        "assessments": [
+          [
+            301,
+            45
+          ]
+        ],
+        "window": [
+          -10,
+          0
+        ],
+        "selection": "first"
+      }
+    },
+    {
+      "id": "F04-all-anchors",
+      "family": "proposed capability",
+      "reason": "All eligible opportunities each receive candidate selection; day45 qualifies only the second anchor.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "pairs": [
+          [
+            202,
+            301
+          ]
+        ]
+      },
+      "proposed": {
+        "treatments": [
+          [
+            201,
+            20
+          ],
+          [
+            202,
+            50
+          ]
+        ],
+        "assessments": [
+          [
+            301,
+            45
+          ]
+        ],
+        "window": [
+          -10,
+          0
+        ],
+        "selection": "all"
+      }
+    },
+    {
+      "id": "F05-date-roles",
+      "family": "proposed capability",
+      "reason": "A pre-RT assessment day35 reports candidate35, anchor40 and qualification40 separately.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "date_roles": [
+          [
+            35,
+            40,
+            40
+          ]
+        ]
+      },
+      "proposed": {
+        "anchor_day": 40,
+        "candidate_day": 35,
+        "window": [
+          -10,
+          0
+        ]
+      }
+    },
+    {
+      "id": "F06-patient-explanation-pair",
+      "family": "proposed capability",
+      "reason": "Patient passes via cancer20: explanation must retain that cancer denominator20/numerator25, not pair cancer10 diagnosis0 with numerator25.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "passing_pairs": [
+          [
+            1,
+            20,
+            20,
+            25
+          ]
+        ]
+      },
+      "proposed": {
+        "eligible": [
+          [
+            1,
+            10,
+            0
+          ],
+          [
+            1,
+            20,
+            20
+          ]
+        ],
+        "passing": [
+          [
+            1,
+            20,
+            25
+          ]
+        ]
+      }
+    },
+    {
+      "id": "F07-missing-eligibility-date",
+      "family": "proposed capability",
+      "reason": "Missing a required denominator date must remain visible as unresolved eligibility.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "eligibility_counts": [
+          [
+            "eligible",
+            0
+          ],
+          [
+            "unresolved",
+            1
+          ]
+        ]
+      },
+      "proposed": {
+        "denominators": [
+          [
+            1,
+            10,
+            null
+          ]
+        ],
+        "required_date": true
+      }
+    },
+    {
+      "id": "F08-report-period",
+      "family": "proposed capability",
+      "reason": "Use declared opportunity date for the reporting period; a January prerequisite and February completion must not create two cancer votes.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "period_outcomes": [
+          [
+            "2026-02",
+            1,
+            1
+          ]
+        ]
+      },
+      "proposed": {
+        "a_day": 30,
+        "b_day": 31,
+        "period_date_role": "completion"
+      }
+    },
+    {
+      "id": "F09-except",
+      "family": "proposed capability",
+      "reason": "Anti-membership stays separate from AND repair.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md",
+        "../intent-check/config_check_20261012120430.json"
+      ],
+      "expected": {
+        "members": [
+          [
+            1,
+            10,
+            10
+          ]
+        ]
+      },
+      "proposed": {
+        "a": [
+          [
+            1,
+            10,
+            10
+          ],
+          [
+            1,
+            20,
+            20
+          ]
+        ],
+        "b": [
+          [
+            1,
+            20,
+            20
+          ]
+        ],
+        "operation": "except"
+      }
+    },
+    {
+      "id": "M08-bounded-fanout",
+      "family": "measure",
+      "reason": "32 A and 32 B events for one cancer still produce one FIRST completion, not 1024 materialized final rows. This is a correctness/workload sentinel, not a production performance claim.",
+      "evidence": [
+        "../AND_COMPILER_HISTORY_REVIEW.md"
+      ],
+      "expected": {
+        "root:first": [
+          [
+            1,
+            10,
+            10,
+            50
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "a": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                0
+              ],
+              [
+                1,
+                10,
+                10,
+                1
+              ],
+              [
+                1,
+                10,
+                10,
+                2
+              ],
+              [
+                1,
+                10,
+                10,
+                3
+              ],
+              [
+                1,
+                10,
+                10,
+                4
+              ],
+              [
+                1,
+                10,
+                10,
+                5
+              ],
+              [
+                1,
+                10,
+                10,
+                6
+              ],
+              [
+                1,
+                10,
+                10,
+                7
+              ],
+              [
+                1,
+                10,
+                10,
+                8
+              ],
+              [
+                1,
+                10,
+                10,
+                9
+              ],
+              [
+                1,
+                10,
+                10,
+                10
+              ],
+              [
+                1,
+                10,
+                10,
+                11
+              ],
+              [
+                1,
+                10,
+                10,
+                12
+              ],
+              [
+                1,
+                10,
+                10,
+                13
+              ],
+              [
+                1,
+                10,
+                10,
+                14
+              ],
+              [
+                1,
+                10,
+                10,
+                15
+              ],
+              [
+                1,
+                10,
+                10,
+                16
+              ],
+              [
+                1,
+                10,
+                10,
+                17
+              ],
+              [
+                1,
+                10,
+                10,
+                18
+              ],
+              [
+                1,
+                10,
+                10,
+                19
+              ],
+              [
+                1,
+                10,
+                10,
+                20
+              ],
+              [
+                1,
+                10,
+                10,
+                21
+              ],
+              [
+                1,
+                10,
+                10,
+                22
+              ],
+              [
+                1,
+                10,
+                10,
+                23
+              ],
+              [
+                1,
+                10,
+                10,
+                24
+              ],
+              [
+                1,
+                10,
+                10,
+                25
+              ],
+              [
+                1,
+                10,
+                10,
+                26
+              ],
+              [
+                1,
+                10,
+                10,
+                27
+              ],
+              [
+                1,
+                10,
+                10,
+                28
+              ],
+              [
+                1,
+                10,
+                10,
+                29
+              ],
+              [
+                1,
+                10,
+                10,
+                30
+              ],
+              [
+                1,
+                10,
+                10,
+                31
+              ]
+            ]
+          },
+          "b": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                50
+              ],
+              [
+                1,
+                10,
+                10,
+                51
+              ],
+              [
+                1,
+                10,
+                10,
+                52
+              ],
+              [
+                1,
+                10,
+                10,
+                53
+              ],
+              [
+                1,
+                10,
+                10,
+                54
+              ],
+              [
+                1,
+                10,
+                10,
+                55
+              ],
+              [
+                1,
+                10,
+                10,
+                56
+              ],
+              [
+                1,
+                10,
+                10,
+                57
+              ],
+              [
+                1,
+                10,
+                10,
+                58
+              ],
+              [
+                1,
+                10,
+                10,
+                59
+              ],
+              [
+                1,
+                10,
+                10,
+                60
+              ],
+              [
+                1,
+                10,
+                10,
+                61
+              ],
+              [
+                1,
+                10,
+                10,
+                62
+              ],
+              [
+                1,
+                10,
+                10,
+                63
+              ],
+              [
+                1,
+                10,
+                10,
+                64
+              ],
+              [
+                1,
+                10,
+                10,
+                65
+              ],
+              [
+                1,
+                10,
+                10,
+                66
+              ],
+              [
+                1,
+                10,
+                10,
+                67
+              ],
+              [
+                1,
+                10,
+                10,
+                68
+              ],
+              [
+                1,
+                10,
+                10,
+                69
+              ],
+              [
+                1,
+                10,
+                10,
+                70
+              ],
+              [
+                1,
+                10,
+                10,
+                71
+              ],
+              [
+                1,
+                10,
+                10,
+                72
+              ],
+              [
+                1,
+                10,
+                10,
+                73
+              ],
+              [
+                1,
+                10,
+                10,
+                74
+              ],
+              [
+                1,
+                10,
+                10,
+                75
+              ],
+              [
+                1,
+                10,
+                10,
+                76
+              ],
+              [
+                1,
+                10,
+                10,
+                77
+              ],
+              [
+                1,
+                10,
+                10,
+                78
+              ],
+              [
+                1,
+                10,
+                10,
+                79
+              ],
+              [
+                1,
+                10,
+                10,
+                80
+              ],
+              [
+                1,
+                10,
+                10,
+                81
+              ]
+            ]
+          },
+          "root": {
+            "kind": "and",
+            "children": [
+              "a",
+              "b"
+            ]
+          }
+        },
+        "measure_checks": [
+          "root:first"
+        ]
+      }
+    },
+    {
+      "id": "P04-qi19-death-window",
+      "family": "indicator",
+      "reason": "T-3/QI19 pattern: the same person has death day100, cancer10 treatment day50 and cancer20 treatment day90. Only cancer20 has treatment in [-30,0] of death; reduce the two eligible cancers to one passing patient. Death is deliberately projected into both eligible cancer contexts as a declared person fact.",
+      "evidence": [
+        "../../../agent-stack/agent-tasks/cqi/validation/lung_dashboard_investigation/ANALYSIS_2026-09-28.md"
+      ],
+      "expected": {
+        "indicator_rows": [
+          [
+            1,
+            1,
+            true,
+            100,
+            90
+          ]
+        ],
+        "api_eligible_units": [
+          [
+            1,
+            null,
+            1
+          ]
+        ],
+        "api_passing_units": [
+          [
+            1,
+            null,
+            1
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "death": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                100
+              ],
+              [
+                1,
+                20,
+                20,
+                100
+              ]
+            ]
+          },
+          "treatment": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                50
+              ],
+              [
+                1,
+                20,
+                20,
+                90
+              ]
+            ]
+          },
+          "n": {
+            "kind": "window",
+            "anchor": "death",
+            "candidate": "treatment",
+            "min": -30,
+            "max": 0,
+            "pick": "any",
+            "date_source": "candidate"
+          }
+        },
+        "indicator": {
+          "denominator": "death",
+          "numerator": "n",
+          "grain": "patient",
+          "cohort": [
+            [
+              1,
+              10,
+              10,
+              0
+            ],
+            [
+              1,
+              20,
+              20,
+              0
+            ]
+          ],
+          "windows": {}
+        }
+      }
+    },
+    {
+      "id": "I09-repeated-cohort-dates",
+      "family": "indicator",
+      "reason": "Whole-cohort denominator: two recorded dates on one cancer do not create two votes. Under the proposed earliest-reference policy, the explanatory denominator date is day0.",
+      "evidence": [
+        "../MEASURE_INDICATOR_RESOLUTION_PROPOSAL.md"
+      ],
+      "expected": {
+        "indicator_rows": [
+          [
+            1,
+            10,
+            true,
+            0,
+            5
+          ]
+        ],
+        "api_eligible_units": [
+          [
+            1,
+            10,
+            10
+          ]
+        ],
+        "api_passing_units": [
+          [
+            1,
+            10,
+            10
+          ]
+        ]
+      },
+      "current_runtime": {
+        "measures": {
+          "n": {
+            "kind": "leaf",
+            "events": [
+              [
+                1,
+                10,
+                10,
+                5
+              ]
+            ]
+          }
+        },
+        "indicator": {
+          "denominator": "cohort",
+          "numerator": "n",
+          "grain": "episode",
+          "cohort": [
+            [
+              1,
+              10,
+              10,
+              0
+            ],
+            [
+              1,
+              10,
+              10,
+              10
+            ]
+          ],
+          "windows": {}
+        }
+      }
+    }
+  ]
+}

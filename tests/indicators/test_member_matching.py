@@ -48,18 +48,18 @@ def test_episode_id_is_required_even_when_resolvers_are_shared(whole):
     assert list(indicator.numerator_members(executor, cohort_members=cohort)) == [member(resolver=99, day=3)]
 
 
-def test_whole_cohort_windows_use_each_matching_rows_anchor():
+def test_whole_cohort_has_one_vote_and_earliest_reference():
     cohort = [member(), member(day=30)]
     evidence = [member(day=5), member(day=5)]
     indicator, executor, rows = evaluate(cohort + cohort, evidence,
                                         numerator_max_days_prior=0, numerator_max_days_post=10)
-    assert len(rows) == 2
-    assert [row.numerator_value for row in rows] == [True, False]
+    assert len(rows) == 1
+    assert [row.numerator_value for row in rows] == [True]
     assert indicator.numerator_members(executor, cohort_members=cohort) == [member(day=5)]
     assert len(indicator.denominator_members(executor, cohort_members=cohort + cohort)) == len(rows)
 
 
-@pytest.mark.parametrize("whole,window,expected", [(True, False, False), (False, False, True),
+@pytest.mark.parametrize("whole,window,expected", [(True, False, False), (False, False, False),
                                                   (True, True, False), (False, True, False)])
 def test_undated_evidence_preserves_report_policy(whole, window, expected):
     cohort = [member()]
@@ -96,7 +96,8 @@ def test_explicit_denominator_without_windows_matches_keys_not_dates():
 
 def test_explicit_undated_denominators_are_ineligible_in_both_outputs():
     indicator, executor, rows = evaluate([member()], [member(day=3)], [member(day=None)])
-    assert rows == []
+    assert len(rows) == 1 and rows[0].eligibility_status == "unresolved"
+    assert not rows[0].denominator_value
     assert not indicator.denominator_members(executor, cohort_members=[member()])
 
 
@@ -134,7 +135,8 @@ def test_patient_cannot_pass_on_an_ineligible_or_out_of_scope_cancer():
 
 def test_patient_missing_death_date_is_not_eligible():
     indicator, executor, rows = evaluate([member()], [member(day=3)], [member(day=None)], grain="patient")
-    assert rows == []
+    assert len(rows) == 1 and rows[0].eligibility_status == "unresolved"
+    assert not rows[0].denominator_value
     assert not indicator.denominator_members(executor, cohort_members=[member()])
 
 
@@ -164,8 +166,7 @@ def test_reducer_rejects_patient_members_as_episode_input():
 @pytest.mark.parametrize("grain", ["episode", "patient"])
 def test_matching_does_not_scan_other_cancers_for_each_member(monkeypatch, whole, grain):
     """Count work rather than time so a quadratic regression fails reliably."""
-    import oa_cohorts.output.pivot_queries as pivot_module
-    import oa_cohorts.query.indicator as indicator_module
+    import oa_cohorts.query.indicator_evaluation as evaluation_module
     import oa_cohorts.query.indicator_members as members_module
 
     cohort = [member(person=person, episode=episode, resolver=99)
@@ -178,7 +179,7 @@ def test_matching_does_not_scan_other_cancers_for_each_member(monkeypatch, whole
         calls.append(None)
         return original(value)
 
-    for module in (pivot_module, indicator_module, members_module):
+    for module in (evaluation_module, members_module):
         monkeypatch.setattr(module, "member_key", counted_key)
     indicator, executor, rows = evaluate(cohort, evidence, None if whole else cohort, grain=grain)
     work_limit = 20 * (len(cohort) + len(evidence))

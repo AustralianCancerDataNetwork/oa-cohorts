@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 import pytest
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 from oa_cohorts.core import ResultDateSource, WindowPickStrategy
 from oa_cohorts.query.measure import MeasureSQLCompiler
@@ -64,19 +65,20 @@ def test_null_bounds_produce_no_interval_predicate():
         window_min_days=None,
         window_max_days=None,
     )
-    sql = str(MeasureSQLCompiler(m).sql_any().compile(compile_kwargs={"literal_binds": True}))
+    sql = str(MeasureSQLCompiler(m).sql_any().compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
     assert "INTERVAL" not in sql
 
 
-def test_both_bounds_produce_two_interval_predicates():
+def test_both_bounds_use_signed_calendar_day_offsets():
     m = _make_measure(
         [_row(1, 10, 10, "2024-01-01")],
         [_row(1, 10, 10, "2024-02-01")],
         window_min_days=-30,
         window_max_days=42,
     )
-    sql = str(MeasureSQLCompiler(m).sql_any().compile(compile_kwargs={"literal_binds": True}))
-    assert sql.count("INTERVAL") == 2
+    sql = str(MeasureSQLCompiler(m).sql_any().compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
+    assert "CAST(-30 AS INTEGER)" in sql
+    assert "CAST(42 AS INTEGER)" in sql
 
 
 def test_pick_any_produces_no_group_by():
@@ -85,7 +87,7 @@ def test_pick_any_produces_no_group_by():
         [_row(1, 10, 10, "2024-02-01")],
         window_pick_strategy=WindowPickStrategy.any,
     )
-    sql = str(MeasureSQLCompiler(m).sql_any().compile(compile_kwargs={"literal_binds": True}))
+    sql = str(MeasureSQLCompiler(m).sql_any().compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
     assert "GROUP BY" not in sql
 
 
@@ -95,7 +97,7 @@ def test_pick_earliest_uses_row_number():
         [_row(1, 10, 10, "2024-02-01")],
         window_pick_strategy=WindowPickStrategy.earliest,
     )
-    sql = str(MeasureSQLCompiler(m).sql_any().compile(compile_kwargs={"literal_binds": True}))
+    sql = str(MeasureSQLCompiler(m).sql_any().compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
     assert "row_number" in sql.lower()
     assert "over" in sql.lower()
     assert "GROUP BY" not in sql
@@ -107,7 +109,7 @@ def test_pick_latest_uses_row_number():
         [_row(1, 10, 10, "2024-02-01")],
         window_pick_strategy=WindowPickStrategy.latest,
     )
-    sql = str(MeasureSQLCompiler(m).sql_any().compile(compile_kwargs={"literal_binds": True}))
+    sql = str(MeasureSQLCompiler(m).sql_any().compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
     assert "row_number" in sql.lower()
     assert "over" in sql.lower()
     assert "GROUP BY" not in sql
@@ -119,7 +121,7 @@ def test_pick_closest_uses_row_number():
         [_row(1, 10, 10, "2024-02-01")],
         window_pick_strategy=WindowPickStrategy.closest,
     )
-    sql = str(MeasureSQLCompiler(m).sql_any().compile(compile_kwargs={"literal_binds": True}))
+    sql = str(MeasureSQLCompiler(m).sql_any().compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
     assert "row_number" in sql.lower()
     assert "over" in sql.lower()
 
@@ -130,7 +132,7 @@ def test_result_source_greatest_uses_greatest_func():
         [_row(1, 10, 10, "2024-03-01")],
         result_date_source=ResultDateSource.greatest,
     )
-    sql = str(MeasureSQLCompiler(m).sql_any().compile(compile_kwargs={"literal_binds": True}))
+    sql = str(MeasureSQLCompiler(m).sql_any().compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
     assert "greatest" in sql.lower()
 
 
@@ -145,8 +147,8 @@ def test_require_same_resolver_false_omits_resolver_join_condition():
         [_row(1, 10, 10, "2024-02-01")],
         require_same_resolver=False,
     )
-    sql_true = str(MeasureSQLCompiler(m_true).sql_any().compile(compile_kwargs={"literal_binds": True}))
-    sql_false = str(MeasureSQLCompiler(m_false).sql_any().compile(compile_kwargs={"literal_binds": True}))
+    sql_true = str(MeasureSQLCompiler(m_true).sql_any().compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
+    sql_false = str(MeasureSQLCompiler(m_false).sql_any().compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
     # With resolver constraint the join ON clause adds an extra measure_resolver equality;
     # without it, measure_resolver only appears in the SELECT column list.
     assert sql_true.count("measure_resolver") > sql_false.count("measure_resolver")

@@ -516,6 +516,10 @@ def import_config_directory(
             session.expire_all()
             for measure in session.scalars(sa.select(Measure)).unique():
                 _validate_measure_dependencies(measure)
+            from ..query.indicator_evaluation import validate_resolution_policy
+
+            for indicator in session.scalars(sa.select(Indicator)).unique():
+                validate_resolution_policy(indicator)
             session.commit()
     except Exception:
         if not dry_run:

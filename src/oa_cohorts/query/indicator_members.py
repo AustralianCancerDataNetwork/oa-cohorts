@@ -12,10 +12,6 @@ from .measure import MeasureMember
 type MemberKey = tuple[int, int, int]
 
 
-def dedupe_members(members: Sequence[MeasureMember]) -> list[MeasureMember]:
-    return list(dict.fromkeys(members))
-
-
 def member_key(member: MeasureMember) -> MemberKey | None:
     """Missing episode linkage never matches another cancer or a patient."""
     if member.episode_id is None:
@@ -67,27 +63,45 @@ class IndicatorMemberResult:
     numerator_date: date | None
     eligible_keys: frozenset[MemberKey] = frozenset()
     passing_keys: frozenset[MemberKey] = frozenset()
+    denominator_value: bool = True
+    eligibility_status: str = "eligible"
+    numerator: MeasureMember | None = None
+    passing_denominator: MeasureMember | None = None
+    period_date: date | None = None
+    completion_date: date | None = None
+    unresolved_keys: frozenset[MemberKey] = frozenset()
 
 
-def reduce_patient_results(results: Sequence[IndicatorMemberResult]) -> list[IndicatorMemberResult]:
+def reduce_patient_results(results: Sequence[IndicatorMemberResult], *, period_source="denominator") -> list[IndicatorMemberResult]:
     """Reduce already cancer-aligned eligible results; retain their audit keys."""
     by_person: dict[int, list[IndicatorMemberResult]] = defaultdict(list)
     for result in results:
         by_person[result.denominator.person_id].append(result)
-    return [_patient_result(person, by_person[person]) for person in sorted(by_person)]
+    return [_patient_result(person, by_person[person], period_source=period_source) for person in sorted(by_person)]
 
 
-def _patient_result(person: int, results: Sequence[IndicatorMemberResult]) -> IndicatorMemberResult:
-    passing = [result for result in results if result.numerator_value]
-    eligible_keys = frozenset(member_key(result.denominator) for result in results)
+def _patient_result(person: int, results: Sequence[IndicatorMemberResult], *, period_source) -> IndicatorMemberResult:
+    eligible = [result for result in results if result.denominator_value]
+    passing = [result for result in eligible if result.numerator_value]
+    eligible_keys = frozenset(member_key(result.denominator) for result in eligible)
     passing_keys = frozenset(member_key(result.denominator) for result in passing)
     if None in eligible_keys:
         raise ValueError("Patient reduction requires episode-aligned input results")
+    explanation = min(passing, key=lambda result: (result.numerator_date or date.max,
+                                                  member_key(result.denominator))) if passing else None
     return IndicatorMemberResult(
         denominator=MeasureMember(person, person, measure_date=earliest_date(
-            [result.denominator.measure_date for result in results])),
+            [result.denominator.measure_date for result in eligible])),
         numerator_value=bool(passing),
         numerator_date=earliest_date([result.numerator_date for result in passing]),
         eligible_keys=eligible_keys,
         passing_keys=passing_keys,
+        denominator_value=bool(eligible),
+        eligibility_status="eligible" if eligible else "unresolved",
+        numerator=explanation.numerator if explanation else None,
+        passing_denominator=(explanation.passing_denominator or explanation.denominator) if explanation else None,
+        period_date=(explanation.period_date if explanation and period_source in ("numerator", "completion")
+                     else earliest_date([result.period_date for result in eligible])),
+        completion_date=explanation.completion_date if explanation else None,
+        unresolved_keys=frozenset(member_key(result.denominator) for result in results if not result.denominator_value),
     )

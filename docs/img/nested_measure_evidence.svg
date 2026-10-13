@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="628" viewBox="0 0 800 628" role="img" aria-labelledby="title description">
+  <title id="title">Nested combinations resolve alternatives before checking the AND</title>
+  <desc id="description">Stage III with either RT or surgery qualifies separately for two cancers in P1. For cancer B surgery precedes stage, so completion follows the later stage date. P2 cannot combine stage on cancer C with RT on cancer D.</desc>
+  <style>
+      text { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; fill: #213047; }
+      .heading { font-size: 24px; font-weight: 650; }
+      .label { font-size: 20px; font-weight: 650; }
+      .body { font-size: 19px; }
+      .note { font-size: 18px; fill: #526174; }
+      .count { font-size: 34px; font-weight: 700; }
+      .connector { fill: none; stroke: #526174; stroke-width: 2; marker-end: url(#arrow); }
+    </style>
+  <rect width="800" height="628" rx="12" fill="#ffffff"/>
+  <text x="400" y="34" class="heading" text-anchor="middle">A AND (B OR C)</text>
+  <text x="400" y="66" class="body" text-anchor="middle">Stage III AND (RT OR surgery) · all dates in 2026</text>
+  <text x="20" y="112" class="label">Combine the alternatives within each cancer, then check stage</text>
+  <rect x="20" y="132" width="760" height="40" rx="10" fill="#eaf0f7" stroke="#bac3cf" stroke-width="1.5"/>
+  <text x="34" y="159" class="note">Patient</text>
+  <text x="119" y="159" class="note">Cancer</text>
+  <text x="204" y="159" class="note">A: stage III</text>
+  <text x="349" y="159" class="note">B: RT</text>
+  <text x="494" y="159" class="note">C: surgery</text>
+  <text x="639" y="159" class="note">First complete</text>
+  <rect x="20" y="172" width="760" height="48" fill="#edf5ff"/>
+  <text x="34" y="200" class="body">P1</text>
+  <text x="119" y="200" class="body">A</text>
+  <text x="204" y="200" class="body">10 Jan</text>
+  <text x="349" y="200" class="body">20 Jan</text>
+  <text x="494" y="200" class="body">—</text>
+  <text x="639" y="200" class="body">20 Jan</text>
+  <line x1="20" y1="220" x2="780" y2="220" stroke="#dce3ec"/>
+  <rect x="20" y="220" width="760" height="48" fill="#f5f0ff"/>
+  <text x="34" y="248" class="body">P1</text>
+  <text x="119" y="248" class="body">B</text>
+  <text x="204" y="248" class="body">1 Apr</text>
+  <text x="349" y="248" class="body">—</text>
+  <text x="494" y="248" class="body">25 Mar</text>
+  <text x="639" y="248" class="body">1 Apr</text>
+  <line x1="20" y1="268" x2="780" y2="268" stroke="#dce3ec"/>
+  <rect x="20" y="268" width="760" height="48" fill="#f7f8fa"/>
+  <text x="34" y="296" class="body">P2</text>
+  <text x="119" y="296" class="body">C</text>
+  <text x="204" y="296" class="body">5 Jan</text>
+  <text x="349" y="296" class="body">—</text>
+  <text x="494" y="296" class="body">—</text>
+  <text x="639" y="296" class="body">—</text>
+  <line x1="20" y1="316" x2="780" y2="316" stroke="#dce3ec"/>
+  <rect x="20" y="316" width="760" height="48" fill="#f7f8fa"/>
+  <text x="34" y="344" class="body">P2</text>
+  <text x="119" y="344" class="body">D</text>
+  <text x="204" y="344" class="body">—</text>
+  <text x="349" y="344" class="body">12 Jan</text>
+  <text x="494" y="344" class="body">—</text>
+  <text x="639" y="344" class="body">—</text>
+  <line x1="20" y1="364" x2="780" y2="364" stroke="#dce3ec"/>
+  <rect x="20" y="388" width="370" height="140" rx="10" fill="#edf5ff" stroke="#739bd0" stroke-width="1.5"/>
+  <text x="42" y="423" class="label">P1 / cancer A</text>
+  <text x="42" y="459" class="body">RT is the qualifying alternative.</text>
+  <text x="42" y="489" class="body">Stage and RT are complete</text>
+  <text x="42" y="519" class="body">on 20 January.</text>
+  <rect x="410" y="388" width="370" height="140" rx="10" fill="#f5f0ff" stroke="#a18abb" stroke-width="1.5"/>
+  <text x="432" y="423" class="label">P1 / cancer B</text>
+  <text x="432" y="459" class="body">Surgery happens before stage.</text>
+  <text x="432" y="489" class="body">Both criteria are complete</text>
+  <text x="432" y="519" class="body">on 1 April.</text>
+  <text x="20" y="568" class="note">P2 has stage for C and RT for D. Neither cancer meets the full expression.</text>
+  <text x="20" y="603" class="note">Supporting records remain available for later windows and indicator evaluation.</text>
+</svg>

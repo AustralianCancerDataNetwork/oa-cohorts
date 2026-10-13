@@ -12,7 +12,8 @@ from ..core import RuleTarget, RuleTemporality
 from ..core.html_utils import HTMLChild, HTMLRenderable, RawHTML, esc
 from ..measurables import MeasurableBase, get_measurable_registry
 from ..measurables.measurable_base import SQLCol
-from .query_rule import QueryRule
+from .evidence import canonical_query
+from .query_rule import AbsenceRule, QueryRule
 from .typing import _first_member_query
 
 SQLQuery: TypeAlias = Select[Any] | CompoundSelect[Any]
@@ -158,7 +159,7 @@ class Subquery(HTMLRenderable, Base):
             rule.get_filter_details(field)
             for rule in self.rules
         ]
-        return sa.and_(*clauses)
+        return sa.and_(measurable.intrinsic_predicate(), *clauses)
 
     def filter_table(self, *, ep_override: bool = False) -> tuple[sa.ColumnElement[Any], ...]:
         measurable = self.measurable_cls()
@@ -182,6 +183,9 @@ class Subquery(HTMLRenderable, Base):
         )
     
     def get_subquery_any(self, *, ep_override: bool = False) -> SQLQuery:
+        return canonical_query(self.get_subquery_evidence(ep_override=ep_override))
+
+    def get_subquery_evidence(self, *, ep_override: bool = False) -> SQLQuery:
         """
         Return UNION ALL over rule-level selects.
 
@@ -195,8 +199,10 @@ class Subquery(HTMLRenderable, Base):
         field = self.filter_field(measurable)
 
         selects: list[sa.Select[Any]] = [
-            sa.select(*self.filter_table_dated(ep_override=ep_override)).where(
-                rule.get_filter_details(field)
+            sa.select(*(sa.literal(not isinstance(rule, AbsenceRule)).label("date_required")
+                        if column.key == "date_required" else column
+                        for column in measurable.evidence_selectables(self.temporality, ep_override))).where(
+                measurable.intrinsic_predicate(), rule.get_filter_details(field)
             )
             for rule in self.rules
         ]
@@ -208,20 +214,8 @@ class Subquery(HTMLRenderable, Base):
         Return qualifying rows WITHOUT dates (UNION ALL over rules).
         Used as intermediate for AND logic across subqueries.
         """
-        if not self.rules:
-            raise ValueError(f"Subquery {self.subquery_id} has no rules")
-
-        measurable = self.measurable_cls()
-        field = self.filter_field(measurable)
-
-        selects: list[sa.Select[Any]] = [
-            sa.select(*self.filter_table(ep_override=ep_override)).where(
-                rule.get_filter_details(field)
-            )
-            for rule in self.rules
-        ]
-
-        return sa.union_all(*selects)
+        source = self.get_subquery_evidence(ep_override=ep_override).subquery()
+        return sa.select(source.c.person_id, source.c.episode_id, source.c.measure_resolver).distinct()
 
     def get_subquery_first(self, *, ep_override: bool = False) -> SQLQuery:
         """

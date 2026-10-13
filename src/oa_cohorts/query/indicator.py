@@ -10,16 +10,8 @@ from orm_loader.helpers import Base
 from ..core import IndicatorGrain
 from ..core.executability import ExecStatus, IndicatorExecCheck
 from ..core.html_utils import HTMLRenderable, RawHTML
-from .indicator_members import (
-    IndicatorMemberResult,
-    cohort_anchor_dates,
-    dedupe_members,
-    earliest_date,
-    indicator_grain,
-    member_key,
-    members_by_key,
-    reduce_patient_results,
-)
+from .indicator_evaluation import evaluate_indicator, outcome_members
+from .indicator_members import IndicatorMemberResult
 from .measure import Measure, MeasureExecutor, MeasureMember
 from .report import Report, ReportIndicatorMap
 
@@ -34,6 +26,10 @@ class Indicator(HTMLRenderable, Base):
     __tablename__ = 'indicator'
     __table_args__ = (
         sa.CheckConstraint("grain IN ('episode', 'patient')", name="indicator_grain"),
+        sa.CheckConstraint("opportunity_selection IN ('any', 'first')", name="indicator_opportunity_selection"),
+        sa.CheckConstraint("numerator_reference IN ('cohort', 'denominator')", name="indicator_numerator_reference"),
+        sa.CheckConstraint("period_date_source IN ('cohort', 'denominator', 'numerator', 'completion')", name="indicator_period_date_source"),
+        sa.CheckConstraint("undated_numerator_policy IN ('exclude', 'presence')", name="indicator_undated_numerator_policy"),
     )
 
     indicator_id: so.Mapped[int] = so.mapped_column(primary_key=True)
@@ -47,6 +43,11 @@ class Indicator(HTMLRenderable, Base):
                 validate_strings=True, name="indicator_grain"),
         default=IndicatorGrain.episode, server_default="episode", nullable=False,
     )
+
+    opportunity_selection: so.Mapped[str] = so.mapped_column(sa.String(5), default="any", server_default="any", nullable=False)
+    numerator_reference: so.Mapped[str] = so.mapped_column(sa.String(11), default="cohort", server_default="cohort", nullable=False)
+    period_date_source: so.Mapped[str] = so.mapped_column(sa.String(11), default="denominator", server_default="denominator", nullable=False)
+    undated_numerator_policy: so.Mapped[str] = so.mapped_column(sa.String(8), default="exclude", server_default="exclude", nullable=False)
 
     @so.validates("grain")
     def _validate_grain(self, key: str, value) -> IndicatorGrain:
@@ -142,109 +143,18 @@ class Indicator(HTMLRenderable, Base):
         )
 
     def numerator_members(self, executor: MeasureExecutor, *, cohort_members=None) -> Sequence[MeasureMember]:
-        """Eligible numerator evidence, reduced once for patient-grain indicators."""
-        if indicator_grain(self) == IndicatorGrain.episode:
-            return dedupe_members(self._episode_numerator_members(executor, cohort_members=cohort_members))
-        return [MeasureMember(result.denominator.person_id, result.denominator.person_id,
-                              measure_date=result.numerator_date)
-                for result in self.patient_results(executor, cohort_members=cohort_members)
-                if result.numerator_value]
+        """One passing member per configured counting unit, using the report evaluator."""
+        return outcome_members(evaluate_indicator(self, executor, cohort_members), numerator=True)
 
     def denominator_members(self, executor: MeasureExecutor, *, cohort_members=None) -> Sequence[MeasureMember]:
-        """Eligible cancer members or one eligible member per patient."""
-        if indicator_grain(self) == IndicatorGrain.episode:
-            return dedupe_members(self._episode_denominator_members(executor, cohort_members=cohort_members))
-        return [result.denominator for result in self.patient_results(executor, cohort_members=cohort_members)]
+        """One eligible member per counting unit; unresolved eligibility is separate."""
+        return outcome_members(evaluate_indicator(self, executor, cohort_members), numerator=False)
 
     def patient_results(self, executor: MeasureExecutor, *, cohort_members=None) -> list[IndicatorMemberResult]:
-        """Expose the reduced result with internal eligible/passing cancer keys."""
+        """Reduced results with their eligible, passing and unresolved cancer keys."""
         if cohort_members is None:
             raise ValueError("Patient indicators require explicit report cohort_members scope")
-        denominators = self._episode_denominator_members(executor, cohort_members=cohort_members)
-        numerators_by_key = members_by_key(self._episode_numerator_members(executor, cohort_members=cohort_members))
-        results = [self._episode_result(denominator, numerators_by_key.get(member_key(denominator), ()))
-                   for denominator in denominators]
-        return reduce_patient_results(results)
-
-    def _episode_result(self, denominator: MeasureMember, numerators: Sequence[MeasureMember]) -> IndicatorMemberResult:
-        matching = [member for member in numerators
-                    if member_key(member) == member_key(denominator)
-                    and (not self._uses_full_cohort_denominator()
-                         or self._matches_any_cohort_anchor(member, [denominator], side="numerator"))]
-        return IndicatorMemberResult(denominator, bool(matching), earliest_date([m.measure_date for m in matching]))
-
-    def _episode_numerator_members(
-        self,
-        executor: MeasureExecutor,
-        *,
-        cohort_members: Sequence[MeasureMember] | None = None,
-    ) -> Sequence[MeasureMember]:
-        """Numerator evidence for eligible, cancer-aligned denominators."""
-        if cohort_members is None:
-            self._require_cohort_scope()
-        denominator_members = self._episode_denominator_members(executor, cohort_members=cohort_members)
-        if self._uses_full_cohort_denominator():
-            anchors_by_key = members_by_key(denominator_members)
-            return [
-                member
-                for member in self.numerator_measure.members(executor)
-                if member.measure_date is not None
-                and self._matches_any_cohort_anchor(
-                    member, anchors_by_key.get(member_key(member), ()), side="numerator",
-                )
-            ]
-
-        valid_keys = {member_key(member) for member in denominator_members}
-        anchors = self._anchor_dates_by_key(cohort_members or ())
-        return [
-            member
-            for member in self.numerator_measure.members(executor)
-            if member_key(member) is not None and member_key(member) in valid_keys
-            and self.member_within_window(
-                member.measure_date,
-                anchor_date=anchors.get(member_key(member)),
-                side="numerator",
-            )
-        ]
-
-    def _episode_denominator_members(
-        self,
-        executor: MeasureExecutor,
-        *,
-        cohort_members: Sequence[MeasureMember] | None = None,
-    ) -> Sequence[MeasureMember]:
-        """Eligible cohort rows or members of the executed denominator measure."""
-        if self._uses_full_cohort_denominator():
-            if cohort_members is None:
-                self._require_cohort_scope()
-            self._anchor_dates_by_key(cohort_members)
-            return [
-                member
-                for member in cohort_members
-                if self.member_within_window(
-                    # For whole-cohort denominators, the cohort membership row
-                    # is both the candidate member and the timing anchor.
-                    member.measure_date,
-                    anchor_date=self._coerce_member_date(member.measure_date),
-                    side="denominator",
-                )
-            ]
-        if cohort_members is None:
-            self._require_cohort_scope()
-            return [member for member in self.denominator_measure.members(executor)
-                    if member.episode_id is not None and member.measure_date is not None]
-        anchors = self._anchor_dates_by_key(cohort_members)
-        return [
-            member
-            for member in self.denominator_measure.members(executor)
-            if member.measure_date is not None
-            and member_key(member) in anchors
-            and self.member_within_window(
-                member.measure_date,
-                anchor_date=anchors.get(member_key(member)),
-                side="denominator",
-            )
-        ]
+        return evaluate_indicator(self, executor, cohort_members, grain=IndicatorGrain.patient)
 
     def numerator_window(self) -> tuple[int | None, int | None]:
         """Return the configured numerator window as (prior_days, post_days)."""
@@ -304,13 +214,6 @@ class Indicator(HTMLRenderable, Base):
             return self.denominator_window()
         raise ValueError(f"Unknown indicator side: {side}")
 
-    def _uses_full_cohort_denominator(self) -> bool:
-        denominator_measure_id = getattr(self, "denominator_measure_id", None)
-        if denominator_measure_id is not None:
-            return denominator_measure_id == 0
-        denominator_measure = getattr(self, "denominator_measure", None)
-        return getattr(denominator_measure, "measure_id", None) == 0
-
     @staticmethod
     def _coerce_member_date(value: date | datetime | None) -> date | None:
         if value is None:
@@ -318,29 +221,6 @@ class Indicator(HTMLRenderable, Base):
         if isinstance(value, datetime):
             return value.date()
         return value
-
-    @staticmethod
-    def _anchor_dates_by_key(cohort_members: Sequence[MeasureMember]):
-        return cohort_anchor_dates(cohort_members)
-
-    def _require_cohort_scope(self) -> None:
-        if self._uses_full_cohort_denominator() or self.has_numerator_window() or self.has_denominator_window():
-            raise ValueError("Explicit report cohort_members scope is required for whole-cohort matching or indicator windows")
-
-    def _matches_any_cohort_anchor(
-        self,
-        member: MeasureMember,
-        cohort_members: Sequence[MeasureMember],
-        *,
-        side: str,
-    ) -> bool:
-        """Match a complete cancer key and the eligible cohort row's own window."""
-        for cohort_member in cohort_members:
-            if member_key(member) is None or member_key(cohort_member) != member_key(member):
-                continue
-            if self.member_within_window(member.measure_date, anchor_date=cohort_member.measure_date, side=side):
-                return True
-        return False
 
     def __lt__(self, other):
         if self.indicator_id != other.indicator_id:

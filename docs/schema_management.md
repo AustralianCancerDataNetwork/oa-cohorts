@@ -50,7 +50,7 @@ If a command fails with a database error regardless, the error is re-checked aga
 
 `import-config` upserts on primary key: a row whose non-key columns differ from the stored row is updated. Two rules govern the columns a file omits, and they matter most for `report_indicator_map`, whose override values are authored by hand and cannot be regenerated from anything.
 
-* **A column absent from the CSV is left alone.** The file has no opinion about it, so the stored value stands and the row does not count as replaced. 
+* **A column absent from the CSV is left alone.** The file has no opinion about it, so the stored value stands and the row does not count as replaced.
 * **A column present but empty is set to `NULL`.** That is an instruction, and it is how a value is deliberately cleared through the transport.
 
 The distinction is the difference between "this export predates the column" and "this export wants the column cleared", which a plain empty-vs-missing comparison cannot tell apart. Before it existed, a narrow CSV imported against a database holding overrides emitted `UPDATE report_indicator_map SET  WHERE ...` — a bare SQL syntax error rather than either outcome.
@@ -86,11 +86,10 @@ engine = sa.create_engine("sqlite:///scratch.db")
 upgrade(engine)                                  # bring it to the current head
 revise(engine, "add referral temporality")
 ```
-Do not edit `0001_baseline.py` to track model changes. It is a frozen snapshot of the schema at the point migrations were introduced, and `schema check` reporting clean depends on it staying in step with the models it describes.
-Notes:
+Do not edit `0001_baseline.py` to track model changes. It is a frozen snapshot of the schema at the point migrations were introduced, and `schema check` reporting clean depends on it staying in step with the models it describes. Notes:
 
 * **Keep the revision id inside 32 characters.** `alembic_version.version_num` is `VARCHAR(32)`. A longer id applies its DDL and *then* fails writing the version row — and only on Postgres, since SQLite does not enforce varchar length. The result is a database whose schema has changed but whose recorded revision has not. `test_revision_ids_fit_the_alembic_version_column` guards this.
-* **`copy_from` needs the table as it is *before* the direction being run.** A revision that adds columns and drops them again needs two frozen shapes, not one: batch mode drops columns from the description it was given, so handing `downgrade` the pre-add shape fails with `KeyError` on the first column it cannot find. 
+* **`copy_from` needs the table as it is *before* the direction being run.** A revision that adds columns and drops them again needs two frozen shapes, not one: batch mode drops columns from the description it was given, so handing `downgrade` the pre-add shape fails with `KeyError` on the first column it cannot find.
 
 ## Adopting a database older than the models
 
@@ -104,3 +103,12 @@ oa-cohorts schema upgrade
 `bootstrap` refuses to stamp head in that situation rather than claiming migrations ran that never did — which would leave `0002` permanently unapplied and the column types permanently wrong.
 
 `--adopt-on-drift` is the different case — a difference that is known and intentional and that no migration will resolve. It repairs nothing and should not be used to get past an unapplied migration.
+
+
+## Evidence and indicator policies
+
+Migration `0006_resolution_policy` adds settings for matching evidence, selecting treatments, choosing reference dates and reporting periods, and accepting undated records. See the [configuration reference and worked examples](evidence_and_indicators.md#configuration-reference) for what each setting means.
+
+Existing definitions keep their IDs and whether they count cancers or patients. The migration does not choose new clinical intervals; indicator windows still use the cohort date unless configured otherwise.
+
+Test an upgrade on a copy of the configuration database before applying it to a live report. Read-only report execution does not run migrations automatically. Downgrading refuses to discard nondefault policy values, so review and reset those settings deliberately before reverting. This migration changes only oa-cohorts configuration tables; it does not rebuild clinical materialized views.

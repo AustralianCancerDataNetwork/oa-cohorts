@@ -14,6 +14,7 @@ logger = get_logger(__name__)
 class MeasurementMeasurable(DxMeasurementMV, MeasurableBase, Base):
     __measurable__ = MeasurableSpec(
         domain=MeasurableDomain.meas,
+        source_table="measurement",
         label="Diagnosis-episode linked measurements",
         person_id_attr="person_id",
         episode_id_attr="episode_id",
@@ -26,6 +27,7 @@ class MeasurementMeasurable(DxMeasurementMV, MeasurableBase, Base):
 class ProcedureMeasurable(DxProcedureMV, MeasurableBase, Base):
     __measurable__ = MeasurableSpec(
         domain=MeasurableDomain.proc,
+        source_table="procedure_occurrence",
         label="Diagnosis-episode linked procedures",
         person_id_attr="person_id",
         episode_id_attr="episode_id",
@@ -37,6 +39,7 @@ class ProcedureMeasurable(DxProcedureMV, MeasurableBase, Base):
 class ObserveMeasurable(DxObservationMV, MeasurableBase, Base):
     __measurable__ = MeasurableSpec(
         domain=MeasurableDomain.obs,
+        source_table="observation",
         label="Diagnosis-episode linked observations",
         person_id_attr="person_id",
         episode_id_attr="episode_id",
@@ -49,6 +52,7 @@ class ObserveMeasurable(DxObservationMV, MeasurableBase, Base):
 class VisitSpecialtyMeasurable(DxRelevantVisitMV, MeasurableBase, Base):
     __measurable__ = MeasurableSpec(
         domain=MeasurableDomain.visit,
+        source_table="visit_occurrence",
         label="Diagnosis-episode linked specialty visits",
         person_id_attr="person_id",
         episode_id_attr="episode_id",
@@ -60,6 +64,7 @@ class VisitSpecialtyMeasurable(DxRelevantVisitMV, MeasurableBase, Base):
 class MeasurementValueConceptMeasurable(DxMeasurementMV, MeasurableBase, Base):
     __measurable__ = MeasurableSpec(
         domain=MeasurableDomain.meas,
+        source_table="measurement",
         label="Diagnosis-episode linked measurements (precoordinated answer concept)",
         person_id_attr="person_id",
         episode_id_attr="episode_id",

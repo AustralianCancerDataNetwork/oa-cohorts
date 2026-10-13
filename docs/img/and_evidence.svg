@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="816" viewBox="0 0 800 816" role="img" aria-labelledby="title description">
+  <title id="title">AND keeps supporting evidence and a separate completion date</title>
+  <desc id="description">Cancer A meets stage III and RT on 20 January. Stage evidence retains its 10 January source date, while its combined measure and completion dates are 20 January. Later RT remains available. Other cancers do not meet both criteria.</desc>
+  <style>
+      text { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; fill: #213047; }
+      .heading { font-size: 24px; font-weight: 650; }
+      .label { font-size: 20px; font-weight: 650; }
+      .body { font-size: 19px; }
+      .note { font-size: 18px; fill: #526174; }
+      .count { font-size: 34px; font-weight: 700; }
+      .connector { fill: none; stroke: #526174; stroke-width: 2; marker-end: url(#arrow); }
+    </style>
+  <rect width="800" height="816" rx="12" fill="#ffffff"/>
+  <text x="400" y="34" class="heading" text-anchor="middle">AND requires both criteria for the same cancer</text>
+  <text x="400" y="66" class="body" text-anchor="middle">Stage III AND radiotherapy (RT) · all dates in 2026</text>
+  <text x="20" y="108" class="label">Child evidence</text>
+  <rect x="20" y="126" width="760" height="40" rx="10" fill="#eaf0f7" stroke="#bac3cf" stroke-width="1.5"/>
+  <text x="34" y="153" class="note">Patient</text>
+  <text x="129" y="153" class="note">Cancer</text>
+  <text x="234" y="153" class="note">Event</text>
+  <text x="339" y="153" class="note">Source date</text>
+  <text x="509" y="153" class="note">Criterion</text>
+  <rect x="20" y="166" width="760" height="38" fill="#edf5ff"/>
+  <text x="34" y="194" class="body">P1</text>
+  <text x="129" y="194" class="body">A</text>
+  <text x="234" y="194" class="body">a1</text>
+  <text x="339" y="194" class="body">10 Jan</text>
+  <text x="509" y="194" class="body">Stage III</text>
+  <line x1="20" y1="204" x2="780" y2="204" stroke="#dce3ec"/>
+  <rect x="20" y="204" width="760" height="38" fill="#edf5ff"/>
+  <text x="34" y="232" class="body">P1</text>
+  <text x="129" y="232" class="body">A</text>
+  <text x="234" y="232" class="body">b1</text>
+  <text x="339" y="232" class="body">20 Jan</text>
+  <text x="509" y="232" class="body">RT</text>
+  <line x1="20" y1="242" x2="780" y2="242" stroke="#dce3ec"/>
+  <rect x="20" y="242" width="760" height="38" fill="#edf5ff"/>
+  <text x="34" y="270" class="body">P1</text>
+  <text x="129" y="270" class="body">A</text>
+  <text x="234" y="270" class="body">b2</text>
+  <text x="339" y="270" class="body">15 Feb</text>
+  <text x="509" y="270" class="body">Further RT</text>
+  <line x1="20" y1="280" x2="780" y2="280" stroke="#dce3ec"/>
+  <rect x="20" y="280" width="760" height="38" fill="#f5f0ff"/>
+  <text x="34" y="308" class="body">P1</text>
+  <text x="129" y="308" class="body">B</text>
+  <text x="234" y="308" class="body">a2</text>
+  <text x="339" y="308" class="body">1 Apr</text>
+  <text x="509" y="308" class="body">Stage III</text>
+  <line x1="20" y1="318" x2="780" y2="318" stroke="#dce3ec"/>
+  <rect x="20" y="318" width="760" height="38" fill="#f7f8fa"/>
+  <text x="34" y="346" class="body">P2</text>
+  <text x="129" y="346" class="body">C</text>
+  <text x="234" y="346" class="body">a3</text>
+  <text x="339" y="346" class="body">5 Jan</text>
+  <text x="509" y="346" class="body">Stage III</text>
+  <line x1="20" y1="356" x2="780" y2="356" stroke="#dce3ec"/>
+  <rect x="20" y="356" width="760" height="38" fill="#f7f8fa"/>
+  <text x="34" y="384" class="body">P2</text>
+  <text x="129" y="384" class="body">D</text>
+  <text x="234" y="384" class="body">b3</text>
+  <text x="339" y="384" class="body">12 Jan</text>
+  <text x="509" y="384" class="body">RT</text>
+  <line x1="20" y1="394" x2="780" y2="394" stroke="#dce3ec"/>
+  <text x="20" y="437" class="label">P1 / cancer A: supporting evidence retained by the AND</text>
+  <rect x="20" y="455" width="760" height="40" rx="10" fill="#eaf0f7" stroke="#bac3cf" stroke-width="1.5"/>
+  <text x="34" y="482" class="note">Event</text>
+  <text x="144" y="482" class="note">Source date</text>
+  <text x="354" y="482" class="note">Measure date</text>
+  <text x="574" y="482" class="note">Completion</text>
+  <rect x="20" y="495" width="760" height="38" fill="#edf5ff"/>
+  <text x="34" y="523" class="body">a1</text>
+  <text x="144" y="523" class="body">10 Jan</text>
+  <text x="354" y="523" class="body">20 Jan</text>
+  <text x="574" y="523" class="body">20 Jan</text>
+  <line x1="20" y1="533" x2="780" y2="533" stroke="#dce3ec"/>
+  <rect x="20" y="533" width="760" height="38" fill="#edf5ff"/>
+  <text x="34" y="561" class="body">b1</text>
+  <text x="144" y="561" class="body">20 Jan</text>
+  <text x="354" y="561" class="body">20 Jan</text>
+  <text x="574" y="561" class="body">20 Jan</text>
+  <line x1="20" y1="571" x2="780" y2="571" stroke="#dce3ec"/>
+  <rect x="20" y="571" width="760" height="38" fill="#edf5ff"/>
+  <text x="34" y="599" class="body">b2</text>
+  <text x="144" y="599" class="body">15 Feb</text>
+  <text x="354" y="599" class="body">15 Feb</text>
+  <text x="574" y="599" class="body">15 Feb</text>
+  <line x1="20" y1="609" x2="780" y2="609" stroke="#dce3ec"/>
+  <rect x="20" y="635" width="760" height="118" rx="10" fill="#f0f8f4" stroke="#7aa58a" stroke-width="1.5"/>
+  <text x="42" y="671" class="label">First qualification: 20 January</text>
+  <text x="42" y="705" class="body">Both criteria had occurred by then. Original source dates are retained.</text>
+  <text x="42" y="735" class="note">sql_qualification() returns that first completion, rather than all evidence.</text>
+  <text x="20" y="791" class="note">P1 / B has no RT. Evidence for P2 / C and P2 / D cannot qualify each other.</text>
+</svg>

@@ -304,7 +304,10 @@ def test_build_pivot_indicators_excludes_undated_denominator_members():
 
     rows = build_pivot_indicators(report, executor)
 
-    assert len(rows) == 1
+    assert len(rows) == 2
+    assert rows[0].eligibility_status == "unresolved"
+    assert not rows[0].denominator_value
+    rows = [row for row in rows if row.denominator_value]
     assert rows[0].person_id == 2
     assert rows[0].numerator_value is True
     assert rows[0].denominator_date == date(2024, 2, 2)

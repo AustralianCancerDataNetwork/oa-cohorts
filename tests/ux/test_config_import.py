@@ -991,3 +991,28 @@ def test_csv_import_rejects_cycle_atomically(tmp_path):
         with pytest.raises(ValueError, match="Measure dependency cycle"):
             import_config_directory(config_dir, session)
         assert session.scalar(sa.text("SELECT count(*) FROM measure")) == 0
+
+
+def test_resolution_policy_columns_import_and_survive_an_older_csv(tmp_path):
+    from oa_cohorts.query.indicator import Indicator
+    from oa_cohorts.schema import upgrade
+
+    directory = _build_config_dir(tmp_path / "config")
+    engine = sa.create_engine(f"sqlite:///{tmp_path / 'policy.db'}")
+    upgrade(engine)
+    with so.Session(engine) as session:
+        import_config_directory(directory, session, create_tables=False)
+        values = {"opportunity_selection": "first", "numerator_reference": "denominator",
+                  "period_date_source": "completion", "undated_numerator_policy": "presence"}
+        for field, value in values.items():
+            setattr(session.get(Indicator, 1), field, value)
+        session.commit()
+        # Missing columns are no instruction to reset an existing policy.
+        import_config_directory(directory, session, create_tables=False)
+        indicator = session.get(Indicator, 1)
+        assert {field: getattr(indicator, field) for field in values} == values
+        required = {"indicator_id": 1, "indicator_description": "Test indicator", "numerator_measure_id": 2, "denominator_measure_id": 1}
+        _write_csv(directory / "indicator.csv", [*required, *values], [{**required, **values}])
+        import_config_directory(directory, session, create_tables=False)
+        session.expire_all()
+        assert {field: getattr(session.get(Indicator, 1), field) for field in values} == values
