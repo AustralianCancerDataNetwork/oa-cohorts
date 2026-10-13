@@ -52,6 +52,8 @@
     
       <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
+      <link rel="stylesheet" href="../stylesheets/figures.css">
+    
     <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -395,6 +397,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#combining-rules-either-is-different-from-both" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Combining rules: either is different from both
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#1-exactrule" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -498,6 +511,17 @@
     <span class="md-ellipsis">
       
         Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#from-selected-records-to-an-indicator-result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From selected records to an indicator result
       
     </span>
   </a>
@@ -662,6 +686,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence_and_indicators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence to Indicator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -842,6 +894,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#combining-rules-either-is-different-from-both" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Combining rules: either is different from both
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#1-exactrule" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -951,6 +1014,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#from-selected-records-to-an-indicator-result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From selected records to an indicator result
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1027,7 +1101,47 @@
 <li>produces a SQL <code>WHERE</code> clause fragment</li>
 <li>participates in rule-level <code>UNION ALL</code> composition inside the subquery</li>
 </ul>
-<p>The sections below describe the supported matcher types in terms of current code behavior.</p>
+<p>Choose a rule according to the field you want to test: a code, a number, a boolean flag or a string. The <a href="../measurables/">measurable</a> supplies that field and determines which records are available to test. A rule filters those records; it does not decide which cancer an event belongs to or how many cancers or patients the indicator counts.</p>
+<p>The examples below use invented concept IDs and records. Assume the example concepts and their stated relationships are present in the vocabulary; they are not clinical concept mappings to copy into a report. <code>NULL</code> means a missing value.</p>
+<h2 id="combining-rules-either-is-different-from-both">Combining rules: either is different from both<a class="headerlink" href="#combining-rules-either-is-different-from-both" title="Permanent link">&para;</a></h2>
+<p>During measure execution, multiple rules in one subquery are <strong>alternatives</strong>. Each rule selects records, and the results are combined with <code>UNION ALL</code>. For example, two exact rules for ECOG 0 and ECOG 1 mean “ECOG 0 <strong>or</strong> ECOG 1”, not “both”.</p>
+<table>
+<thead>
+<tr>
+<th>Record</th>
+<th>Recorded ECOG</th>
+<th>Exact rule for ECOG 0</th>
+<th>Exact rule for ECOG 1</th>
+<th>Selected by the subquery?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M1</td>
+<td>0</td>
+<td>Yes</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>M2</td>
+<td>1</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>M3</td>
+<td>2</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<p>Here 0, 1 and 2 are the clinical score labels; the exact rules use the corresponding vocabulary concept IDs. If the source instead stores a numeric score, use a scalar rule against that numeric field.</p>
+<p>To require stage III <strong>and</strong> radiotherapy, put those criteria in separate measures and combine them with <code>AND</code>. The criteria must match the same cancer. If the question concerns curative RT, modality and intent must also refer to the same treatment; combining arbitrary records from the same patient or cancer would not establish that. See <a href="../measure_resolution/#combining-criteria">Combining criteria</a> and <a href="../evidence_and_indicators/#a-question-about-first-treatment-must-use-the-first-treatment">treatment identity</a>.</p>
+<p>For developers calling SQL helpers directly: compiled measure execution uses <code>get_subquery_evidence()</code>, which combines rule alternatives. The lower-level <code>Subquery.select()</code> and <code>where_clause()</code> helpers combine rule predicates with <code>AND</code>; they are not an equivalent preview of a multi-rule measure.</p>
 <hr />
 <h2 id="1-exactrule">1. <code>ExactRule</code><a class="headerlink" href="#1-exactrule" title="Permanent link">&para;</a></h2>
 <h3 id="semantics">Semantics<a class="headerlink" href="#semantics" title="Permanent link">&para;</a></h3>
@@ -1037,6 +1151,39 @@
 </code></pre></div>
 <h3 id="typical-use">Typical use<a class="headerlink" href="#typical-use" title="Permanent link">&para;</a></h3>
 <p>Precise coded events such as a single diagnosis, procedure, or referral concept.</p>
+<h3 id="worked-example">Worked example<a class="headerlink" href="#worked-example" title="Permanent link">&para;</a></h3>
+<p>An exact rule with <code>concept_id=1100</code> keeps only records coded 1100. It does not include related concepts automatically.</p>
+<table>
+<thead>
+<tr>
+<th>Recorded concept</th>
+<th>Selected?</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1100</td>
+<td>Yes</td>
+<td>Exact match</td>
+</tr>
+<tr>
+<td>1000, the parent of 1100</td>
+<td>No</td>
+<td>Related, but a different concept</td>
+</tr>
+<tr>
+<td>1200, another concept in the same family</td>
+<td>No</td>
+<td>Related, but a different concept</td>
+</tr>
+<tr>
+<td><code>NULL</code></td>
+<td>No</td>
+<td>No value to match</td>
+</tr>
+</tbody>
+</table>
 <h2 id="2-hierarchyrule">2. <code>HierarchyRule</code><a class="headerlink" href="#2-hierarchyrule" title="Permanent link">&para;</a></h2>
 <h3 id="semantics_1">Semantics<a class="headerlink" href="#semantics_1" title="Permanent link">&para;</a></h3>
 <p>Expand one OMOP concept into its descendants using <code>concept_ancestor</code>, then match any descendant concept.</p>
@@ -1045,6 +1192,45 @@
 </code></pre></div>
 <h3 id="typical-use_1">Typical use<a class="headerlink" href="#typical-use_1" title="Permanent link">&para;</a></h3>
 <p>Broad diagnosis or procedure groupings such as stage families or disease branches.</p>
+<h3 id="worked-example_1">Worked example<a class="headerlink" href="#worked-example_1" title="Permanent link">&para;</a></h3>
+<p>Suppose the hierarchy rows for ancestor 1000 include 1000 itself and descendants 1100 and 1200. A hierarchy rule for 1000 accepts all three.</p>
+<table>
+<thead>
+<tr>
+<th>Recorded concept</th>
+<th>Selected?</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1000</td>
+<td>Yes</td>
+<td>The hierarchy contains the self-relationship 1000 → 1000</td>
+</tr>
+<tr>
+<td>1100</td>
+<td>Yes</td>
+<td>Descendant of 1000</td>
+</tr>
+<tr>
+<td>1200</td>
+<td>Yes</td>
+<td>Descendant of 1000</td>
+</tr>
+<tr>
+<td>2000</td>
+<td>No</td>
+<td>Outside that hierarchy</td>
+</tr>
+<tr>
+<td><code>NULL</code></td>
+<td>No</td>
+<td>No value to match</td>
+</tr>
+</tbody>
+</table>
+<p>The rule reads <code>concept_ancestor</code>; it does not infer relationships from concept names or code prefixes. Parent matching depends on the self-relationship being present.</p>
 <h2 id="3-hierarchyexclusionrule">3. <code>HierarchyExclusionRule</code><a class="headerlink" href="#3-hierarchyexclusionrule" title="Permanent link">&para;</a></h2>
 <h3 id="semantics_2">Semantics<a class="headerlink" href="#semantics_2" title="Permanent link">&para;</a></h3>
 <p>Exclude a concept and all of its descendants.</p>
@@ -1052,7 +1238,36 @@
 <div class="highlight"><pre><span></span><code><span class="n">field</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="n">descendant_concept_ids</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="typical-use_2">Typical use<a class="headerlink" href="#typical-use_2" title="Permanent link">&para;</a></h3>
-<p>Definitions like "all lung cancers except squamous cell carcinoma".</p>
+<p>Filtering individual records outside an unwanted concept family.</p>
+<h3 id="worked-example_2">Worked example<a class="headerlink" href="#worked-example_2" title="Permanent link">&para;</a></h3>
+<p>Using the same family <code>{1000, 1100, 1200}</code>, a hierarchy exclusion rule for 1000 selects records outside that set.</p>
+<table>
+<thead>
+<tr>
+<th>Recorded concept</th>
+<th>Selected?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1000</td>
+<td>No</td>
+</tr>
+<tr>
+<td>1100</td>
+<td>No</td>
+</tr>
+<tr>
+<td>2000</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>NULL</code></td>
+<td>No: SQL <code>NOT IN</code> does not treat a null as a known value outside the set</td>
+</tr>
+</tbody>
+</table>
+<p>This filters <strong>records</strong>, not every record belonging to a cancer. If one cancer has records coded both 1100 and 2000, its 2000 record can still pass this rule. To exclude the cancer whenever it has evidence in the unwanted family, use a measure-level <code>EXCEPT</code> with that family as the exclusion criterion. A hierarchy exclusion alone also does not supply a positive definition such as “lung cancer”.</p>
 <h2 id="4-presencerule">4. <code>PresenceRule</code><a class="headerlink" href="#4-presencerule" title="Permanent link">&para;</a></h2>
 <h3 id="semantics_3">Semantics<a class="headerlink" href="#semantics_3" title="Permanent link">&para;</a></h3>
 <p>Match rows where the resolved field is non-null.</p>
@@ -1060,12 +1275,36 @@
 <div class="highlight"><pre><span></span><code><span class="n">field</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
 </code></pre></div>
 <h3 id="typical-use_3">Typical use<a class="headerlink" href="#typical-use_3" title="Permanent link">&para;</a></h3>
-<p>Existence checks such as:</p>
-<ul>
-<li>any chemotherapy record</li>
-<li>any death date</li>
-<li>any observation in a target domain</li>
-</ul>
+<p>Checking whether the field supplied by the chosen measurable has a value.</p>
+<h3 id="worked-example_3">Worked example<a class="headerlink" href="#worked-example_3" title="Permanent link">&para;</a></h3>
+<p>For a concept-like field, presence means non-null; it does not mean “known, valid clinical code”.</p>
+<table>
+<thead>
+<tr>
+<th>Field in an available row</th>
+<th><code>PresenceRule</code> selects it?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1100</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>0</td>
+<td>Yes: zero is a value, not SQL <code>NULL</code></td>
+</tr>
+<tr>
+<td><code>NULL</code></td>
+<td>No</td>
+</tr>
+<tr>
+<td>No row supplied by the measurable</td>
+<td>No row exists for the rule to select</td>
+</tr>
+</tbody>
+</table>
+<p>The target determines what is being checked. A non-null treatment field does not by itself establish that an assessment exists, that a date is known, or that an event falls inside an indicator window.</p>
 <h2 id="5-absencerule">5. <code>AbsenceRule</code><a class="headerlink" href="#5-absencerule" title="Permanent link">&para;</a></h2>
 <h3 id="semantics_4">Semantics<a class="headerlink" href="#semantics_4" title="Permanent link">&para;</a></h3>
 <p>Match rows where the resolved field is null.</p>
@@ -1073,7 +1312,36 @@
 <div class="highlight"><pre><span></span><code><span class="n">field</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span>
 </code></pre></div>
 <h3 id="typical-use_4">Typical use<a class="headerlink" href="#typical-use_4" title="Permanent link">&para;</a></h3>
-<p>Negative cohort definitions such as "no surgery" or "no documented metastases".</p>
+<p>Finding missing values in rows supplied by a measurable.</p>
+<h3 id="worked-example_4">Worked example<a class="headerlink" href="#worked-example_4" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Field in an available row</th>
+<th><code>AbsenceRule</code> selects it?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1100</td>
+<td>No</td>
+</tr>
+<tr>
+<td>0</td>
+<td>No: zero is not SQL <code>NULL</code></td>
+</tr>
+<tr>
+<td><code>NULL</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>No row supplied by the measurable</td>
+<td>No row exists for the rule to select</td>
+</tr>
+</tbody>
+</table>
+<p>A measurable may deliberately provide one row per cancer with a null field when no linked record exists; in that case the rule can select that row. Without such a row, <code>AbsenceRule</code> cannot find the cancer by looking for nulls. Missing documentation also does not establish clinical absence. For “eligible cancers with no qualifying surgery evidence”, use an eligible-cancer measure <code>EXCEPT</code> a surgery measure, with the appropriate episode and timing definitions.</p>
+<p>Existing definitions can also combine a dated positive criterion with an <code>AbsenceRule</code> through AND. For example, stage recorded on 10 January AND a supplied no-surgery row qualifies on 10 January. The absence condition has no event date and does not erase the stage date. A required event with a missing date still cannot establish a completion date. Absence alone cannot establish that something happened inside a date window.</p>
 <h2 id="6-scalarrule">6. <code>ScalarRule</code><a class="headerlink" href="#6-scalarrule" title="Permanent link">&para;</a></h2>
 <h3 id="semantics_5">Semantics<a class="headerlink" href="#semantics_5" title="Permanent link">&para;</a></h3>
 <p>Apply a threshold comparison to a measurable's numeric value column.</p>
@@ -1111,6 +1379,73 @@
 <li>referral-to-specialist interval</li>
 <li>measurement thresholds such as ECOG, lab values, or scores</li>
 </ul>
+<h3 id="worked-example-a-time-threshold">Worked example: a time threshold<a class="headerlink" href="#worked-example-a-time-threshold" title="Permanent link">&para;</a></h3>
+<p>Suppose the measurable exposes an interval in whole days. With <code>concept_id=0</code>, <code>scalar_threshold=30</code> and <code>threshold_direction=lt</code>, the rule tests only whether that interval is less than 30. Set <code>threshold_comparator</code> to the measurable that supplies the interval.</p>
+<table>
+<thead>
+<tr>
+<th>Interval supplied by the measurable</th>
+<th>Selected by <code>&lt; 30</code>?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>−1 day</td>
+<td>Yes: the rule has no lower bound</td>
+</tr>
+<tr>
+<td>29 days</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>30 days</td>
+<td>No: <code>&lt;</code> is strict</td>
+</tr>
+<tr>
+<td>31 days</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>NULL</code></td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<p>“Less than 30” is different from “0 through 30 days, inclusive”. For a bounded event-to-event interval, a <a href="../measure_resolution/#temporal-window-event-to-event-timing">temporal-window measure</a> makes both bounds and the compared dates explicit.</p>
+<h3 id="worked-example-a-numeric-measurement">Worked example: a numeric measurement<a class="headerlink" href="#worked-example-a-numeric-measurement" title="Permanent link">&para;</a></h3>
+<p>Suppose concept 3000 identifies a measurement whose numeric score must be less than 2. A concept-constrained scalar rule checks both the measurement concept and its value on the same row.</p>
+<table>
+<thead>
+<tr>
+<th>Measurement concept</th>
+<th style="text-align: right;">Numeric value</th>
+<th>Selected by concept 3000 AND value <code>&lt; 2</code>?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3000</td>
+<td style="text-align: right;">1</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>3000</td>
+<td style="text-align: right;">2</td>
+<td>No</td>
+</tr>
+<tr>
+<td>4000</td>
+<td style="text-align: right;">1</td>
+<td>No: wrong measurement</td>
+</tr>
+<tr>
+<td>3000</td>
+<td style="text-align: right;"><code>NULL</code></td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<p>With <code>concept_id=0</code>, the 4000 row would also pass the numeric threshold if the measurable supplies it. Use that mode when the measurable already identifies the required quantity, rather than to mix unrelated measurements.</p>
 <h2 id="7-predicaterule">7. <code>PredicateRule</code><a class="headerlink" href="#7-predicaterule" title="Permanent link">&para;</a></h2>
 <h3 id="semantics_6">Semantics<a class="headerlink" href="#semantics_6" title="Permanent link">&para;</a></h3>
 <p>Match rows using a boolean predicate column exposed by the measurable.</p>
@@ -1134,6 +1469,35 @@
 <li>treatment includes systemic therapy</li>
 <li>concurrent chemo-radiotherapy flag</li>
 </ul>
+<h3 id="worked-example_5">Worked example<a class="headerlink" href="#worked-example_5" title="Permanent link">&para;</a></h3>
+<p>Suppose the measurable supplies a derived “includes RT” flag. With <code>concept_id=1</code> (or omitted), the rule selects true flags. With <code>concept_id=0</code>, it selects false flags.</p>
+<table>
+<thead>
+<tr>
+<th>Flag supplied by the measurable</th>
+<th>Select true (<code>concept_id=1</code>)</th>
+<th>Select false (<code>concept_id=0</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TRUE</code></td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>FALSE</code></td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>NULL</code></td>
+<td>No</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<p>An unknown flag is not a false flag. The predicate’s clinical meaning comes from the measurable that calculates it; the rule only tests that result.</p>
 <h2 id="8-phenotyperule">8. <code>PhenotypeRule</code><a class="headerlink" href="#8-phenotyperule" title="Permanent link">&para;</a></h2>
 <h3 id="semantics_7">Semantics<a class="headerlink" href="#semantics_7" title="Permanent link">&para;</a></h3>
 <p>Expand a phenotype definition into a curated set of concepts and match any of them.</p>
@@ -1142,6 +1506,35 @@
 </code></pre></div>
 <h3 id="typical-use_7">Typical use<a class="headerlink" href="#typical-use_7" title="Permanent link">&para;</a></h3>
 <p>Curated research or histology-driven definitions that do not map cleanly onto a single hierarchy.</p>
+<h3 id="worked-example_6">Worked example<a class="headerlink" href="#worked-example_6" title="Permanent link">&para;</a></h3>
+<p>Suppose phenotype 7 explicitly contains concepts 1100 and 2000. A <code>PhenotypeRule</code> with <code>phenotype_id=7</code> tests membership in that set.</p>
+<table>
+<thead>
+<tr>
+<th>Recorded concept</th>
+<th>Selected?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1100</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>2000</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>1200</td>
+<td>No: not in the curated set</td>
+</tr>
+<tr>
+<td><code>NULL</code></td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<p>Being related to a member is not enough. Include the desired descendants in the phenotype definition if the clinical question requires them.</p>
 <h2 id="9-substringrule">9. <code>SubstringRule</code><a class="headerlink" href="#9-substringrule" title="Permanent link">&para;</a></h2>
 <h3 id="semantics_8">Semantics<a class="headerlink" href="#semantics_8" title="Permanent link">&para;</a></h3>
 <p>Match rows whose resolved string field contains the source concept's <code>concept_code</code>.</p>
@@ -1150,7 +1543,46 @@
 <div class="highlight"><pre><span></span><code><span class="n">field</span><span class="w"> </span><span class="k">ILIKE</span><span class="w"> </span><span class="s1">&#39;%concept_code%&#39;</span>
 </code></pre></div>
 <h3 id="typical-use_8">Typical use<a class="headerlink" href="#typical-use_8" title="Permanent link">&para;</a></h3>
-<p>Fallback matching for legacy coding systems or structured code prefixes where OMOP hierarchy expansion is insufficient.</p>
+<p>Matching code or label fragments where a suitable coded definition is unavailable.</p>
+<h3 id="worked-example_7">Worked example<a class="headerlink" href="#worked-example_7" title="Permanent link">&para;</a></h3>
+<p>Suppose the rule’s referenced concept has <code>concept_code='ABC'</code>. The rule uses that code as its search fragment against the measurable’s string field.</p>
+<table>
+<thead>
+<tr>
+<th>String supplied by the measurable</th>
+<th>Selected?</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ABC.1</code></td>
+<td>Yes</td>
+<td>Contains ABC</td>
+</tr>
+<tr>
+<td><code>abc.2</code></td>
+<td>Yes</td>
+<td>Matching is case-insensitive</td>
+</tr>
+<tr>
+<td><code>XABCY</code></td>
+<td>Yes</td>
+<td>The fragment can occur anywhere</td>
+</tr>
+<tr>
+<td><code>ABD.1</code></td>
+<td>No</td>
+<td>Does not contain ABC</td>
+</tr>
+<tr>
+<td><code>NULL</code></td>
+<td>No</td>
+<td>No string to match</td>
+</tr>
+</tbody>
+</table>
+<p>This is a contains test, not a prefix or vocabulary-hierarchy test. It does not validate the coding system. The <code>%</code> and <code>_</code> characters in a search fragment also act as SQL wildcards; they are not escaped as literal characters.</p>
 <hr />
 <h2 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">&para;</a></h2>
 <table>
@@ -1185,7 +1617,7 @@
 <tr>
 <td><code>AbsenceRule</code></td>
 <td>concept-like field</td>
-<td>explicit absence</td>
+<td>null value in an existing row</td>
 </tr>
 <tr>
 <td><code>ScalarRule</code></td>
@@ -1209,6 +1641,31 @@
 </tr>
 </tbody>
 </table>
+<h2 id="from-selected-records-to-an-indicator-result">From selected records to an indicator result<a class="headerlink" href="#from-selected-records-to-an-indicator-result" title="Permanent link">&para;</a></h2>
+<p>Rules keep the dates and cancer identities supplied by their measurable. They do not reassign evidence across primaries or reduce it to one patient result.</p>
+<table>
+<thead>
+<tr>
+<th>Selected evidence for one patient</th>
+<th>What it establishes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Two qualifying assessments for cancer A, on different dates</td>
+<td>Both can remain available for later date-window checks</td>
+</tr>
+<tr>
+<td>A qualifying assessment for cancer B</td>
+<td>Evidence for B; it cannot satisfy A’s indicator through same-cancer matching</td>
+</tr>
+<tr>
+<td>A record with a qualifying code but no date</td>
+<td>Code matching can succeed; dated eligibility or a timing window still needs the required date</td>
+</tr>
+</tbody>
+</table>
+<p><a href="../episode_attachment/">Episode attachment</a> explains where evidence belongs. <a href="../evidence_and_indicators/">Evidence and indicators</a> explains how dates, eligibility and counting cancers or patients determine the final result.</p>
 
 
 

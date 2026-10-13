@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="687" viewBox="0 0 800 687" role="img" aria-labelledby="title description">
+  <title id="title">Different event dates attach to different primaries within overlapping windows</title>
+  <desc id="description">E1 window is 3 March 2025 to 30 June 2026. E2 window is 1 December 2025 to 1 March 2027. An unlinked referral on 5 February 2026 attaches to E1 because E1 has started and is less than 365 days old. Spirometry and MDT in March attach to E2 because both cancers have started and E2 has the more recent start.</desc>
+  <style>text { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; fill: #213047; }
+.heading { font-size: 24px; font-weight: 650; }
+.label { font-size: 20px; font-weight: 650; }
+.body { font-size: 19px; }
+.note { font-size: 18px; fill: #526174; }
+.small { font-size: 17px; fill: #526174; }
+.grid { stroke: #dce3ec; stroke-width: 1; }
+.axis { stroke: #526174; stroke-width: 1.5; }</style>
+  <rect width="800" height="687" rx="12" fill="#ffffff"/>
+  <text x="400" y="34" class="heading" text-anchor="middle">Two primaries with overlapping attachment windows</text>
+  <text x="400" y="66" class="body" text-anchor="middle">Events below have no valid recorded episode link</text>
+  <line x1="190.0" y1="100" x2="190.0" y2="456" class="grid"/>
+  <text x="190.0" y="486" class="small" text-anchor="middle">Mar 2025</text>
+  <line x1="281.4" y1="100" x2="281.4" y2="456" class="grid"/>
+  <text x="281.4" y="486" class="small" text-anchor="middle">Jul 2025</text>
+  <line x1="419.2" y1="100" x2="419.2" y2="456" class="grid"/>
+  <text x="419.2" y="486" class="small" text-anchor="middle">Jan 2026</text>
+  <line x1="554.8" y1="100" x2="554.8" y2="456" class="grid"/>
+  <text x="554.8" y="486" class="small" text-anchor="middle">Jul 2026</text>
+  <line x1="692.6" y1="100" x2="692.6" y2="456" class="grid"/>
+  <text x="692.6" y="486" class="small" text-anchor="middle">Jan 2027</text>
+  <line x1="190" y1="456" x2="760" y2="456" class="axis"/>
+  <text x="20" y="133" class="label">E1 first primary</text>
+  <rect x="191.5" y="112" width="362.5" height="30" rx="4" fill="#edf5ff" stroke="#739bd0" stroke-width="1.5"/>
+  <line x1="258.9" y1="105" x2="258.9" y2="146" class="axis" style="stroke:#739bd0"/>
+  <text x="258.9" y="95" class="small" text-anchor="middle">Dx 1 Jun 2025</text>
+  <text x="190" y="162" class="small">Window: 3 Mar 2025–30 Jun 2026</text>
+  <text x="20" y="213" class="label">E2 second</text>
+  <rect x="396.0" y="192" width="340.8" height="30" rx="4" fill="#f5f0ff" stroke="#a18abb" stroke-width="1.5"/>
+  <line x1="463.4" y1="185" x2="463.4" y2="226" class="axis" style="stroke:#a18abb"/>
+  <text x="463.4" y="177" class="small" text-anchor="middle">Dx 1 Mar 2026</text>
+  <text x="190" y="242" class="small">Window: 1 Dec 2025–1 Mar 2027</text>
+  <text x="20" y="296" class="body">GP referral 1</text>
+  <path d="M242.4 283 L249.4 290 L242.4 297 L235.4 290 Z" fill="#739bd0" stroke="#ffffff"/>
+  <text x="256.4" y="296" class="small">10 May 2025 → E1</text>
+  <text x="20" y="338" class="body">GP referral 2</text>
+  <path d="M445.4 325 L452.4 332 L445.4 339 L438.4 332 Z" fill="#739bd0" stroke="#ffffff"/>
+  <text x="459.4" y="338" class="small">5 Feb 2026 → E1</text>
+  <text x="20" y="380" class="body">Spirometry</text>
+  <path d="M470.1 367 L477.1 374 L470.1 381 L463.1 374 Z" fill="#a18abb" stroke="#ffffff"/>
+  <text x="484.1" y="380" class="small">10 Mar 2026 → E2</text>
+  <text x="20" y="422" class="body">MDT</text>
+  <path d="M471.6 409 L478.6 416 L471.6 423 L464.6 416 Z" fill="#a18abb" stroke="#ffffff"/>
+  <text x="485.6" y="422" class="small">12 Mar 2026 → E2</text>
+  <rect x="20" y="510" width="370" height="153" rx="10" fill="#edf5ff" stroke="#739bd0" stroke-width="1.5"/>
+  <text x="42" y="545" class="label">5 February referral</text>
+  <text x="42" y="580" class="body">E1 has started; E2 has not.</text>
+  <text x="42" y="609" class="body">E1 is less than 365 days old.</text>
+  <text x="42" y="638" class="body">The referral attaches to E1.</text>
+  <rect x="410" y="510" width="370" height="153" rx="10" fill="#f5f0ff" stroke="#a18abb" stroke-width="1.5"/>
+  <text x="432" y="545" class="label">March spirometry and MDT</text>
+  <text x="432" y="580" class="body">Both cancers have started.</text>
+  <text x="432" y="609" class="body">E2 has the more recent start.</text>
+  <text x="432" y="638" class="body">Both events attach to E2.</text>
+</svg>

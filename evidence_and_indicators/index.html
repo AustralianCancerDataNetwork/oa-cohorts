@@ -1,0 +1,1414 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="OMOP-Alchemy based composable API to feed clinical quality indicator results to downstream reporting">
+      
+      
+      
+        <link rel="canonical" href="https://AustralianCancerDataNetwork.github.io/oa-cohorts/evidence_and_indicators/">
+      
+      
+        <link rel="prev" href="../example_execution/">
+      
+      
+        <link rel="next" href="../measure_resolution/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Evidence to Indicator - OA Cohorts</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../stylesheets/figures.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#from-clinical-evidence-to-one-indicator-result" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="OA Cohorts" class="md-header__button md-logo" aria-label="OA Cohorts" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            OA Cohorts
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Evidence to Indicator
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/AustralianCancerDataNetwork/oa-cohorts" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    oa_cohorts
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="OA Cohorts" class="md-nav__button md-logo" aria-label="OA Cohorts" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    OA Cohorts
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/AustralianCancerDataNetwork/oa-cohorts" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    oa_cohorts
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inputs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Inputs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../measurables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Measurables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../query_rule_definitions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Query Definitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Execution
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Execution
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../example_execution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Example execution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outputs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Outputs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence to Indicator
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence to Indicator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#several-records-one-result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Several records, one result
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#check-the-date-window-before-choosing-an-assessment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Check the date window before choosing an assessment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-question-about-first-treatment-must-use-the-first-treatment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A question about first treatment must use the first treatment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#does-the-window-run-from-diagnosis-or-treatment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Does the window run from diagnosis or treatment?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#should-the-indicator-count-cancers-or-patients" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Should the indicator count cancers or patients?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#missing-information-and-reporting-periods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Missing information and reporting periods
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../measure_resolution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Measure Resolution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../episode_attachment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Episode Attachment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../schema_management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schema Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#several-records-one-result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Several records, one result
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#check-the-date-window-before-choosing-an-assessment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Check the date window before choosing an assessment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-question-about-first-treatment-must-use-the-first-treatment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A question about first treatment must use the first treatment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#does-the-window-run-from-diagnosis-or-treatment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Does the window run from diagnosis or treatment?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#should-the-indicator-count-cancers-or-patients" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Should the indicator count cancers or patients?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#missing-information-and-reporting-periods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Missing information and reporting periods
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href=".." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Home
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="./" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Outputs
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="from-clinical-evidence-to-one-indicator-result">From clinical evidence to one indicator result<a class="headerlink" href="#from-clinical-evidence-to-one-indicator-result" title="Permanent link">&para;</a></h1>
+<p>A patient may have several assessments and treatments for the same cancer. Each record can help establish whether an indicator is met, but it should not cause that cancer to be counted again. Measures collect and combine this evidence. Indicators use it to decide which cancers are eligible (the denominator), which meet the criterion (the numerator), and whether the report counts cancers or patients.</p>
+<p><img alt="One patient with two eligible lung cancers: A has repeated RT evidence and meets the criterion; B has no RT recorded. Counting cancers gives 1/2, while counting patients gives 1/1." src="../img/evidence_to_indicator.svg" /></p>
+<p>The counts are numerator / denominator. Several records for A produce one cancer result. When counting patients, P1 meets the indicator through A; B is still not shown as having received RT.</p>
+<p>Episode attachment is a separate decision from timing. A measurement attached to cancer B cannot pass an indicator for cancer A merely because the same patient has both. <a href="../episode_attachment/">Episode attachment</a> explains recorded links, fallback date windows and nested diagnoses.</p>
+<h2 id="several-records-one-result">Several records, one result<a class="headerlink" href="#several-records-one-result" title="Permanent link">&para;</a></h2>
+<p>The following fictional patient has two lung primaries. The event labels distinguish the records; two events can remain separate even when they share a date. RT means radiotherapy.</p>
+<table>
+<thead>
+<tr>
+<th>Patient</th>
+<th>Cancer</th>
+<th>Event</th>
+<th>Date</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P1</td>
+<td>Lung A</td>
+<td>E1</td>
+<td>10 Jan 2026</td>
+<td>Stage III</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>Lung A</td>
+<td>E2</td>
+<td>20 Jan 2026</td>
+<td>RT start</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>Lung A</td>
+<td>E3</td>
+<td>15 Feb 2026</td>
+<td>Further RT start</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>Lung B</td>
+<td>E4</td>
+<td>1 Apr 2026</td>
+<td>Stage III</td>
+</tr>
+</tbody>
+</table>
+<p>For <strong>Stage III AND RT</strong>, A qualifies and B does not. For <strong>Stage III OR RT</strong>, both qualify. Several records for A still count as one eligible cancer.</p>
+<table>
+<thead>
+<tr>
+<th>Expression</th>
+<th>Evidence retained</th>
+<th>First date A meets the criteria</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stage III OR RT</td>
+<td>E1, E2 and E3</td>
+<td>10 Jan</td>
+</tr>
+<tr>
+<td>Stage III AND RT</td>
+<td>Supporting stage and RT records, with completion dates</td>
+<td>20 Jan</td>
+</tr>
+<tr>
+<td>Stage III EXCEPT RT</td>
+<td>A is excluded because it has RT; B remains</td>
+<td>None for A</td>
+</tr>
+</tbody>
+</table>
+<p>For an AND, the first qualifying date is the later of the earliest qualifying dates for its two criteria: <code>MAX(earliest qualifying A, earliest qualifying B)</code>. In this example, stage was recorded on 10 January and RT began on 20 January, so both requirements had been met by 20 January. This does not establish that the stage assessment was still clinically current when RT began. If that matters to the question, the definition needs a date window.</p>
+<h2 id="check-the-date-window-before-choosing-an-assessment">Check the date window before choosing an assessment<a class="headerlink" href="#check-the-date-window-before-choosing-an-assessment" title="Permanent link">&para;</a></h2>
+<p>Suppose diagnosis is 1 March, eligible RT starts 20 March, and assessment must be within <strong>10 days before RT through RT start</strong>, inclusive.</p>
+<p><img alt="Filtering before selection retains the valid 15 March assessment; choosing the earliest assessment first would miss it." src="../img/assessment_window_selection.svg" /></p>
+<table>
+<thead>
+<tr>
+<th>Assessment date</th>
+<th style="text-align: right;">Difference from RT</th>
+<th>Qualifies?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 March</td>
+<td style="text-align: right;">−19 days</td>
+<td>No</td>
+</tr>
+<tr>
+<td>10 March</td>
+<td style="text-align: right;">−10 days</td>
+<td>Yes, lower boundary</td>
+</tr>
+<tr>
+<td>15 March</td>
+<td style="text-align: right;">−5 days</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>20 March</td>
+<td style="text-align: right;">0 days</td>
+<td>Yes, upper boundary</td>
+</tr>
+<tr>
+<td>21 March</td>
+<td style="text-align: right;">+1 day</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<p>The assessment on 1 March is too early, but it must not hide the valid assessment on 15 March. First find assessments inside the window, then apply the choice specified by the measure: keep all, the earliest, the latest, or the closest to treatment. In configuration these are <code>any</code>, <code>earliest</code>, <code>latest</code> and <code>closest</code>. Equally close assessments are ordered by earlier date, then source identifier. The 10-day interval is illustrative; each indicator needs its own clinical definition.</p>
+<p>These three dates answer different questions. The configuration calls the event being checked the <strong>candidate</strong> and the event it is compared with the <strong>anchor</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Date role</th>
+<th>This example</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Assessment (<code>candidate</code>)</td>
+<td>15 March</td>
+<td>When assessment happened</td>
+</tr>
+<tr>
+<td>Treatment (<code>anchor</code>)</td>
+<td>20 March</td>
+<td>The date the assessment is compared with</td>
+</tr>
+<tr>
+<td>Completion</td>
+<td>20 March</td>
+<td>When both dated requirements had occurred</td>
+</tr>
+</tbody>
+</table>
+<p>The measure can return the assessment date, the treatment date, or the earlier or later of the two. Its completion date is stored separately. For a later question about treatment start or end, use that treatment date rather than the date when a combined set of criteria was first met.</p>
+<h2 id="a-question-about-first-treatment-must-use-the-first-treatment">A question about first treatment must use the first treatment<a class="headerlink" href="#a-question-about-first-treatment-must-use-the-first-treatment" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Eligible treatment</th>
+<th>Start</th>
+<th>Assessment in its preceding 10 days</th>
+<th>First-treatment question</th>
+<th>Any-treatment question</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T1</td>
+<td>20 March</td>
+<td>None</td>
+<td>Fails</td>
+<td>No qualifying assessment</td>
+</tr>
+<tr>
+<td>T2</td>
+<td>19 April</td>
+<td>14 April</td>
+<td>Cannot rescue T1</td>
+<td>Passes through T2</td>
+</tr>
+</tbody>
+</table>
+<p>Both questions count one eligible cancer. The first-treatment question fails because T1 has no qualifying assessment; the any-treatment question passes because T2 does. To answer the first-treatment question, select T1 before checking whether an assessment meets the criterion.</p>
+<p>Start and end must belong to the same selected treatment. If T1 starts 10 January and ends 2 March, while T2 starts 20 January and ends 10 February, “end of the first treatment” is 2 March. It is not the earliest end among all treatments. The configuration therefore separates how a treatment is selected from which of its dates is used for comparison.</p>
+<p>To count curative RT, the RT and curative intent must belong to the <strong>same recorded treatment</strong>. Palliative RT plus curative systemic anticancer therapy (SACT) does not establish curative RT. Repeated records of the same intent are retained. If one treatment has conflicting recorded intents, it is excluded from intent-specific criteria because its intent is uncertain. The treatment-intent data used here cannot identify cycles with no recorded intent; missing intent needs to be checked in the source data.</p>
+<h2 id="does-the-window-run-from-diagnosis-or-treatment">Does the window run from diagnosis or treatment?<a class="headerlink" href="#does-the-window-run-from-diagnosis-or-treatment" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Question</th>
+<th>Denominator</th>
+<th>Numerator timing</th>
+<th>Result for the example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Documented assessment</td>
+<td>Eligible cancer</td>
+<td>No window</td>
+<td>Met if a dated assessment is recorded</td>
+</tr>
+<tr>
+<td>Assessment within 30 days of diagnosis</td>
+<td>Cancer diagnosed 1 March</td>
+<td>Relative to 1 March</td>
+<td>15 March passes</td>
+</tr>
+<tr>
+<td>Assessment before first eligible RT</td>
+<td>First eligible RT on 20 March</td>
+<td>Relative to selected RT</td>
+<td>15 March passes in the example’s 10 days before RT</td>
+</tr>
+</tbody>
+</table>
+<p>By default, indicator windows run from the cohort date, usually diagnosis. Selecting treated cancers as the denominator does not change that reference date. To compare an assessment with the eligible treatment instead, set <code>numerator_reference=denominator</code>. Use a temporal-window measure for questions about specific start/end dates or more than one timing relationship.</p>
+<p>When comparing with a treatment, evidence recorded against a particular treatment must refer to the selected treatment. An assessment with no treatment ID is checked by its date, within the same cancer.</p>
+<h2 id="should-the-indicator-count-cancers-or-patients">Should the indicator count cancers or patients?<a class="headerlink" href="#should-the-indicator-count-cancers-or-patients" title="Permanent link">&para;</a></h2>
+<p>The configuration field <code>grain</code> controls this choice: <code>episode</code> counts each eligible cancer, while <code>patient</code> counts each eligible patient once. The default is <code>episode</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Patient</th>
+<th>Cancer</th>
+<th>Eligible?</th>
+<th>Criterion met?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P1</td>
+<td>A</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>B</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>C</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Count</th>
+<th style="text-align: right;">Denominator</th>
+<th style="text-align: right;">Numerator</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cancers</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1</td>
+<td>One of three eligible cancers meets the criterion</td>
+</tr>
+<tr>
+<td>Patients</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td>One of two eligible patients has a cancer that meets the criterion</td>
+</tr>
+</tbody>
+</table>
+<p>When counting patients, first check each cancer separately. A patient is eligible if any of their cancers is eligible, and meets the indicator if any eligible cancer meets its criterion. Here P1 meets the indicator through cancer B. The result keeps B’s supporting evidence so the reader can see why. An earlier date from cancer A may determine P1’s reporting period, but it must not be shown as the treatment date that justified the result for B.</p>
+<p>Repeated dates and cohort labels for one cancer do not increase the count. An indicator whose denominator is the whole cohort uses each cancer’s earliest dated cohort reference. Evidence for one primary cannot satisfy the criterion for another.</p>
+<h2 id="missing-information-and-reporting-periods">Missing information and reporting periods<a class="headerlink" href="#missing-information-and-reporting-periods" title="Permanent link">&para;</a></h2>
+<p>“No surgery recorded” does not have a surgery date. When an absence rule is combined with dated criteria, it checks eligibility without supplying a date: stage recorded on 10 January AND no surgery recorded qualifies on 10 January. Its source date stays empty. This differs from surgery that is recorded but has no usable date; that missing date cannot establish when a dated requirement was met. An absence-only measure cannot supply the anchor or candidate date for a window.</p>
+<p>Death criteria check for an OMOP death record, independently of gender or other demographics. They use the calendar date of <code>death_datetime</code>, falling back to <code>death_date</code> when there is no timestamp. No death record means the death criterion is not met; it does not mean the patient is known to be alive. A recorded death with neither date available remains unresolved when its date is required.</p>
+<p>If a date needed to establish eligibility is missing, the result is <strong>unresolved</strong>. Show it separately and exclude it from both numerator and denominator totals (<code>denominator_value=false</code>). If the cancer is eligible but has no qualifying numerator evidence, the criterion has not been demonstrated; that does not prove care was omitted. Undated numerator evidence is excluded by default. The <code>presence</code> setting can accept it when a question only asks whether something was recorded, but it cannot establish that an event fell within a date window.</p>
+<table>
+<thead>
+<tr>
+<th>Evidence</th>
+<th>Eligibility</th>
+<th>Contribution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dated eligible denominator, passing numerator</td>
+<td>Eligible</td>
+<td>Denominator 1, numerator 1</td>
+</tr>
+<tr>
+<td>Dated eligible denominator, no qualifying numerator</td>
+<td>Eligible</td>
+<td>Denominator 1, numerator 0</td>
+</tr>
+<tr>
+<td>Required denominator date missing</td>
+<td>Unresolved</td>
+<td>Neither total; show unresolved count</td>
+</tr>
+<tr>
+<td>No denominator membership</td>
+<td>Outside the eligible set</td>
+<td>Neither total</td>
+</tr>
+</tbody>
+</table>
+<p>The indicator’s <code>period_date</code> determines where its result appears in a monthly or yearly report. It can come from the cohort, denominator, numerator or completion date. For example, if two AND criteria are met on 31 January and 1 February, their completion date is 1 February. A report using completion dates counts that result once, in February. Use the same period date for both numerator and denominator totals, and show results with missing period dates as unassigned rather than guessing a date.</p>
+<p>When counting patients, cohort or denominator dates use the earliest eligible reference across their cancers. Numerator or completion dates follow the cancer that provides the supporting evidence for the patient’s result.</p>
+<h2 id="configuration-reference">Configuration reference<a class="headerlink" href="#configuration-reference" title="Permanent link">&para;</a></h2>
+<p>These settings make the choices above explicit. The defaults count cancers, accept any eligible treatment opportunity and compare indicator windows with the cohort date. <a href="../schema_management/#evidence-and-indicator-policies">Schema management</a> explains how to upgrade the configuration database.</p>
+<table>
+<thead>
+<tr>
+<th>Location</th>
+<th>Field</th>
+<th>Default / options</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Indicator</td>
+<td><code>grain</code></td>
+<td><code>episode</code> counts cancers; <code>patient</code> counts patients</td>
+</tr>
+<tr>
+<td>Measure</td>
+<td><code>matching_scope</code></td>
+<td><code>cancer</code>; <code>treatment</code> additionally requires equal non-null treatment identity</td>
+</tr>
+<tr>
+<td>Temporal window</td>
+<td><code>anchor_selection</code></td>
+<td><code>first</code>; also <code>latest</code>, <code>all</code></td>
+</tr>
+<tr>
+<td>Temporal window</td>
+<td><code>anchor_order_date_role</code></td>
+<td><code>measure</code>; also <code>start</code>, <code>end</code>, <code>completion</code></td>
+</tr>
+<tr>
+<td>Temporal window</td>
+<td><code>anchor_date_role</code>, <code>candidate_date_role</code></td>
+<td><code>measure</code>; also <code>start</code>, <code>end</code>, <code>completion</code></td>
+</tr>
+<tr>
+<td>Indicator</td>
+<td><code>opportunity_selection</code></td>
+<td><code>any</code>; also <code>first</code></td>
+</tr>
+<tr>
+<td>Indicator</td>
+<td><code>numerator_reference</code></td>
+<td><code>cohort</code>; also <code>denominator</code></td>
+</tr>
+<tr>
+<td>Indicator</td>
+<td><code>period_date_source</code></td>
+<td><code>denominator</code>; also <code>cohort</code>, <code>numerator</code>, <code>completion</code></td>
+</tr>
+<tr>
+<td>Indicator</td>
+<td><code>undated_numerator_policy</code></td>
+<td><code>exclude</code>; also <code>presence</code></td>
+</tr>
+</tbody>
+</table>
+<p>When importing a CSV, omitted policy columns leave existing settings unchanged. Blank or unknown values are rejected. For SQL interfaces and the evidence fields available to developers, see <a href="../measure_resolution/">Measure resolution</a>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.expand", "navigation.path", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
+      
+        <script src="../js/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

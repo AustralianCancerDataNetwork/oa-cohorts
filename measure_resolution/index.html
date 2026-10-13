@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://AustralianCancerDataNetwork.github.io/oa-cohorts/measure_resolution/">
       
       
-        <link rel="prev" href="../example_execution/">
+        <link rel="prev" href="../evidence_and_indicators/">
       
       
         <link rel="next" href="../episode_attachment/">
@@ -51,6 +51,8 @@
     
     
       <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../stylesheets/figures.css">
     
     <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
@@ -510,6 +512,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence_and_indicators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence to Indicator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -573,10 +603,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#measuremember-the-atomic-result-row" class="md-nav__link">
+  <a href="#the-evidence-returned-by-a-measure" class="md-nav__link">
     <span class="md-ellipsis">
       
-        MeasureMember: the atomic result row
+        The evidence returned by a measure
       
     </span>
   </a>
@@ -584,10 +614,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#canonical-combination-semantics" class="md-nav__link">
+  <a href="#combining-criteria" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Canonical Combination Semantics
+        Combining criteria
       
     </span>
   </a>
@@ -754,10 +784,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#measuremember-the-atomic-result-row" class="md-nav__link">
+  <a href="#the-evidence-returned-by-a-measure" class="md-nav__link">
     <span class="md-ellipsis">
       
-        MeasureMember: the atomic result row
+        The evidence returned by a measure
       
     </span>
   </a>
@@ -765,10 +795,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#canonical-combination-semantics" class="md-nav__link">
+  <a href="#combining-criteria" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Canonical Combination Semantics
+        Combining criteria
       
     </span>
   </a>
@@ -818,7 +848,7 @@
     
     
       <li class="md-path__item">
-        <a href="./" class="md-path__link">
+        <a href="../evidence_and_indicators/" class="md-path__link">
           
   <span class="md-ellipsis">
     Outputs
@@ -844,8 +874,9 @@
 
 
 <h1 id="measure-resolution">Measure Resolution<a class="headerlink" href="#measure-resolution" title="Permanent link">&para;</a></h1>
-<h2 id="measuremember-the-atomic-result-row"><code>MeasureMember</code>: the atomic result row<a class="headerlink" href="#measuremember-the-atomic-result-row" title="Permanent link">&para;</a></h2>
-<p>When a measure executes, it materialises <code>MeasureMember</code> rows:</p>
+<p>For worked clinical examples, counting rules and date roles, start with <a href="../evidence_and_indicators/">From clinical evidence to one indicator result</a>. This page describes the SQL projections.</p>
+<h2 id="the-evidence-returned-by-a-measure">The evidence returned by a measure<a class="headerlink" href="#the-evidence-returned-by-a-measure" title="Permanent link">&para;</a></h2>
+<p>A measure returns <code>MeasureMember</code> rows. These identify the patient, cancer and date; additional fields retain source identifiers, treatment identifiers and dates needed by later criteria. The four core fields are:</p>
 <div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">MeasureMember</span><span class="p">:</span>
     <span class="n">person_id</span><span class="p">:</span> <span class="nb">int</span>
@@ -855,19 +886,19 @@
 </code></pre></div>
 <p>A <code>MeasureMember</code> is not just a boolean membership flag. It captures:</p>
 <ul>
-<li>who qualified</li>
-<li>under which resolver</li>
-<li>on what date</li>
+<li>which patient and cancer the evidence belongs to</li>
+<li>which episode is used for matching (<code>measure_resolver</code>)</li>
+<li>the date returned by the measure</li>
 </ul>
 <p>This preserved timing is what allows indicator windows, per-period reporting, and episode-aware logic to work later in the pipeline.</p>
-<h2 id="canonical-combination-semantics">Canonical Combination Semantics<a class="headerlink" href="#canonical-combination-semantics" title="Permanent link">&para;</a></h2>
-<p>Measures compose child results using the canonical member shape. In the shipped config this is primarily through <code>OR</code> and <code>AND</code>.</p>
+<h2 id="combining-criteria">Combining criteria<a class="headerlink" href="#combining-criteria" title="Permanent link">&para;</a></h2>
+<p>Measures combine evidence using <code>OR</code>, <code>AND</code> and <code>EXCEPT</code>. They retain the records and dates needed by later criteria. The indicator decides how that evidence contributes to the final count.</p>
 <h3 id="or-preserve-all-qualifying-rows"><code>OR</code>: preserve all qualifying rows<a class="headerlink" href="#or-preserve-all-qualifying-rows" title="Permanent link">&para;</a></h3>
-<p><code>OR</code> logic unions child outputs without collapsing them.</p>
+<p><code>OR</code> keeps distinct qualifying evidence, deduplicating the same physical event.</p>
 <p>Implementation shape:</p>
 <ul>
-<li>each child emits canonical rows</li>
-<li>rows are combined with <code>UNION ALL</code></li>
+<li>each child supplies evidence rows</li>
+<li>rows are combined with <code>UNION</code></li>
 <li>all qualifying dates are preserved</li>
 </ul>
 <p>Example:</p>
@@ -875,39 +906,44 @@
 <li>measure = ECOG 0 OR ECOG 1</li>
 </ul>
 <p>If the same person qualifies on two different dates, both rows survive.</p>
-<p><img alt="Qualification temporal resolution" src="../img/temporal_resolver_2.png" /></p>
-<h3 id="and-resolver-aligned-intersection"><code>AND</code>: resolver-aligned intersection<a class="headerlink" href="#and-resolver-aligned-intersection" title="Permanent link">&para;</a></h3>
-<p><code>AND</code> is not a simple person-level intersection. The same <code>measure_resolver</code> must satisfy all child criteria.</p>
+<p><img alt="OR retains evidence from either criterion, including distinct events on the same date, while keeping each cancer separate." src="../img/or_evidence.svg" /></p>
+<p>This is the full evidence result. The four-column <code>sql_any()</code> projection can merge distinct events that share a cancer and date; <code>sql_evidence()</code> retains their source identities.</p>
+<h3 id="and-both-criteria-for-the-same-cancer"><code>AND</code>: both criteria for the same cancer<a class="headerlink" href="#and-both-criteria-for-the-same-cancer" title="Permanent link">&para;</a></h3>
+<p><code>AND</code> requires all child criteria to be met for the same cancer. Matching only the patient would allow evidence from one primary to qualify another.</p>
 <p>Implementation shape:</p>
 <ul>
-<li>child rows are aligned by <code>measure_resolver</code></li>
-<li>the resulting qualification date is the latest child date</li>
+<li>child rows are aligned by <code>(person_id, episode_id, measure_resolver)</code></li>
+<li>first qualification is the latest of the earliest child completions; branch evidence remains available</li>
 <li>rows with mismatched resolvers do not qualify together</li>
 </ul>
-<p>This represents the earliest point at which all required conditions have become true for the same clinical context.</p>
+<p>This gives the first date by which all required events had occurred. If the criteria must be met close together in time, add an explicit date window.</p>
 <p>Example:</p>
 <ul>
 <li>measure = Stage III AND Radiotherapy</li>
 </ul>
 <p>If Stage III qualifies under episode 10 and Radiotherapy qualifies under episode 10, the composite measure qualifies.</p>
 <p>If the two child rows belong to different episodes, they do not intersect.</p>
-<p><img alt="Qualification temporal resolution" src="../img/temporal_resolver_3.png" /></p>
-<h3 id="first-vs-any"><code>FIRST</code> vs <code>ANY</code><a class="headerlink" href="#first-vs-any" title="Permanent link">&para;</a></h3>
-<p>The engine compiles multiple SQL variants for measures and subqueries:</p>
+<p><img alt="AND retains the supporting stage and RT records for cancer A, preserving source dates and recording when both criteria were complete. Other cancers cannot borrow that evidence." src="../img/and_evidence.svg" /></p>
+<p>The stage record keeps its original <code>source_date</code> of 10 January. Its combined <code>measure_date</code> and <code>completion_date</code> are 20 January, when both requirements had occurred. Later RT evidence also remains available. <code>sql_qualification()</code> returns the first completion date for the cancer.</p>
+<h3 id="choosing-a-sql-result">Choosing a SQL result<a class="headerlink" href="#choosing-a-sql-result" title="Permanent link">&para;</a></h3>
+<p>Use the query that answers the question being asked:</p>
 <ul>
-<li><code>ANY</code>: preserve all qualifying rows</li>
-<li><code>FIRST</code>: collapse to the earliest qualifying row per resolver</li>
-<li><code>UNDATED</code>: keep qualifying membership without dates for intermediate set logic</li>
+<li><code>sql_evidence()</code> preserves qualifying records, source identities and date roles.</li>
+<li><code>sql_any()</code> returns distinct rows with the four core fields.</li>
+<li><code>sql_first()</code> returns the earliest emitted date per <code>(person_id, episode_id, measure_resolver)</code>.</li>
+<li><code>sql_qualification()</code> returns the earliest completion date per cancer: when all dated requirements had occurred.</li>
+<li><code>sql_undated()</code> returns distinct membership keys without dates; it is unsupported for temporal-window measures.</li>
 </ul>
+<p><code>MeasureExecutor</code> retains the evidence fields and scopes its cache to the selected people and episode override. Cumulative AND combines each child’s evidence with the other children’s earliest completions, so 32 records from each of two children need at most 64 evidence rows rather than 1,024 pairs.</p>
 <h3 id="temporal-window-event-to-event-timing">Temporal Window: Event-to-Event Timing<a class="headerlink" href="#temporal-window-event-to-event-timing" title="Permanent link">&para;</a></h3>
 <p>A third measure kind handles cases where qualification depends on the relationship between two events — specifically, whether event B occurs within a defined window relative to event A.</p>
 <p>This is expressed via <code>MeasureTemporalWindow</code>, a separate config table with a 1:1 relationship to <code>Measure</code> (enforced by primary key). A measure with a <code>window_config</code> row is a temporal window measure.</p>
 <p><strong>Anchor and candidate</strong></p>
-<p>The anchor uses exactly one source: the measure's <code>subquery_id</code>, or <code>MeasureTemporalWindow.anchor_measure_id</code> pointing to another dated measure. A separate <code>candidate_measure_id</code> identifies the events evaluated relative to that anchor. A measure anchor runs its own filters first; only then is its earliest returned date selected per <code>(person_id, episode_id, measure_resolver)</code>. Existing subquery anchors keep their earliest-event behaviour. Missing references, two anchor sources, reversed bounds and dependency cycles are rejected before SQL compilation. </p>
+<p>The anchor uses exactly one source: the measure's <code>subquery_id</code>, or <code>MeasureTemporalWindow.anchor_measure_id</code> pointing to another dated measure. A separate <code>candidate_measure_id</code> identifies the events evaluated relative to that anchor. A measure anchor runs its own filters first; only then does its declared first/latest/all anchor selection run per <code>(person_id, episode_id, measure_resolver)</code>. The default anchor selection is <code>first</code>. Missing references, two anchor sources, reversed bounds and dependency cycles are rejected before SQL compilation.</p>
 <p><strong>Window bounds</strong></p>
-<p><code>window_min_days</code> and <code>window_max_days</code> are optional. <code>NULL</code> means unbounded on that side. Negative values are valid — a candidate event occurring before the anchor can still qualify when it falls within the configured bounds. The emitted result remains the canonical <code>MeasureMember</code> row shape described above, so downstream comparison is based on the resolved <code>measure_date</code> selected by the window logic rather than on a separately emitted delta column.</p>
+<p><code>window_min_days</code> and <code>window_max_days</code> are optional. <code>NULL</code> means unbounded on that side. Negative values are valid — a candidate event occurring before the anchor can still qualify when it falls within the configured bounds. The selected result date is returned as <code>measure_date</code>; the supporting event dates remain available in the evidence fields.</p>
 <p><strong>Pick strategy</strong> (<code>window_pick_strategy</code>)</p>
-<p>Controls which candidate event is retained per resolver after applying the window filter:</p>
+<p>Controls which candidate events are retained for each selected anchor, after applying the window filter:</p>
 <table>
 <thead>
 <tr>
@@ -922,15 +958,15 @@
 </tr>
 <tr>
 <td><code>earliest</code></td>
-<td>One row per resolver: earliest qualifying candidate date</td>
+<td>Earliest qualifying candidate for each selected anchor</td>
 </tr>
 <tr>
 <td><code>latest</code></td>
-<td>One row per resolver: latest qualifying candidate date</td>
+<td>Latest qualifying candidate for each selected anchor</td>
 </tr>
 <tr>
 <td><code>closest</code></td>
-<td>One row per resolver: candidate date closest to anchor date</td>
+<td>Qualifying candidate closest to each selected anchor</td>
 </tr>
 </tbody>
 </table>
@@ -965,7 +1001,7 @@
 </table>
 <p>Default when <code>NULL</code>: <code>candidate</code>.</p>
 <p><strong>Resolver alignment</strong> (<code>require_same_resolver</code>)</p>
-<p>When <code>TRUE</code> (default), the anchor and candidate are joined on both <code>person_id</code> and <code>measure_resolver</code>. When <code>FALSE</code>, the join is on <code>person_id</code> only.</p>
+<p>When <code>TRUE</code> (default), the anchor and candidate must match on <code>(person_id, episode_id, measure_resolver)</code>. When <code>FALSE</code>, matching uses <code>person_id</code> only. Reserve that setting for intentionally patient-level facts; it permits matching across the patient’s cancers.</p>
 <p><strong>SQL variants</strong></p>
 <p><code>sql_any()</code> and <code>sql_first()</code> are supported. <code>sql_undated()</code> raises <code>NotImplementedError</code> — this surfaces as <code>WARN</code> (not <code>FAIL</code>) in <code>is_executable()</code> because the measure is still usable in the normal execution path.</p>
 <p><strong>Configuration</strong></p>
@@ -992,11 +1028,11 @@ MeasureTemporalWindow:
 <ol>
 <li><code>B OR C</code> resolves to all qualifying child rows</li>
 <li><code>A</code> resolves independently</li>
-<li><code>AND</code> aligns rows on <code>measure_resolver</code></li>
-<li>the composite qualification date becomes the latest aligned child date</li>
+<li><code>AND</code> matches evidence on <code>(person_id, episode_id, measure_resolver)</code></li>
+<li>its first qualification is the later of A’s and the qualifying alternative’s earliest completion dates</li>
 </ol>
-<p>The canonical member shape is preserved at every level, which is why deeply nested logic can still feed report generation consistently.</p>
-<p><img alt="Qualification temporal resolution" src="../img/temporal_resolver_1.png" /></p>
+<p>The supporting evidence remains available to later measures and indicator windows.</p>
+<p><img alt="Stage III AND either RT or surgery qualifies separately for each cancer. Completion is the later of stage and the qualifying treatment; evidence cannot be combined across two cancers in the same patient." src="../img/nested_measure_evidence.svg" /></p>
 
 
 

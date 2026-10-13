@@ -52,6 +52,8 @@
     
       <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
+      <link rel="stylesheet" href="../stylesheets/figures.css">
+    
     <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -513,6 +515,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../evidence_and_indicators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence to Indicator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../measure_resolution/" class="md-nav__link">
         
   
@@ -612,21 +642,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#part-2-for-developers" class="md-nav__link">
+  <a href="#query-and-output-details" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Part 2: for developers
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#diagnosis-time-evidence-windows" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Diagnosis-time evidence windows
+        Query and output details
       
     </span>
   </a>
@@ -776,21 +795,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#part-2-for-developers" class="md-nav__link">
+  <a href="#query-and-output-details" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Part 2: for developers
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#diagnosis-time-evidence-windows" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Diagnosis-time evidence windows
+        Query and output details
       
     </span>
   </a>
@@ -840,7 +848,7 @@
     
     
       <li class="md-path__item">
-        <a href="../measure_resolution/" class="md-path__link">
+        <a href="../evidence_and_indicators/" class="md-path__link">
           
   <span class="md-ellipsis">
     Outputs
@@ -866,15 +874,16 @@
 
 
 <h1 id="episode-attachment-and-measure-resolution">Episode attachment and measure resolution<a class="headerlink" href="#episode-attachment-and-measure-resolution" title="Permanent link">&para;</a></h1>
-<p>The first part explains the intended rules for clinicians. The second part records their developer contracts and implementation status. The examples apply the rules below and identify results that depend on an unresolved decision.</p>
+<p>This page explains which cancer an assessment or treatment belongs to, and how that affects its quality indicators. It starts with the clinical rules and examples, then gives the details needed to use the data in queries. For how several records become one indicator result, see <a href="../evidence_and_indicators/">From clinical evidence to one indicator result</a>.</p>
 <h2 id="part-1-for-clinicians">Part 1: for clinicians<a class="headerlink" href="#part-1-for-clinicians" title="Permanent link">&para;</a></h2>
-<h3 id="the-unit-of-a-report">The unit of a report<a class="headerlink" href="#the-unit-of-a-report" title="Permanent link">&para;</a></h3>
-<p>A report row describes one patient's cancer from its diagnosis: one <strong>episode of care</strong> per top-level MOSAIQ diagnosis. A diagnosis recorded under another diagnosis is a <strong>nested diagnosis</strong>. It belongs to the same cancer and does not create a cohort row under the primary-diagnosis assumption below.</p>
-<p>Treatment careplans, surgery and diagnosis details reach an episode through the diagnosis recorded in the source. Measurements, assessments, procedures and observations use valid recorded episode links when available; otherwise they use the date-window rules below. Specialist visits have a separate attachment rule.</p>
+<h3 id="which-cancers-enter-the-report">Which cancers enter the report?<a class="headerlink" href="#which-cancers-enter-the-report" title="Permanent link">&para;</a></h3>
+<p>The cohort identifies a patient’s cancer by its diagnosis: one <strong>episode of care</strong> per top-level MOSAIQ diagnosis. A diagnosis recorded under another diagnosis is a <strong>nested diagnosis</strong>. It belongs to the same cancer and does not create a separate cohort entry when the cohort selects primary diagnoses, as described below. An indicator can then count cancers individually or count each patient once.</p>
+<p>Treatment careplans and performed surgery reach the diagnosis recorded in the source. Care on a nested progression or metastatic diagnosis also counts for its same-patient episode of care, while remaining available on the nested diagnosis. This follows the recorded parent and does not move care between primaries.</p>
+<p>Measurements, assessments, procedures and observations use valid recorded episode links when available; otherwise they use the date-window rules below. Specialist visits have a separate attachment rule.</p>
 <div class="admonition note">
 <p class="admonition-title">Assumption: cohorts select through the primary diagnosis</p>
 <p>Every leaf measure reachable from a cohort definition must select through the <strong>primary diagnosis</strong> (<code>dx_primary</code>). Under this assumption, each cohort row identifies an episode of care. A nested diagnosis is not a cohort row even when its diagnosis codes match the cohort definition.</p>
-<p>Cohorts defined through any diagnosis (<code>dx_any</code>), stage (<code>dx_stage</code>) or metastasis (<code>dx_mets</code>) can select nested diagnoses and need a different cohort contract. Enforcing the primary-diagnosis restriction during configuration import is not yet decided.</p>
+<p>Cohorts defined through any diagnosis (<code>dx_any</code>), stage (<code>dx_stage</code>) or metastasis (<code>dx_mets</code>) can also select nested diagnoses. The one-entry-per-cancer interpretation on this page does not apply to those definitions.</p>
 </div>
 <p>Two top-level diagnoses for one patient are treated as true second primaries, so the patient can have two cohort rows. Duplicate entry of one cancer as two top-level diagnoses is assumed to be managed through clinical data review; these rules do not merge those diagnoses.</p>
 <h3 id="attachment-rules">Attachment rules<a class="headerlink" href="#attachment-rules" title="Permanent link">&para;</a></h3>
@@ -899,20 +908,24 @@
 <td>From 90 days before the episode starts to its recorded end date, or start + 365 days when no end is recorded; extend its end to the latest nested-diagnosis window end when that is later</td>
 </tr>
 <tr>
+<td>Nested-diagnosis treatment</td>
+<td>Keep direct evidence and credit its valid episode-of-care parent; deduplicate performed source activity</td>
+</tr>
+<tr>
 <td>Measure criteria</td>
-<td>Apply exclusions as exclusions; combine AND and EXCEPT on the complete patient-and-episode member identity</td>
+<td>Combine evidence for the same patient and cancer; apply exclusions to that cancer</td>
 </tr>
 <tr>
 <td>Indicator evaluation</td>
-<td>Use one shared calculation for every output; whole-cohort matching grain remains open</td>
+<td>Check the criteria and date windows for each cancer; count each patient once if the indicator is configured to count patients</td>
 </tr>
 </tbody>
 </table>
 <h3 id="step-1-how-a-clinical-event-finds-an-episode">Step 1: how a clinical event finds an episode<a class="headerlink" href="#step-1-how-a-clinical-event-finds-an-episode" title="Permanent link">&para;</a></h3>
 <ol>
 <li><strong>Recorded links.</strong> Validate each recorded relationship against the event ID, kind of event, episode and patient. Keep every valid relationship, including relationships to nested diagnoses and relationships outside the date window. An event can retain several valid links. It does not also enter date-window fallback.</li>
-<li><strong>Date window.</strong> For an event without a valid recorded link, consider the patient's episodes of care whose windows contain the event date. Each window starts <strong>90 days before</strong> the episode starts and closes at the <strong>later of its own window end and the latest window end of its nested diagnoses</strong>. Each episode's window ends on its recorded end date, or <strong>365 days after its start</strong> when no end is recorded. A later progression or metastasis therefore extends eligibility for the same cancer. The start of the root window stays unchanged;</li>
-<li><strong>Choosing one.</strong> Prefer candidates that had already started on the event date, then choose the most recent start. If none had started, choose the nearest upcoming start. Resolve equal starts using the lower episode number. When the nearest eligible already-started episode began at least 365 days before the event, choose the earliest eligible upcoming episode starting within 60 days after the event, breaking equal starts by the lowest episode ID. Both thresholds are inclusive. A more recent started episode blocks this override, and a same-day start is already started. No concept list is used. </li>
+<li><strong>Date window.</strong> For an event without a valid recorded link, consider the patient's episodes of care whose windows contain the event date. Each window starts <strong>90 days before</strong> the episode starts and closes at the <strong>later of its own window end and the latest window end of its nested diagnoses</strong>. Each episode's window ends on its recorded end date, or <strong>365 days after its start</strong> when no end is recorded. A later progression or metastasis therefore extends eligibility for the same cancer. The original cancer’s window still starts at the same date.</li>
+<li><strong>Choosing one.</strong> Prefer candidates that had already started on the event date, then choose the most recent start. If none had started, choose the nearest upcoming start. If start dates are equal, choose the lower episode number. When the nearest eligible already-started episode began at least 365 days before the event, choose the earliest eligible upcoming episode starting within 60 days after the event, breaking equal starts by the lowest episode ID. Both thresholds are inclusive. A more recent started episode blocks this override, and a same-day start is already started. No concept list is used.</li>
 <li><strong>No candidate.</strong> The event has no diagnosis-episode attachment through this route, so an indicator using these diagnosis-linked event views cannot use it.</li>
 </ol>
 <div  class="mermaid">flowchart TD
@@ -931,39 +944,27 @@
     nearest --> tie
     tie --> one["Attach to one episode of care"]
 </div>
-<p>For specialist visits, the 1.0 target is a separate ranking by tier, distance from the episode start in either direction, and stable episode ID. The exact 180-day boundary still needs to be settled and tested.</p>
-<h3 id="step-2-how-the-report-decides-whether-a-patient-qualifies">Step 2: how the report decides whether a patient qualifies<a class="headerlink" href="#step-2-how-the-report-decides-whether-a-patient-qualifies" title="Permanent link">&para;</a></h3>
+<p>Specialist visits use a separate assignment based on proximity to the episode start. They do not use the event ranking above and may appear against more than one episode.</p>
+<h3 id="step-2-how-the-report-checks-an-indicator">Step 2: how the report checks an indicator<a class="headerlink" href="#step-2-how-the-report-checks-an-indicator" title="Permanent link">&para;</a></h3>
 <ol>
 <li><strong>Cohort.</strong> Create one cohort row per episode of care that meets the cohort definition, dated at diagnosis. This depends on the primary-diagnosis assumption above.</li>
-<li><strong>Criteria inside a measure.</strong> A rule set with inclusions and exclusions selects rows that meet an inclusion and no exclusion. OR combines qualifying members without duplicating their identity. AND requires evidence for the same patient and episode. EXCEPT retains members selected by its first child that are not selected by the other children; unsupported combinations must be rejected rather than evaluated as AND.</li>
-<li><strong>Denominator and numerator.</strong> For a <strong>defined denominator</strong>, both denominator and numerator must align with the cohort's episode of care. For a <strong>whole-cohort</strong> indicator, whether qualifying evidence must align with the same episode of care or can match at patient level remains open (question 2). Evidence must satisfy the indicator's date window in either case.</li>
-<li><strong>One calculation.</strong> A shared evaluator determines eligibility, anchors, windows and null-date handling. Every output serialises the same result.</li>
+<li><strong>Criteria inside a measure.</strong> Inclusions select records and exclusions remove them. OR accepts evidence for either criterion. AND requires both criteria for the same cancer. EXCEPT keeps cancers meeting its first criterion only when they do not meet the other criteria. The measure retains the dates needed to check timing later.</li>
+<li><strong>Denominator and numerator.</strong> The denominator identifies eligible cancers, either the <strong>whole cohort</strong> or a subset meeting specified criteria. The numerator identifies which of those cancers meet the indicator. In both cases, the evidence must belong to the same cancer and satisfy the configured date windows.</li>
+<li><strong>Counting patients.</strong> If the indicator counts patients rather than cancers, check each cancer first. Then count the patient once in the denominator if any cancer is eligible, and once in the numerator if any eligible cancer meets the criterion. Keep the supporting evidence from the cancer that meets it.</li>
 </ol>
+<p>Evidence for one primary cannot satisfy an indicator for another, and repeated records do not cause the same cancer to be counted again. If a date needed to establish eligibility is missing, show the result as unresolved and exclude it from both totals. Numerator evidence also needs a date unless the question explicitly accepts undated records and has no date window. The <a href="../evidence_and_indicators/">worked resolution examples</a> explain these cases and how results are assigned to reporting periods.</p>
 <h3 id="worked-example-1-one-cancer-with-a-later-nested-diagnosis">Worked example 1: one cancer with a later nested diagnosis<a class="headerlink" href="#worked-example-1-one-cancer-with-a-later-nested-diagnosis" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>E1</strong> is a lung episode of care diagnosed 10 March 2025, with no recorded end date. Its own window runs from 10 December 2024 to 10 March 2026. P1 extends its upper bound to 1 September 2026.</li>
 <li><strong>P1</strong> is brain metastases recorded beneath the lung diagnosis from 1 September 2025, with no recorded end date. Its own window ends on 1 September 2026. It can receive valid recorded links but is not a date-window candidate.</li>
 </ul>
-<div  class="mermaid">gantt
-    title One cancer with a later nested diagnosis
-    dateFormat YYYY-MM-DD
-    axisFormat %b %Y
-    section Episode windows
-    E1 lung episode of care       :e1, 2024-12-10, 2026-09-01
-    P1 nested (recorded links only) :done, p1, 2025-09-01, 2026-09-01
-    section Events
-    GP referral                   :milestone, 2025-02-20, 0d
-    ECOG A                        :milestone, 2025-03-25, 0d
-    Chemotherapy starts (P1 careplan) :milestone, 2025-09-20, 0d
-    ECOG B                        :milestone, 2025-10-15, 0d
-    ECOG C                        :milestone, 2026-04-20, 0d
-</div>
+<p><img alt="A nested brain-metastases diagnosis extends E1’s attachment window beyond its original end, allowing the later ECOG assessment to attach to the same lung cancer." src="../img/nested_diagnosis_window.svg" /></p>
 <table>
 <thead>
 <tr>
 <th>Event</th>
-<th>Attachment under the stated rules</th>
-<th>Reason or unresolved decision</th>
+<th>Attachment</th>
+<th>Reason</th>
 </tr>
 </thead>
 <tbody>
@@ -979,8 +980,8 @@
 </tr>
 <tr>
 <td>Chemotherapy careplan recorded against the brain-metastases diagnosis</td>
-<td>P1</td>
-<td>Whether this treatment counts for E1 is question 3</td>
+<td>P1 and E1</td>
+<td>The nested diagnosis retains its evidence and its root also receives credit</td>
 </tr>
 <tr>
 <td>ECOG B, 15 Oct 2025</td>
@@ -1012,7 +1013,7 @@
 <tr>
 <td>Received systemic therapy</td>
 <td>Whole cohort</td>
-<td>Depends on whole-cohort matching and treatment on nested diagnoses (questions 2 and 3)</td>
+<td>Treatment is available on E1; it qualifies only if the treatment date meets the indicator window</td>
 </tr>
 <tr>
 <td>Stage III NSCLC with ECOG 0–2</td>
@@ -1022,29 +1023,18 @@
 <tr>
 <td>Stage III NSCLC who received systemic therapy</td>
 <td>Defined denominator</td>
-<td>Treatment on P1 does not meet direct episode matching for E1; whether it should count is question 3</td>
+<td>Treatment on P1 counts for E1 when stage and treatment meet the indicator criteria and window</td>
 </tr>
 </tbody>
 </table>
-<p>ECOG C demonstrates Q1: it occurs after E1's own 365-day horizon but inside the extended window. It reaches E1 through date-window fallback. P1 contributes its window end, but its start never competes with another primary's start in the ranking. If E1's own end already covers P1, extension does not shorten it.</p>
+<p>Chemotherapy beginning 20 September is more than 90 days after E1's diagnosis. Root attribution makes the treatment available on E1, but it does not qualify for a 0..90-day indicator. A performed surgery on P1 likewise removes E1's false no-surgery state; a historical-surgery observation alone does not.</p>
+<p>ECOG C occurs after E1's own 365-day horizon but inside the extended window. It reaches E1 through date-window fallback. P1 contributes its window end, but its start never competes with another primary's start in the ranking. If E1's own end already covers P1, extension does not shorten it.</p>
 <h3 id="worked-example-2-two-lung-primaries">Worked example 2: two lung primaries<a class="headerlink" href="#worked-example-2-two-lung-primaries" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>E1</strong> is the first lung primary, diagnosed 1 June 2025, with a recorded end of 30 June 2026. Its window runs from 3 March 2025 to 30 June 2026.</li>
 <li><strong>E2</strong> is the second lung primary, diagnosed 1 March 2026, with no recorded end date. Its window runs from 1 December 2025 to 1 March 2027.</li>
 </ul>
-<div  class="mermaid">gantt
-    title Two lung primaries
-    dateFormat YYYY-MM-DD
-    axisFormat %b %Y
-    section Episode windows
-    E1 first lung primary         :e1, 2025-03-03, 2026-06-30
-    E2 second lung primary        :e2, 2025-12-01, 2027-03-01
-    section Events
-    GP referral 1                 :milestone, 2025-05-10, 0d
-    GP referral 2 (new lesion)    :milestone, 2026-02-05, 0d
-    Spirometry                    :milestone, 2026-03-10, 0d
-    MDT presentation              :milestone, 2026-03-12, 0d
-</div>
+<p><img alt="Two overlapping primary-cancer windows: the February referral attaches to E1, while March spirometry and MDT attach to the more recently started E2." src="../img/two_primary_windows.svg" /></p>
 <table>
 <thead>
 <tr>
@@ -1062,7 +1052,7 @@
 <tr>
 <td>GP referral 2 for the new lesion, 5 Feb 2026</td>
 <td>E1</td>
-<td>Both windows contain it, but E1 is less than 365 days old, so Q4 does not override it</td>
+<td>Both windows contain it, but E1 is less than 365 days old, so the upcoming-episode preference does not apply</td>
 </tr>
 <tr>
 <td>Spirometry, 10 Mar 2026</td>
@@ -1076,19 +1066,42 @@
 </tr>
 </tbody>
 </table>
-<p>The spirometry and MDT attach once, to E2. The referral for the new lesion attaches to E1 under the already-started preference, so it cannot start an E2 referral-to-specialist or referral-to-treatment calculation through episode-aligned matching. Q4 keeps this result because E1 is less than 365 days old at the referral. If E1 instead began on 1 June 2024 and remained eligible, that 5 February referral would attach to E2: E1 is then at least 365 days old and E2 begins within 60 days. A valid explicit link to E1 still takes precedence.</p>
-<p>Ranking by dates alone does not establish which cancer an event concerns. If E2 were a prostate primary, the lung MDT would still attach to E2 under this rule. Q5 keeps attachment independent of the kind or content of an event.</p>
-<h2 id="part-2-for-developers">Part 2: for developers<a class="headerlink" href="#part-2-for-developers" title="Permanent link">&para;</a></h2>
-<h3 id="attachment-contract-omop-constructs">Attachment contract (<code>omop-constructs</code>)<a class="headerlink" href="#attachment-contract-omop-constructs" title="Permanent link">&para;</a></h3>
-<!-- table TODO once completed -->
-
+<p>The spirometry and MDT attach once, to E2. The referral for the new lesion attaches to E1 under the already-started preference, so it cannot start an E2 referral-to-specialist or referral-to-treatment calculation through episode-aligned matching. The upcoming-episode preference does not apply because E1 is less than 365 days old at the referral. If E1 instead began on 1 June 2024 and remained eligible, that 5 February referral would attach to E2: E1 is then at least 365 days old and E2 begins within 60 days. A valid explicit link to E1 still takes precedence.</p>
+<p>Ranking by dates alone does not establish which cancer an event concerns. If E2 were a prostate primary, the lung MDT would still attach to E2 under this rule. Attachment is independent of the kind or content of an event.</p>
+<h2 id="query-and-output-details">Query and output details<a class="headerlink" href="#query-and-output-details" title="Permanent link">&para;</a></h2>
+<h3 id="episode-links-supplied-by-omop-constructs">Episode links supplied by <code>omop-constructs</code><a class="headerlink" href="#episode-links-supplied-by-omop-constructs" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Evidence</th>
+<th>Identity and attribution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Generic events</td>
+<td>Source table, source event ID and attached episode ID; valid explicit links take precedence over date-based assignment</td>
+</tr>
+<tr>
+<td>Treatment and performed surgery</td>
+<td>Recorded disease owner plus its eligible episode-of-care root; physical activity is deduplicated per target</td>
+</tr>
+<tr>
+<td>Treatment intent</td>
+<td>Source measurement IDs distinguish different records even when their concepts and dates agree</td>
+</tr>
+<tr>
+<td>Treatment summaries</td>
+<td>Wide regimen × course combinations and condition-date envelope rows; raw row counts are not patient or treatment counts</td>
+</tr>
+</tbody>
+</table>
+<p>The existing treatment measurables consume the attributed condition episode IDs. Indicator criteria and diagnosis-time evidence windows determine whether that attributed evidence qualifies for a report.</p>
 <p>View-definition changes require a rebuild, followed by immediate ANALYZE in dependency order. See <a href="../schema_management/#rebuilding-and-refreshing-clinical-materialized-views">Rebuilding and refreshing clinical materialized views</a>.</p>
-<h3 id="measure-and-indicator-contract-oa-cohorts">Measure and indicator contract (<code>oa-cohorts</code>)<a class="headerlink" href="#measure-and-indicator-contract-oa-cohorts" title="Permanent link">&para;</a></h3>
-<!-- table TODO once completed -->
-
-<h2 id="diagnosis-time-evidence-windows">Diagnosis-time evidence windows<a class="headerlink" href="#diagnosis-time-evidence-windows" title="Permanent link">&para;</a></h2>
-<p><a href="../measure_resolution/">Temporal measure composition</a> explains the measure-based
-anchor.</p>
+<h3 id="matching-and-counting-in-oa-cohorts">Matching and counting in <code>oa-cohorts</code><a class="headerlink" href="#matching-and-counting-in-oa-cohorts" title="Permanent link">&para;</a></h3>
+<p>Measures retain person, episode, resolver and evidence dates. Both whole-cohort and defined-denominator indicators match <code>(person_id, episode_id, measure_resolver)</code> before applying date windows. Missing episode linkage does not match. They produce one result per cancer; the configuration field <code>grain=patient</code> combines those cancer results into one result per patient. The default, <code>grain=episode</code>, counts cancers separately. Patient output rows use <code>person_id</code> as their resolver and include the cancer identities that support the result.</p>
+<p>Treatment attribution and indicator timing are separate operations. An episode window determines which cancer can receive otherwise unlinked evidence; it does not replace a diagnosis-relative criterion or an interval between two events.</p>
+<p>For configuring a window between diagnosis and another event, see <a href="../measure_resolution/#temporal-window-event-to-event-timing">Temporal windows</a>.</p>
 
 
 

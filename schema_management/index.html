@@ -50,6 +50,8 @@
     
       <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
+      <link rel="stylesheet" href="../stylesheets/figures.css">
+    
     <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -511,6 +513,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../evidence_and_indicators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence to Indicator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../measure_resolution/" class="md-nav__link">
         
   
@@ -775,6 +805,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#evidence-and-indicator-policies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence and indicator policies
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -905,6 +946,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#evidence-and-indicator-policies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence and indicator policies
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1005,7 +1057,7 @@
 <h2 id="what-an-import-does-to-a-column-your-csv-does-not-have">What an import does to a column your CSV does not have<a class="headerlink" href="#what-an-import-does-to-a-column-your-csv-does-not-have" title="Permanent link">&para;</a></h2>
 <p><code>import-config</code> upserts on primary key: a row whose non-key columns differ from the stored row is updated. Two rules govern the columns a file omits, and they matter most for <code>report_indicator_map</code>, whose override values are authored by hand and cannot be regenerated from anything.</p>
 <ul>
-<li><strong>A column absent from the CSV is left alone.</strong> The file has no opinion about it, so the stored value stands and the row does not count as replaced. </li>
+<li><strong>A column absent from the CSV is left alone.</strong> The file has no opinion about it, so the stored value stands and the row does not count as replaced.</li>
 <li><strong>A column present but empty is set to <code>NULL</code>.</strong> That is an instruction, and it is how a value is deliberately cleared through the transport.</li>
 </ul>
 <p>The distinction is the difference between "this export predates the column" and "this export wants the column cleared", which a plain empty-vs-missing comparison cannot tell apart. Before it existed, a narrow CSV imported against a database holding overrides emitted <code>UPDATE report_indicator_map SET  WHERE ...</code> — a bare SQL syntax error rather than either outcome.</p>
@@ -1030,11 +1082,10 @@
 <span class="n">upgrade</span><span class="p">(</span><span class="n">engine</span><span class="p">)</span>                                  <span class="c1"># bring it to the current head</span>
 <span class="n">revise</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="s2">&quot;add referral temporality&quot;</span><span class="p">)</span>
 </code></pre></div>
-Do not edit <code>0001_baseline.py</code> to track model changes. It is a frozen snapshot of the schema at the point migrations were introduced, and <code>schema check</code> reporting clean depends on it staying in step with the models it describes.
-Notes:</p>
+Do not edit <code>0001_baseline.py</code> to track model changes. It is a frozen snapshot of the schema at the point migrations were introduced, and <code>schema check</code> reporting clean depends on it staying in step with the models it describes. Notes:</p>
 <ul>
 <li><strong>Keep the revision id inside 32 characters.</strong> <code>alembic_version.version_num</code> is <code>VARCHAR(32)</code>. A longer id applies its DDL and <em>then</em> fails writing the version row — and only on Postgres, since SQLite does not enforce varchar length. The result is a database whose schema has changed but whose recorded revision has not. <code>test_revision_ids_fit_the_alembic_version_column</code> guards this.</li>
-<li><strong><code>copy_from</code> needs the table as it is <em>before</em> the direction being run.</strong> A revision that adds columns and drops them again needs two frozen shapes, not one: batch mode drops columns from the description it was given, so handing <code>downgrade</code> the pre-add shape fails with <code>KeyError</code> on the first column it cannot find. </li>
+<li><strong><code>copy_from</code> needs the table as it is <em>before</em> the direction being run.</strong> A revision that adds columns and drops them again needs two frozen shapes, not one: batch mode drops columns from the description it was given, so handing <code>downgrade</code> the pre-add shape fails with <code>KeyError</code> on the first column it cannot find.</li>
 </ul>
 <h2 id="adopting-a-database-older-than-the-models">Adopting a database older than the models<a class="headerlink" href="#adopting-a-database-older-than-the-models" title="Permanent link">&para;</a></h2>
 <p><code>schema bootstrap</code> stamps head, which asserts the live schema matches the current models. When it does not, the database is not necessarily broken — it may simply match an <em>earlier</em> revision, with the difference being migrations that have never been applied.</p>
@@ -1043,6 +1094,10 @@ oa-cohorts<span class="w"> </span>schema<span class="w"> </span>upgrade
 </code></pre></div>
 <p><code>bootstrap</code> refuses to stamp head in that situation rather than claiming migrations ran that never did — which would leave <code>0002</code> permanently unapplied and the column types permanently wrong.</p>
 <p><code>--adopt-on-drift</code> is the different case — a difference that is known and intentional and that no migration will resolve. It repairs nothing and should not be used to get past an unapplied migration.</p>
+<h2 id="evidence-and-indicator-policies">Evidence and indicator policies<a class="headerlink" href="#evidence-and-indicator-policies" title="Permanent link">&para;</a></h2>
+<p>Migration <code>0006_resolution_policy</code> adds settings for matching evidence, selecting treatments, choosing reference dates and reporting periods, and accepting undated records. See the <a href="../evidence_and_indicators/#configuration-reference">configuration reference and worked examples</a> for what each setting means.</p>
+<p>Existing definitions keep their IDs and whether they count cancers or patients. The migration does not choose new clinical intervals; indicator windows still use the cohort date unless configured otherwise.</p>
+<p>Test an upgrade on a copy of the configuration database before applying it to a live report. Read-only report execution does not run migrations automatically. Downgrading refuses to discard nondefault policy values, so review and reset those settings deliberately before reverting. This migration changes only oa-cohorts configuration tables; it does not rebuild clinical materialized views.</p>
 
 
 

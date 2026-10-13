@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="624" viewBox="0 0 800 624" role="img" aria-labelledby="title description">
+  <title id="title">OR retains qualifying evidence from either child</title>
+  <desc id="description">Four ECOG records survive the OR, including two distinct same-date events for cancer A. Repeated identical copies of one source record are deduplicated. Cancer B remains separate.</desc>
+  <style>
+      text { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; fill: #213047; }
+      .heading { font-size: 24px; font-weight: 650; }
+      .label { font-size: 20px; font-weight: 650; }
+      .body { font-size: 19px; }
+      .note { font-size: 18px; fill: #526174; }
+      .count { font-size: 34px; font-weight: 700; }
+      .connector { fill: none; stroke: #526174; stroke-width: 2; marker-end: url(#arrow); }
+    </style>
+  <rect width="800" height="624" rx="12" fill="#ffffff"/>
+  <text x="400" y="34" class="heading" text-anchor="middle">OR keeps either criterion’s evidence</text>
+  <text x="400" y="66" class="body" text-anchor="middle">ECOG 0 OR ECOG 1 · all dates in 2026</text>
+  <text x="20" y="110" class="label">Evidence returned by sql_evidence()</text>
+  <rect x="20" y="128" width="760" height="40" rx="10" fill="#eaf0f7" stroke="#bac3cf" stroke-width="1.5"/>
+  <text x="34" y="155" class="note">Patient</text>
+  <text x="129" y="155" class="note">Cancer</text>
+  <text x="234" y="155" class="note">Event</text>
+  <text x="339" y="155" class="note">Source date</text>
+  <text x="509" y="155" class="note">Criterion</text>
+  <rect x="20" y="168" width="760" height="42" fill="#edf5ff"/>
+  <text x="34" y="196" class="body">P1</text>
+  <text x="129" y="196" class="body">A</text>
+  <text x="234" y="196" class="body">a1</text>
+  <text x="339" y="196" class="body">10 Jan</text>
+  <text x="509" y="196" class="body">ECOG 0</text>
+  <line x1="20" y1="210" x2="780" y2="210" stroke="#dce3ec"/>
+  <rect x="20" y="210" width="760" height="42" fill="#edf5ff"/>
+  <text x="34" y="238" class="body">P1</text>
+  <text x="129" y="238" class="body">A</text>
+  <text x="234" y="238" class="body">a2</text>
+  <text x="339" y="238" class="body">10 Jan</text>
+  <text x="509" y="238" class="body">ECOG 0</text>
+  <line x1="20" y1="252" x2="780" y2="252" stroke="#dce3ec"/>
+  <rect x="20" y="252" width="760" height="42" fill="#f5f0ff"/>
+  <text x="34" y="280" class="body">P1</text>
+  <text x="129" y="280" class="body">A</text>
+  <text x="234" y="280" class="body">b1</text>
+  <text x="339" y="280" class="body">25 Jan</text>
+  <text x="509" y="280" class="body">ECOG 1</text>
+  <line x1="20" y1="294" x2="780" y2="294" stroke="#dce3ec"/>
+  <rect x="20" y="294" width="760" height="42" fill="#f5f0ff"/>
+  <text x="34" y="322" class="body">P1</text>
+  <text x="129" y="322" class="body">B</text>
+  <text x="234" y="322" class="body">b2</text>
+  <text x="339" y="322" class="body">1 Apr</text>
+  <text x="509" y="322" class="body">ECOG 1</text>
+  <line x1="20" y1="336" x2="780" y2="336" stroke="#dce3ec"/>
+  <rect x="20" y="374" width="370" height="150" rx="10" fill="#edf5ff" stroke="#739bd0" stroke-width="1.5"/>
+  <text x="42" y="409" class="label">Same date, different events</text>
+  <text x="42" y="445" class="body">a1 and a2 share a date.</text>
+  <text x="42" y="475" class="body">They are different events,</text>
+  <text x="42" y="505" class="body">so both remain.</text>
+  <rect x="410" y="374" width="370" height="150" rx="10" fill="#f7f8fa" stroke="#9ba5b2" stroke-width="1.5"/>
+  <text x="432" y="409" class="label">Same physical event</text>
+  <text x="432" y="445" class="body">Repeated identical copies of a1</text>
+  <text x="432" y="475" class="body">produce one evidence row.</text>
+  <text x="20" y="566" class="note">A and B are separate cancers belonging to P1. Evidence stays with each cancer.</text>
+  <text x="20" y="600" class="note">The indicator decides the final count; these four records are not four cancers.</text>
+</svg>
