@@ -11,7 +11,6 @@ from .indicator_members import (
     cohort_anchor_dates,
     indicator_grain,
     member_date,
-    member_key,
     member_keys,
     members_by_key,
     reduce_patient_results,
