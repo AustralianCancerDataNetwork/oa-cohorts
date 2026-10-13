@@ -1,4 +1,4 @@
-# Postgres for the `requires_database("test_dashboard_db")` tests.
+# Postgres for `oa_configurator.testing.isolated_test_database` tests.
 # See tests/README.md. Port 55433 so it cannot collide with a local server
 # on 5432 or with omop-alchemy's test container on 55432.
 services:

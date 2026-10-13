@@ -5,7 +5,7 @@ from typing import Any, ClassVar
 
 import sqlalchemy as sa
 import sqlalchemy.orm as so
-from omop_alchemy.cdm.model import Concept
+from omop_alchemy.cdm.model import Concept, Concept_Ancestor
 from orm_loader.helpers import Base
 
 from ..core import RuleMatcher, RuleTarget, ThresholdDirection
@@ -246,9 +246,9 @@ class HierarchyBase(QueryRule):
 
     children: so.Mapped[list[Concept]] = so.relationship(
         Concept,
-        secondary="concept_ancestor",
-        primaryjoin="QueryRule.concept_id == concept_ancestor.c.ancestor_concept_id",
-        secondaryjoin="concept_ancestor.c.descendant_concept_id == Concept.concept_id",
+        secondary=Concept_Ancestor.__table__,
+        primaryjoin=QueryRule.concept_id == Concept_Ancestor.__table__.c.ancestor_concept_id,
+        secondaryjoin=Concept_Ancestor.__table__.c.descendant_concept_id == Concept.concept_id,
         lazy="selectin",
     )
 

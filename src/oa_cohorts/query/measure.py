@@ -17,6 +17,7 @@ from ..core.html_utils import (
     HTMLRenderable,
     RawHTML,
     esc,
+    render_sql,
     sql_block,
     table,
     td,
@@ -350,17 +351,7 @@ class Measure(HTMLRenderable, Base):
         return blocks
 
     def _render_sql(self, stmt: sa.ClauseElement) -> str:
-        try:
-            from sqlalchemy.dialects import postgresql
-            dialect = postgresql.dialect()
-        except ImportError:
-            dialect = sa.create_engine("sqlite://").dialect
-
-        compiled = stmt.compile(
-            dialect=dialect,
-            compile_kwargs={"literal_binds": True},
-        )
-        return str(compiled)
+        return render_sql(stmt)
 
     
 

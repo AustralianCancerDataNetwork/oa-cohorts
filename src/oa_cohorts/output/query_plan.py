@@ -4,30 +4,12 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Literal, Protocol, TypeAlias, runtime_checkable
 
-import sqlalchemy as sa
 from sqlalchemy.sql import CompoundSelect, Select
 
-from ..core.html_utils import HTMLRenderable, RawHTML, esc
+from ..core.html_utils import HTMLRenderable, RawHTML, esc, render_sql
 from ..query.measure import Measure, MeasureSQLCompiler
 
 SQLQuery: TypeAlias = Select | CompoundSelect
-
-def _render_sql(stmt_or_clause: sa.ClauseElement) -> str:
-    """
-    Render SQLAlchemy Select / CompoundSelect / ClauseElement to SQL string.
-    Prefer Postgres dialect if available.
-    """
-    try:
-        from sqlalchemy.dialects import postgresql
-        dialect = postgresql.dialect()
-    except ImportError:
-        dialect = sa.create_engine("sqlite://").dialect
-
-    compiled = stmt_or_clause.compile(
-        dialect=dialect,
-        compile_kwargs={"literal_binds": True},
-    )
-    return str(compiled)
 
 @runtime_checkable
 class SupportsSQL(Protocol):
@@ -105,7 +87,7 @@ class QueryNode(HTMLRenderable):
                 ("UNDATED", self.sql_undated),
             ):
                 try:
-                    sql = _render_sql(fn())
+                    sql = render_sql(fn())
                     blocks.append(
                         RawHTML(
                             f"<div style='margin-top:6px;font-weight:bold'>{esc(label)}</div>"
