@@ -1,7 +1,12 @@
 from ..output.query_plan import MeasureNode, QueryNode, QueryPlan, SubqueryNode
 from .dash_cohort import DashCohort, DashCohortDef, dash_cohort_def_map
 from .indicator import Indicator
-from .measure import Measure, MeasureRelationship, MeasureTemporalWindow
+from .measure import (
+    Measure,
+    MeasureRelationship,
+    MeasureTemporalWindow,
+    measure_dependencies,
+)
 from .phenotype import Phenotype, PhenotypeDefinition
 from .query_rule import (
     AbsenceRule,
@@ -42,5 +47,6 @@ __all__ = [
     "SubqueryNode",
     "SubstringRule",
     "dash_cohort_def_map",
+    "measure_dependencies",
     "subquery_rule_map",
 ]

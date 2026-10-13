@@ -12,6 +12,7 @@ class MeasureExecCheck:
     status: ExecStatus
     ok_variants: list[str]
     failed_variants: dict[str, str]  
+    not_applicable_variants: tuple[str, ...] = ()
 
 @dataclass
 class IndicatorExecCheck:
