@@ -166,7 +166,6 @@ def test_reducer_rejects_patient_members_as_episode_input():
 @pytest.mark.parametrize("grain", ["episode", "patient"])
 def test_matching_does_not_scan_other_cancers_for_each_member(monkeypatch, whole, grain):
     """Count work rather than time so a quadratic regression fails reliably."""
-    import oa_cohorts.query.indicator_evaluation as evaluation_module
     import oa_cohorts.query.indicator_members as members_module
 
     cohort = [member(person=person, episode=episode, resolver=99)
@@ -179,8 +178,7 @@ def test_matching_does_not_scan_other_cancers_for_each_member(monkeypatch, whole
         calls.append(None)
         return original(value)
 
-    for module in (evaluation_module, members_module):
-        monkeypatch.setattr(module, "member_key", counted_key)
+    monkeypatch.setattr(members_module, "member_key", counted_key)
     indicator, executor, rows = evaluate(cohort, evidence, None if whole else cohort, grain=grain)
     work_limit = 20 * (len(cohort) + len(evidence))
     assert len(calls) < work_limit, "Pivot must only examine evidence for the matching cancer"
