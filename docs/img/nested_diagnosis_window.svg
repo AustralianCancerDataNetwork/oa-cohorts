@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="638" viewBox="0 0 800 638" role="img" aria-labelledby="title description">
+  <title id="title">A nested diagnosis extends attachment eligibility for the same lung cancer</title>
+  <desc id="description">E1 starts on 10 March 2025. Its attachment window starts 90 days before diagnosis and originally ends 10 March 2026. Nested brain metastases P1 starts 1 September 2025 and extends E1 to 1 September 2026. ECOG C on 20 April 2026 is inside the extended window. P1 receives recorded links but is not a fallback candidate. All dates are fictional.</desc>
+  <style>text { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; fill: #213047; }
+.heading { font-size: 24px; font-weight: 650; }
+.label { font-size: 20px; font-weight: 650; }
+.body { font-size: 19px; }
+.note { font-size: 18px; fill: #526174; }
+.small { font-size: 17px; fill: #526174; }
+.grid { stroke: #dce3ec; stroke-width: 1; }
+.axis { stroke: #526174; stroke-width: 1.5; }</style>
+  <rect width="800" height="638" rx="12" fill="#ffffff"/>
+  <text x="400" y="34" class="heading" text-anchor="middle">A later diagnosis extends the cancer’s window</text>
+  <text x="400" y="66" class="body" text-anchor="middle">One lung cancer · P1 is a nested brain-metastases diagnosis</text>
+  <line x1="216.4" y1="100" x2="216.4" y2="520" class="grid"/>
+  <text x="216.4" y="550" class="small" text-anchor="middle">Jan 2025</text>
+  <line x1="370.6" y1="100" x2="370.6" y2="520" class="grid"/>
+  <text x="370.6" y="550" class="small" text-anchor="middle">Jul 2025</text>
+  <line x1="527.4" y1="100" x2="527.4" y2="520" class="grid"/>
+  <text x="527.4" y="550" class="small" text-anchor="middle">Jan 2026</text>
+  <line x1="681.6" y1="100" x2="681.6" y2="520" class="grid"/>
+  <text x="681.6" y="550" class="small" text-anchor="middle">Jul 2026</text>
+  <line x1="190" y1="520" x2="760" y2="520" class="axis"/>
+  <text x="20" y="136" class="label">E1 lung cancer</text>
+  <rect x="197.7" y="116" width="387.6" height="30" rx="4" fill="#edf5ff" stroke="#739bd0" stroke-width="1.5"/>
+  <rect x="585.3" y="116" width="149.1" height="30" rx="4" fill="#d6e7fb" stroke="#739bd0" stroke-width="1.5"/>
+  <text x="391.5" y="137" class="body" text-anchor="middle">Own window</text>
+  <text x="659.8499999999999" y="137" class="body" text-anchor="middle">Extended</text>
+  <text x="760" y="96" class="small" text-anchor="end">Extended end: 1 Sep 2026</text>
+  <text x="585.3" y="170" class="small" text-anchor="middle">Own end: 10 Mar 2026</text>
+  <text x="20" y="216" class="label">P1 nested</text>
+  <rect x="423.5" y="196" width="310.9" height="30" rx="4" fill="#f5f0ff" stroke="#a18abb" stroke-width="1.5"/>
+  <text x="578.95" y="217" class="body" text-anchor="middle">Diagnosis → window end</text>
+  <text x="400" y="267" class="note" text-anchor="middle">P1 can receive recorded links; it is not a date-based fallback option.</text>
+  <text x="20" y="322" class="body">GP referral</text>
+  <path d="M259.0 309 L266.0 316 L259.0 323 L252.0 316 Z" fill="#739bd0" stroke="#ffffff"/>
+  <text x="273.0" y="322" class="small">20 Feb 2025</text>
+  <text x="20" y="362" class="body">ECOG A</text>
+  <path d="M287.1 349 L294.1 356 L287.1 363 L280.1 356 Z" fill="#739bd0" stroke="#ffffff"/>
+  <text x="301.1" y="362" class="small">25 Mar 2025</text>
+  <text x="20" y="402" class="body">Chemo starts</text>
+  <path d="M439.6 389 L446.6 396 L439.6 403 L432.6 396 Z" fill="#a18abb" stroke="#ffffff"/>
+  <text x="453.6" y="402" class="small">20 Sep 2025 · linked to P1</text>
+  <text x="20" y="442" class="body">ECOG B</text>
+  <path d="M460.9 429 L467.9 436 L460.9 443 L453.9 436 Z" fill="#739bd0" stroke="#ffffff"/>
+  <text x="474.9" y="442" class="small">15 Oct 2025</text>
+  <text x="20" y="482" class="body">ECOG C</text>
+  <path d="M620.3 469 L627.3 476 L620.3 483 L613.3 476 Z" fill="#739bd0" stroke="#ffffff"/>
+  <text x="634.3" y="482" class="small">20 Apr 2026</text>
+  <text x="20" y="584" class="body">ECOG C is after E1’s original end, but inside the extended window.</text>
+  <text x="20" y="614" class="note">It can therefore be attached to the same lung cancer.</text>
+</svg>

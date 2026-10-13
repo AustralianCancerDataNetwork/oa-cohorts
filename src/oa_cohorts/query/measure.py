@@ -25,8 +25,9 @@ from ..errors import (  # noqa: F401 -- compatible error re-export
     MissingMaterializedViewError,
     reraise_schema_error,
 )
+from .evidence import EvidenceCompiler, canonical_query
 from .subquery import Subquery
-from .typing import COMBINATION_SQL, SQLQuery, _first_member_query
+from .typing import SQLQuery, _first_member_query
 
 
 @dataclass(frozen=True)
@@ -51,6 +52,19 @@ class MeasureMember:
     episode_id: int | None = None
     measure_date: date | None = None
 
+    source_table: str | None = None
+    source_event_id: int | None = None
+    opportunity_id: int | None = None
+    source_date: date | None = None
+    start_date: date | None = None
+    end_date: date | None = None
+    completion_date: date | None = None
+    anchor_date: date | None = None
+    candidate_date: date | None = None
+    anchor_event_id: int | None = None
+    candidate_event_id: int | None = None
+    date_required: bool = True
+
     @classmethod
     def from_row(cls, r):
         return cls(
@@ -58,6 +72,18 @@ class MeasureMember:
             measure_resolver=r.measure_resolver,
             episode_id=getattr(r, "episode_id", None),
             measure_date=getattr(r, "measure_date", None),
+            source_table=getattr(r, "source_table", None),
+            source_event_id=getattr(r, "source_event_id", None),
+            opportunity_id=getattr(r, "opportunity_id", None),
+            source_date=getattr(r, "source_date", None),
+            start_date=getattr(r, "start_date", None),
+            end_date=getattr(r, "end_date", None),
+            completion_date=getattr(r, "completion_date", None),
+            anchor_date=getattr(r, "anchor_date", None),
+            candidate_date=getattr(r, "candidate_date", None),
+            anchor_event_id=getattr(r, "anchor_event_id", None),
+            candidate_event_id=getattr(r, "candidate_event_id", None),
+            date_required=getattr(r, "date_required", True),
         )
 
 
@@ -94,7 +120,8 @@ class Measure(HTMLRenderable, Base):
     It is resolved at Report level and cannot be executed directly.
     """
     __tablename__ = "measure"
-    __allow_unmapped__ = True 
+    __allow_unmapped__ = True
+    __table_args__ = (sa.CheckConstraint("matching_scope IN ('cancer', 'treatment')", name="measure_matching_scope"),)
     measure_id: so.Mapped[int] = so.mapped_column(primary_key=True)
     id = so.synonym("measure_id")
 
@@ -102,6 +129,7 @@ class Measure(HTMLRenderable, Base):
     combination: so.Mapped[RuleCombination] = so.mapped_column(sa.Enum(RuleCombination))
 
     subquery_id: so.Mapped[int | None] = so.mapped_column(sa.ForeignKey("subquery.subquery_id"), nullable=True)
+    matching_scope: so.Mapped[str] = so.mapped_column(sa.String(9), default="cancer", server_default="cancer", nullable=False)
     person_ep_override: so.Mapped[bool] = so.mapped_column(sa.Boolean, default=False)
 
     subquery: so.Mapped[Subquery | None] = so.relationship("Subquery", lazy="joined")
@@ -399,6 +427,16 @@ class MeasureRelationship(HTMLRenderable, Base):
 class MeasureTemporalWindow(Base):
     """Window config for a temporal-window measure (1:1 with Measure via PK)."""
     __tablename__ = "measure_temporal_window"
+    __table_args__ = (
+        sa.CheckConstraint("anchor_selection IN ('first', 'latest', 'all')", name="window_anchor_selection"),
+        sa.CheckConstraint("anchor_order_date_role IN ('measure', 'start', 'end', 'completion')", name="window_anchor_order_date_role"),
+        sa.CheckConstraint("anchor_date_role IN ('measure', 'start', 'end', 'completion')", name="window_anchor_date_role"),
+        sa.CheckConstraint("candidate_date_role IN ('measure', 'start', 'end', 'completion')", name="window_candidate_date_role"),
+    )
+    anchor_selection: so.Mapped[str] = so.mapped_column(sa.String(6), default="first", server_default="first", nullable=False)
+    anchor_order_date_role: so.Mapped[str] = so.mapped_column(sa.String(10), default="measure", server_default="measure", nullable=False)
+    anchor_date_role: so.Mapped[str] = so.mapped_column(sa.String(10), default="measure", server_default="measure", nullable=False)
+    candidate_date_role: so.Mapped[str] = so.mapped_column(sa.String(10), default="measure", server_default="measure", nullable=False)
 
     measure_id: so.Mapped[int] = so.mapped_column(
         sa.ForeignKey("measure.measure_id"), primary_key=True
@@ -434,6 +472,14 @@ def _window_dependencies(measure: Measure) -> list[Measure]:
     cfg = measure.window_config
     if cfg is None:
         raise ValueError(f"Measure {measure.measure_id} has no temporal-window configuration")
+    choices = {"anchor_selection": ("first", "latest", "all"),
+               "anchor_order_date_role": ("measure", "start", "end", "completion"),
+               "anchor_date_role": ("measure", "start", "end", "completion"),
+               "candidate_date_role": ("measure", "start", "end", "completion")}
+    for field, allowed in choices.items():
+        value = getattr(cfg, field, None)
+        if value is not None and value not in allowed:
+            raise ValueError(f"Invalid {field}: {value!r}")
     anchor = getattr(cfg, "anchor_measure", None)
     if getattr(cfg, "anchor_measure_id", None) is not None and anchor is None:
         raise ValueError(f"Measure {measure.measure_id} has a missing anchor measure")
@@ -452,17 +498,6 @@ def _window_dependencies(measure: Measure) -> list[Measure]:
     return [cfg.candidate_measure] if anchor is None else [cfg.candidate_measure, anchor]
 
 
-def _temporal_anchor_query(measure: Measure, *, ep_override: bool) -> SQLQuery:
-    """Select the earliest date AFTER a measure anchor's own predicates run."""
-    anchor = getattr(measure.window_config, "anchor_measure", None)
-    if anchor is None:
-        subquery = measure.subquery
-        if subquery is None:
-            raise ValueError(f"Measure {measure.measure_id} has no temporal anchor subquery")
-        return subquery.get_subquery_first(ep_override=ep_override)
-    return _first_member_query(MeasureSQLCompiler(anchor).sql_any(ep_override=ep_override))
-
-
 def _validate_measure_dependencies(measure: Measure) -> None:
     """Check anchor contracts and cycles without compiling SQL or executing CDM queries."""
     nodes = {}
@@ -474,6 +509,8 @@ def _validate_measure_dependencies(measure: Measure) -> None:
         if identity in nodes:
             continue
         nodes[identity] = node
+        if getattr(node, "matching_scope", None) not in (None, "cancer", "treatment"):
+            raise ValueError(f"Invalid matching_scope for measure {node.measure_id}")
         dependencies = list(node.children)
         if node.is_temporal_window:
             dependencies.extend(_window_dependencies(node))
@@ -484,11 +521,6 @@ def _validate_measure_dependencies(measure: Measure) -> None:
     except CycleError as error:
         cycle = [nodes[identity].measure_id for identity in error.args[1]]
         raise ValueError(f"Measure dependency cycle: {cycle}") from error
-
-
-def _days_offset(n: int) -> sa.ColumnElement:
-    """PostgreSQL INTERVAL expression for date arithmetic. Not cross-dialect portable."""
-    return sa.cast(n, sa.Integer) * sa.text("INTERVAL '1 day'")
 
 
 def _fmt_days_offset(n: int) -> str:
@@ -513,60 +545,13 @@ class MeasureSQLCompiler:
     def __init__(self, measure: Measure):
         self.measure = measure
 
-    def _combine(self, parts: Sequence[SQLQuery]) -> SQLQuery:
-        combiner = COMBINATION_SQL[self.measure.combination]
-        return combiner(*parts)
-    
-    def _normalise(self, q: SQLQuery) -> sa.Subquery:
-        """
-        Ensure child query produces required canonical columns.
-
-        All measure queries must expose:
-            person_id
-            episode_id
-            measure_resolver
-            measure_date
-
-        Raises
-        ------
-        ValueError if required columns are missing.
-        """
-        sq = q.subquery()
-
-        required = {"person_id", "episode_id", "measure_resolver", "measure_date"}
-        missing = required - set(sq.c.keys())
-
-        if missing:
-            raise ValueError(
-                f"Normalisation failed: query is missing columns {missing}. "
-                f"Available columns: {list(sq.c.keys())}"
-            )
-        return sa.select(
-            sq.c.person_id.label("person_id"),
-            sq.c.episode_id.label("episode_id"),
-            sq.c.measure_resolver.label("measure_resolver"),
-            sq.c.measure_date.label("measure_date")
-        ).subquery()
+    def sql_evidence(self, *, ep_override: bool = False) -> SQLQuery:
+        """Preserve physical identity, opportunity and named date roles."""
+        _validate_measure_dependencies(self.measure)
+        return EvidenceCompiler(self.measure).query(ep_override=ep_override)
 
     def sql_any(self, *, ep_override: bool = False) -> SQLQuery:
-        _validate_measure_dependencies(self.measure)
-        if self.measure.is_temporal_window:
-            return self._sql_temporal_window_any(ep_override=ep_override)
-        if self.measure.subquery is None and not self.measure.children:
-            raise ValueError(f"Measure {self.measure.measure_id} has no subquery and no children")
-        ep_override = ep_override or self.measure.person_ep_override
-
-        if self.measure.subquery:
-            return self.measure.subquery.get_subquery_any(ep_override=ep_override)
-
-        children = [MeasureSQLCompiler(c) for c in self.measure.children]
-
-        if self.measure.combination is RuleCombination.rule_or:
-            #return self._combine([c.sql_any(ep_override=ep_override) for c in children])
-            parts = [self._normalise(c.sql_any(ep_override=ep_override)).select() for c in children]
-            return self._combine(parts)
-        # AND / EXCEPT collapse to FIRST logic
-        return self.sql_first(ep_override=ep_override)
+        return canonical_query(self.sql_evidence(ep_override=ep_override))
 
     def sql_undated(self, *, ep_override: bool = False) -> SQLQuery:
         _validate_measure_dependencies(self.measure)
@@ -576,160 +561,19 @@ class MeasureSQLCompiler:
                 "temporal_window measure and does not support undated output. "
                 "Use the dated ANY or FIRST variants, including in dated composites."
             )
-        if self.measure.subquery is None and not self.measure.children:
-            raise ValueError(f"Measure {self.measure.measure_id} has no subquery and no children")
-        ep_override = ep_override or self.measure.person_ep_override
-
-        if self.measure.subquery:
-            return self.measure.subquery.get_subquery_undated(ep_override=ep_override)
-
-        children = [MeasureSQLCompiler(c) for c in self.measure.children]
-        return self._combine([c.sql_undated(ep_override=ep_override) for c in children])
+        source = self.sql_evidence(ep_override=ep_override).subquery()
+        return sa.select(source.c.person_id, source.c.episode_id, source.c.measure_resolver).distinct()
 
     def sql_first(self, *, ep_override: bool = False) -> SQLQuery:
-        _validate_measure_dependencies(self.measure)
-        if self.measure.is_temporal_window:
-            return self._sql_temporal_window_first(ep_override=ep_override)
-        if self.measure.subquery is None and not self.measure.children:
-            raise ValueError(f"Measure {self.measure.measure_id} has no subquery and no children")
-        ep_override = ep_override or self.measure.person_ep_override
+        """Earliest qualifying emitted date; never discard evidence in children."""
+        return _first_member_query(self.sql_any(ep_override=ep_override))
 
-        if self.measure.subquery:
-            return self.measure.subquery.get_subquery_first(ep_override=ep_override)
-        
-        children = [MeasureSQLCompiler(c) for c in self.measure.children]
-        earliest = [
-            self._normalise(c.sql_any(ep_override=ep_override))
-            for c in children
-        ]        
-
-        # earliest = [c.sql_any(ep_override=ep_override).subquery() for c in children]
-        start = earliest[0]
-        lhs = start
-        date_cols = [start.c.measure_date]
-
-        date_cols = [lhs.c.measure_date]
-
-        for rhs in earliest[1:]:
-            lhs = lhs.join(
-                rhs,
-                start.c.measure_resolver == rhs.c.measure_resolver
-            )
-            date_cols.append(rhs.c.measure_date)
-
-        return sa.select(
-            start.c.person_id,
-            start.c.episode_id,
-            start.c.measure_resolver,
-            sa.func.greatest(*date_cols).label("measure_date"),
-        ).select_from(lhs)
-
-    def _sql_temporal_window_any(self, *, ep_override: bool = False) -> SQLQuery:
-        cfg = self.measure.window_config
-        assert cfg is not None
-        anchor_sq = self._normalise(
-            _temporal_anchor_query(self.measure, ep_override=ep_override)
-        )
-
-        # Step 2: candidate — all qualifying rows
-        candidate_sq = self._normalise(
-            MeasureSQLCompiler(cfg.candidate_measure).sql_any(ep_override=ep_override)
-        )
-
-        # Step 3: join condition
-        join_conds = [anchor_sq.c.person_id == candidate_sq.c.person_id]
-        if cfg.require_same_resolver:
-            join_conds.append(
-                anchor_sq.c.measure_resolver == candidate_sq.c.measure_resolver
-            )
-
-        # Step 4: window predicates
-        window_conds = []
-        if cfg.window_min_days is not None:
-            window_conds.append(
-                candidate_sq.c.measure_date
-                >= anchor_sq.c.measure_date + _days_offset(cfg.window_min_days)
-            )
-        if cfg.window_max_days is not None:
-            window_conds.append(
-                candidate_sq.c.measure_date
-                <= anchor_sq.c.measure_date + _days_offset(cfg.window_max_days)
-            )
-
-        # Step 5: result date column
-        source = cfg.result_date_source or ResultDateSource.candidate
-        if source is ResultDateSource.anchor:
-            result_date = anchor_sq.c.measure_date
-        elif source is ResultDateSource.greatest:
-            result_date = sa.func.greatest(anchor_sq.c.measure_date, candidate_sq.c.measure_date)
-        elif source is ResultDateSource.least:
-            result_date = sa.func.least(anchor_sq.c.measure_date, candidate_sq.c.measure_date)
-        else:
-            result_date = candidate_sq.c.measure_date
-
-        # Build base carrying candidate_date and anchor_date so pick strategy can order
-        # by candidate timing without being affected by the result_date transformation.
-        base_q = sa.select(
-            anchor_sq.c.person_id,
-            anchor_sq.c.episode_id,
-            anchor_sq.c.measure_resolver,
-            result_date.label("measure_date"),
-            candidate_sq.c.measure_date.label("_candidate_date"),
-            anchor_sq.c.measure_date.label("_anchor_date"),
-        ).join(candidate_sq, sa.and_(*join_conds))
-
-        if window_conds:
-            base_q = base_q.where(sa.and_(*window_conds))
-
-        base = base_q.subquery()
-
-        def _canonical(sq):
-            return sa.select(
-                sq.c.person_id,
-                sq.c.episode_id,
-                sq.c.measure_resolver,
-                sq.c.measure_date,
-            )
-
-        # Step 6: pick strategy — ordering always on _candidate_date, not result_date
-        strategy = cfg.window_pick_strategy or WindowPickStrategy.earliest
-        if strategy is WindowPickStrategy.any:
-            return _canonical(base)
-
-        if strategy in (WindowPickStrategy.earliest, WindowPickStrategy.latest):
-            order_expr = (
-                sa.asc(base.c._candidate_date)
-                if strategy is WindowPickStrategy.earliest
-                else sa.desc(base.c._candidate_date)
-            )
-            rn_sq = sa.select(
-                base,
-                sa.func.row_number().over(
-                    partition_by=[base.c.person_id, base.c.episode_id, base.c.measure_resolver],
-                    order_by=order_expr,
-                ).label("_rn"),
-            ).subquery()
-            return _canonical(rn_sq).where(rn_sq.c._rn == 1)
-
-        # closest — one row per resolver, minimising |candidate_date - anchor_date|
-        rn_sq = sa.select(
-            base,
-            sa.func.row_number().over(
-                partition_by=[base.c.person_id, base.c.episode_id, base.c.measure_resolver],
-                order_by=[
-                    sa.func.abs(
-                        sa.func.extract("epoch", base.c._candidate_date)
-                        - sa.func.extract("epoch", base.c._anchor_date)
-                    ),
-                    base.c._candidate_date,  # prefer earlier on ties
-                ],
-            ).label("_rn"),
-        ).subquery()
-        return _canonical(rn_sq).where(rn_sq.c._rn == 1)
-
-    def _sql_temporal_window_first(self, *, ep_override: bool = False) -> SQLQuery:
-        return _first_member_query(self._sql_temporal_window_any(ep_override=ep_override))
-
+    def sql_qualification(self, *, ep_override: bool = False) -> SQLQuery:
+        """Earliest completion, separate from a window's emitted date."""
+        evidence = self.sql_evidence(ep_override=ep_override).subquery()
+        return _first_member_query(sa.select(
+            evidence.c.person_id, evidence.c.episode_id, evidence.c.measure_resolver,
+            evidence.c.completion_date.label("measure_date")))
 
 
 class MeasureExecutor:
@@ -750,6 +594,7 @@ class MeasureExecutor:
     def __init__(self, db):
         self.db = db
         self._cache: dict[int, Sequence[MeasureMember]] = {}
+        self._bindings: dict[int, tuple[bool, tuple[int, ...] | None]] = {}
 
     def execute(
         self,
@@ -782,14 +627,16 @@ class MeasureExecutor:
                 "Measure ID = 0 represents FULL COHORT and must be resolved at the Report level. "
                 "Call Report.execute() instead."
             )
-        if not force_refresh and measure.measure_id in self._cache:
+        binding = (ep_override, tuple(sorted(set(people))) if people is not None else None)
+        if (not force_refresh and measure.measure_id in self._cache
+                and self._bindings.get(measure.measure_id, (False, None)) == binding):
             rows = self._cache[measure.measure_id]
             measure._members = rows
             return rows
         
-        sql = MeasureSQLCompiler(measure).sql_any(ep_override=ep_override)
+        sql = MeasureSQLCompiler(measure).sql_evidence(ep_override=ep_override)
 
-        if people:
+        if people is not None:
             sq = sql.subquery()
             sql = sa.select(sq).where(sq.c.person_id.in_(people))
 
@@ -799,6 +646,7 @@ class MeasureExecutor:
             reraise_schema_error(exc, context=f"Measure '{measure.name}' (ID {measure.measure_id})")
             raise
         rows_typed = [MeasureMember.from_row(r) for r in rows]
+        self._bindings[measure.measure_id] = binding
         self._cache[measure.measure_id] = rows_typed
         measure._members = rows_typed
         return rows_typed

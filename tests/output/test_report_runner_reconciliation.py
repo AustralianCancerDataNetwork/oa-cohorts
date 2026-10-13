@@ -150,18 +150,18 @@ def build_report(
 
 def test_build_pivot_indicators_emits_one_row_per_denominator_member():
     cohort_measure = FakeMeasure(10, "cohort", [
-        MeasureMember(person_id=1, measure_resolver=101, measure_date=date(2024, 1, 1)),
-        MeasureMember(person_id=2, measure_resolver=202, measure_date=date(2024, 1, 2)),
-        MeasureMember(person_id=3, measure_resolver=303, measure_date=date(2024, 1, 3)),
+        MeasureMember(person_id=1, measure_resolver=101, episode_id=101, measure_date=date(2024, 1, 1)),
+        MeasureMember(person_id=2, measure_resolver=202, episode_id=202, measure_date=date(2024, 1, 2)),
+        MeasureMember(person_id=3, measure_resolver=303, episode_id=303, measure_date=date(2024, 1, 3)),
     ])
     denominator_measure = FakeMeasure(20, "denominator", [
-        MeasureMember(person_id=1, measure_resolver=101, measure_date=date(2024, 2, 1)),
-        MeasureMember(person_id=2, measure_resolver=202, measure_date=date(2024, 2, 2)),
-        MeasureMember(person_id=3, measure_resolver=303, measure_date=date(2024, 2, 3)),
+        MeasureMember(person_id=1, measure_resolver=101, episode_id=101, measure_date=date(2024, 2, 1)),
+        MeasureMember(person_id=2, measure_resolver=202, episode_id=202, measure_date=date(2024, 2, 2)),
+        MeasureMember(person_id=3, measure_resolver=303, episode_id=303, measure_date=date(2024, 2, 3)),
     ])
     numerator_measure = FakeMeasure(30, "numerator", [
-        MeasureMember(person_id=2, measure_resolver=202, measure_date=date(2024, 2, 5)),
-        MeasureMember(person_id=99, measure_resolver=202, measure_date=date(2024, 2, 6)),
+        MeasureMember(person_id=2, measure_resolver=202, episode_id=202, measure_date=date(2024, 2, 5)),
+        MeasureMember(person_id=99, measure_resolver=202, episode_id=202, measure_date=date(2024, 2, 6)),
     ])
     report = build_report(
         cohort_measure=cohort_measure,
@@ -186,12 +186,12 @@ def test_build_pivot_indicators_emits_one_row_per_denominator_member():
 
 def test_build_pivot_indicators_uses_full_report_cohort_for_measure_zero_denominator():
     cohort_measure = FakeMeasure(10, "cohort", [
-        MeasureMember(person_id=1, measure_resolver=111, measure_date=date(2024, 1, 1)),
-        MeasureMember(person_id=2, measure_resolver=222, measure_date=date(2024, 1, 2)),
+        MeasureMember(person_id=1, measure_resolver=111, episode_id=111, measure_date=date(2024, 1, 1)),
+        MeasureMember(person_id=2, measure_resolver=222, episode_id=222, measure_date=date(2024, 1, 2)),
     ])
     denominator_measure = FakeMeasure(0, "full cohort", [])
     numerator_measure = FakeMeasure(30, "numerator", [
-        MeasureMember(person_id=2, measure_resolver=222, measure_date=date(2024, 3, 1)),
+        MeasureMember(person_id=2, measure_resolver=222, episode_id=222, measure_date=date(2024, 3, 1)),
     ])
     report = build_report(
         cohort_measure=cohort_measure,
@@ -210,14 +210,14 @@ def test_build_pivot_indicators_uses_full_report_cohort_for_measure_zero_denomin
 
 def test_build_pivot_indicators_uses_earliest_matching_numerator_date():
     cohort_measure = FakeMeasure(10, "cohort", [
-        MeasureMember(person_id=1, measure_resolver=123, measure_date=date(2024, 1, 1)),
+        MeasureMember(person_id=1, measure_resolver=123, episode_id=123, measure_date=date(2024, 1, 1)),
     ])
     denominator_measure = FakeMeasure(20, "denominator", [
-        MeasureMember(person_id=1, measure_resolver=123, measure_date=date(2024, 2, 1)),
+        MeasureMember(person_id=1, measure_resolver=123, episode_id=123, measure_date=date(2024, 2, 1)),
     ])
     numerator_measure = FakeMeasure(30, "numerator", [
-        MeasureMember(person_id=1, measure_resolver=123, measure_date=datetime(2024, 2, 7, 14, 30)),
-        MeasureMember(person_id=1, measure_resolver=123, measure_date=date(2024, 2, 3)),
+        MeasureMember(person_id=1, measure_resolver=123, episode_id=123, measure_date=datetime(2024, 2, 7, 14, 30)),
+        MeasureMember(person_id=1, measure_resolver=123, episode_id=123, measure_date=date(2024, 2, 3)),
     ])
     report = build_report(
         cohort_measure=cohort_measure,
@@ -234,14 +234,14 @@ def test_build_pivot_indicators_uses_earliest_matching_numerator_date():
     assert rows[0].denominator_date == date(2024, 2, 1)
 
 
-def test_build_pivot_indicators_propagates_whole_cohort_numerator_across_person_episodes():
+def test_build_pivot_indicators_matches_whole_cohort_numerator_to_same_episode():
     cohort_measure = FakeMeasure(10, "cohort", [
-        MeasureMember(person_id=1, measure_resolver=111, measure_date=date(2024, 1, 1)),
-        MeasureMember(person_id=1, measure_resolver=222, measure_date=date(2024, 1, 5)),
+        MeasureMember(person_id=1, measure_resolver=111, episode_id=111, measure_date=date(2024, 1, 1)),
+        MeasureMember(person_id=1, measure_resolver=222, episode_id=222, measure_date=date(2024, 1, 5)),
     ])
     denominator_measure = FakeMeasure(0, "full cohort", [])
     numerator_measure = FakeMeasure(30, "numerator", [
-        MeasureMember(person_id=1, measure_resolver=111, measure_date=date(2024, 2, 7)),
+        MeasureMember(person_id=1, measure_resolver=111, episode_id=111, measure_date=date(2024, 2, 7)),
     ])
     report = build_report(
         cohort_measure=cohort_measure,
@@ -254,19 +254,19 @@ def test_build_pivot_indicators_propagates_whole_cohort_numerator_across_person_
 
     assert len(rows) == 2
     assert [row.measure_resolver for row in rows] == [111, 222]
-    assert [row.numerator_value for row in rows] == [True, True]
-    assert [row.numerator_date for row in rows] == [date(2024, 2, 7), date(2024, 2, 7)]
+    assert [row.numerator_value for row in rows] == [True, False]
+    assert [row.numerator_date for row in rows] == [date(2024, 2, 7), None]
 
 
-def test_build_pivot_indicators_propagates_earliest_whole_cohort_numerator_date():
+def test_build_pivot_indicators_keeps_each_episodes_earliest_numerator_date():
     cohort_measure = FakeMeasure(10, "cohort", [
-        MeasureMember(person_id=1, measure_resolver=111, measure_date=date(2024, 1, 1)),
-        MeasureMember(person_id=1, measure_resolver=222, measure_date=date(2024, 1, 5)),
+        MeasureMember(person_id=1, measure_resolver=111, episode_id=111, measure_date=date(2024, 1, 1)),
+        MeasureMember(person_id=1, measure_resolver=222, episode_id=222, measure_date=date(2024, 1, 5)),
     ])
     denominator_measure = FakeMeasure(0, "full cohort", [])
     numerator_measure = FakeMeasure(30, "numerator", [
-        MeasureMember(person_id=1, measure_resolver=111, measure_date=date(2024, 2, 7)),
-        MeasureMember(person_id=1, measure_resolver=222, measure_date=datetime(2024, 2, 3, 15, 30)),
+        MeasureMember(person_id=1, measure_resolver=111, episode_id=111, measure_date=date(2024, 2, 7)),
+        MeasureMember(person_id=1, measure_resolver=222, episode_id=222, measure_date=datetime(2024, 2, 3, 15, 30)),
     ])
     report = build_report(
         cohort_measure=cohort_measure,
@@ -279,21 +279,21 @@ def test_build_pivot_indicators_propagates_earliest_whole_cohort_numerator_date(
 
     assert len(rows) == 2
     assert [row.numerator_value for row in rows] == [True, True]
-    assert [row.numerator_date for row in rows] == [date(2024, 2, 3), date(2024, 2, 3)]
+    assert [row.numerator_date for row in rows] == [date(2024, 2, 7), date(2024, 2, 3)]
 
 
 def test_build_pivot_indicators_excludes_undated_denominator_members():
     cohort_measure = FakeMeasure(10, "cohort", [
-        MeasureMember(person_id=1, measure_resolver=101, measure_date=date(2024, 1, 1)),
-        MeasureMember(person_id=2, measure_resolver=202, measure_date=date(2024, 1, 2)),
+        MeasureMember(person_id=1, measure_resolver=101, episode_id=101, measure_date=date(2024, 1, 1)),
+        MeasureMember(person_id=2, measure_resolver=202, episode_id=202, measure_date=date(2024, 1, 2)),
     ])
     denominator_measure = FakeMeasure(20, "denominator", [
-        MeasureMember(person_id=1, measure_resolver=101, measure_date=None),
-        MeasureMember(person_id=2, measure_resolver=202, measure_date=date(2024, 2, 2)),
+        MeasureMember(person_id=1, measure_resolver=101, episode_id=101, measure_date=None),
+        MeasureMember(person_id=2, measure_resolver=202, episode_id=202, measure_date=date(2024, 2, 2)),
     ])
     numerator_measure = FakeMeasure(30, "numerator", [
-        MeasureMember(person_id=1, measure_resolver=101, measure_date=date(2024, 2, 3)),
-        MeasureMember(person_id=2, measure_resolver=202, measure_date=date(2024, 2, 4)),
+        MeasureMember(person_id=1, measure_resolver=101, episode_id=101, measure_date=date(2024, 2, 3)),
+        MeasureMember(person_id=2, measure_resolver=202, episode_id=202, measure_date=date(2024, 2, 4)),
     ])
     report = build_report(
         cohort_measure=cohort_measure,
@@ -304,7 +304,10 @@ def test_build_pivot_indicators_excludes_undated_denominator_members():
 
     rows = build_pivot_indicators(report, executor)
 
-    assert len(rows) == 1
+    assert len(rows) == 2
+    assert rows[0].eligibility_status == "unresolved"
+    assert not rows[0].denominator_value
+    rows = [row for row in rows if row.denominator_value]
     assert rows[0].person_id == 2
     assert rows[0].numerator_value is True
     assert rows[0].denominator_date == date(2024, 2, 2)
@@ -312,15 +315,15 @@ def test_build_pivot_indicators_excludes_undated_denominator_members():
 
 def test_build_pivot_indicators_keeps_nonzero_denominator_resolver_specific():
     cohort_measure = FakeMeasure(10, "cohort", [
-        MeasureMember(person_id=1, measure_resolver=111, measure_date=date(2024, 1, 1)),
-        MeasureMember(person_id=1, measure_resolver=222, measure_date=date(2024, 1, 2)),
+        MeasureMember(person_id=1, measure_resolver=111, episode_id=111, measure_date=date(2024, 1, 1)),
+        MeasureMember(person_id=1, measure_resolver=222, episode_id=222, measure_date=date(2024, 1, 2)),
     ])
     denominator_measure = FakeMeasure(20, "denominator", [
-        MeasureMember(person_id=1, measure_resolver=111, measure_date=date(2024, 2, 1)),
-        MeasureMember(person_id=1, measure_resolver=222, measure_date=date(2024, 2, 2)),
+        MeasureMember(person_id=1, measure_resolver=111, episode_id=111, measure_date=date(2024, 2, 1)),
+        MeasureMember(person_id=1, measure_resolver=222, episode_id=222, measure_date=date(2024, 2, 2)),
     ])
     numerator_measure = FakeMeasure(30, "numerator", [
-        MeasureMember(person_id=1, measure_resolver=111, measure_date=date(2024, 2, 5)),
+        MeasureMember(person_id=1, measure_resolver=111, episode_id=111, measure_date=date(2024, 2, 5)),
     ])
     report = build_report(
         cohort_measure=cohort_measure,
@@ -338,13 +341,13 @@ def test_build_pivot_indicators_keeps_nonzero_denominator_resolver_specific():
 
 def test_build_pivot_indicators_applies_dynamic_windows_relative_to_cohort_membership_date():
     cohort_measure = FakeMeasure(10, "cohort", [
-        MeasureMember(person_id=1, measure_resolver=111, measure_date=date(2024, 1, 1)),
+        MeasureMember(person_id=1, measure_resolver=111, episode_id=111, measure_date=date(2024, 1, 1)),
     ])
     denominator_measure = FakeMeasure(20, "denominator", [
-        MeasureMember(person_id=1, measure_resolver=111, measure_date=date(2024, 1, 8)),
+        MeasureMember(person_id=1, measure_resolver=111, episode_id=111, measure_date=date(2024, 1, 8)),
     ])
     numerator_measure = FakeMeasure(30, "numerator", [
-        MeasureMember(person_id=1, measure_resolver=111, measure_date=date(2024, 1, 25)),
+        MeasureMember(person_id=1, measure_resolver=111, episode_id=111, measure_date=date(2024, 1, 25)),
     ])
     report = build_report(
         cohort_measure=cohort_measure,
@@ -366,12 +369,13 @@ def test_build_pivot_indicators_applies_dynamic_windows_relative_to_cohort_membe
 
 def test_build_pivot_indicators_applies_row_specific_windows_for_full_cohort_denominator():
     cohort_measure = FakeMeasure(10, "cohort", [
-        MeasureMember(person_id=1, measure_resolver=111, measure_date=date(2024, 1, 1)),
-        MeasureMember(person_id=1, measure_resolver=222, measure_date=date(2024, 3, 1)),
+        MeasureMember(person_id=1, measure_resolver=111, episode_id=111, measure_date=date(2024, 1, 1)),
+        MeasureMember(person_id=1, measure_resolver=222, episode_id=222, measure_date=date(2024, 3, 1)),
     ])
     denominator_measure = FakeMeasure(0, "full cohort", [])
     numerator_measure = FakeMeasure(30, "numerator", [
-        MeasureMember(person_id=1, measure_resolver=999, measure_date=date(2024, 2, 1)),
+        MeasureMember(person_id=1, measure_resolver=111, episode_id=111, measure_date=date(2024, 2, 1)),
+        MeasureMember(person_id=1, measure_resolver=222, episode_id=222, measure_date=date(2024, 2, 1)),
     ])
     report = build_report(
         cohort_measure=cohort_measure,
@@ -392,12 +396,12 @@ def test_build_pivot_indicators_applies_row_specific_windows_for_full_cohort_den
 
 def test_build_pivot_indicators_whole_cohort_propagation_does_not_leak_across_people():
     cohort_measure = FakeMeasure(10, "cohort", [
-        MeasureMember(person_id=1, measure_resolver=111, measure_date=date(2024, 1, 1)),
-        MeasureMember(person_id=2, measure_resolver=111, measure_date=date(2024, 1, 2)),
+        MeasureMember(person_id=1, measure_resolver=111, episode_id=111, measure_date=date(2024, 1, 1)),
+        MeasureMember(person_id=2, measure_resolver=111, episode_id=111, measure_date=date(2024, 1, 2)),
     ])
     denominator_measure = FakeMeasure(0, "full cohort", [])
     numerator_measure = FakeMeasure(30, "numerator", [
-        MeasureMember(person_id=1, measure_resolver=111, measure_date=date(2024, 2, 7)),
+        MeasureMember(person_id=1, measure_resolver=111, episode_id=111, measure_date=date(2024, 2, 7)),
     ])
     report = build_report(
         cohort_measure=cohort_measure,
@@ -416,13 +420,13 @@ def test_build_pivot_indicators_whole_cohort_propagation_does_not_leak_across_pe
 
 def test_report_runner_execute_allows_strict_demography_after_full_cohort_reconciliation(monkeypatch):
     cohort_members = [
-        MeasureMember(person_id=1, measure_resolver=111, measure_date=date(2024, 1, 1)),
-        MeasureMember(person_id=2, measure_resolver=222, measure_date=date(2024, 1, 2)),
+        MeasureMember(person_id=1, measure_resolver=111, episode_id=111, measure_date=date(2024, 1, 1)),
+        MeasureMember(person_id=2, measure_resolver=222, episode_id=222, measure_date=date(2024, 1, 2)),
     ]
     cohort_measure = FakeMeasure(10, "cohort", cohort_members)
     denominator_measure = FakeMeasure(0, "full cohort", [])
     numerator_measure = FakeMeasure(30, "numerator", [
-        MeasureMember(person_id=2, measure_resolver=222, measure_date=date(2024, 2, 1)),
+        MeasureMember(person_id=2, measure_resolver=222, episode_id=222, measure_date=date(2024, 2, 1)),
     ])
     report = build_report(
         cohort_measure=cohort_measure,

@@ -4,6 +4,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
+from ..core import IndicatorGrain
+
 
 class MeasureSummary(BaseModel):
     id: int
@@ -12,6 +14,13 @@ class MeasureSummary(BaseModel):
 
 
 class IndicatorPayload(BaseModel):
+
+    grain: IndicatorGrain = IndicatorGrain.episode
+
+    opportunity_selection: str = "any"
+    numerator_reference: str = "cohort"
+    period_date_source: str = "denominator"
+    undated_numerator_policy: str = "exclude"
 
     indicator_id: int
     indicator_description: str
@@ -92,6 +101,19 @@ class PivotCohortRow(BaseModel):
 
 
 class PivotIndicatorRow(BaseModel):
+    grain: IndicatorGrain = IndicatorGrain.episode
+    episode_id: int | None = None
+    period_date: date | None = None
+    completion_date: date | None = None
+    eligibility_status: str = "eligible"
+    eligible_cancer_keys: list[tuple[int, int, int]] = Field(default_factory=list)
+    passing_cancer_keys: list[tuple[int, int, int]] = Field(default_factory=list)
+    unresolved_cancer_keys: list[tuple[int, int, int]] = Field(default_factory=list)
+    passing_denominator_date: date | None = None
+    opportunity_id: int | None = None
+    numerator_source_event_id: int | None = None
+    anchor_date: date | None = None
+    candidate_date: date | None = None
     person_id: int
     measure_resolver: int
 

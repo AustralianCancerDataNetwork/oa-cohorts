@@ -18,6 +18,7 @@ class SurgicalMeasurable(SurgicalProcedureMV, MeasurableBase, Base):
     __measurable__ = MeasurableSpec(
         domain=MeasurableDomain.tx,
         label="Cancer Surgical Procedures",
+        source_table="procedure_occurrence",
         person_id_attr="person_id",
         episode_id_attr="condition_episode_id",
         event_date_attr="surgery_datetime",
@@ -60,6 +61,13 @@ class RTTreatmentMeasurable(ConditionTreatmentEpisode, MeasurableBase, Base):
 class IntentChemoMeasurable(ConditionTreatmentIntentMV, MeasurableBase, Base):
     __measurable__ = MeasurableSpec(
         domain=MeasurableDomain.tx,
+        source_table="measurement",
+        event_id_attr="intent_measurement_id",
+        opportunity_id_attr="treatment_episode_id",
+        start_date_attr="treatment_episode_start_date",
+        end_date_attr="treatment_episode_end_date",
+        eligibility_attr="sact",
+        reject_conflicting_values=True,
         label="Specified Intent of Chemotherapy Treatment Episodes",
         person_id_attr="person_id",
         episode_id_attr="episode_id",
@@ -71,6 +79,13 @@ class IntentChemoMeasurable(ConditionTreatmentIntentMV, MeasurableBase, Base):
 class IntentRTMeasurable(ConditionTreatmentIntentMV, MeasurableBase, Base):
     __measurable__ = MeasurableSpec(
         domain=MeasurableDomain.tx,
+        source_table="measurement",
+        event_id_attr="intent_measurement_id",
+        opportunity_id_attr="treatment_episode_id",
+        start_date_attr="treatment_episode_start_date",
+        end_date_attr="treatment_episode_end_date",
+        eligibility_attr="rt",
+        reject_conflicting_values=True,
         label="Specified Intent of Radiotherapy Treatment Episodes",
         person_id_attr="person_id",
         episode_id_attr="episode_id",
@@ -86,6 +101,13 @@ class IntentRTMeasurable(ConditionTreatmentIntentMV, MeasurableBase, Base):
 class IntentConcurrentRTMeasurable(ConditionTreatmentIntentMV, MeasurableBase, Base):
     __measurable__ = MeasurableSpec(
         domain=MeasurableDomain.tx,
+        source_table="measurement",
+        event_id_attr="intent_measurement_id",
+        opportunity_id_attr="treatment_episode_id",
+        start_date_attr="treatment_episode_start_date",
+        end_date_attr="treatment_episode_end_date",
+        eligibility_attr="concurrent_rt",
+        reject_conflicting_values=True,
         label="RT Episodes in Concurrent Chemoradiotherapy",
         person_id_attr="person_id",
         episode_id_attr="episode_id",

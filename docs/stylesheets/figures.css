@@ -1,0 +1,16 @@
+/* Centre standalone figures without changing inline icons or surrounding prose. */
+.md-typeset p > img:only-child,
+.md-typeset p > a:only-child > img:only-child,
+.md-typeset figure img,
+.md-typeset .mermaid svg {
+  display: block;
+  margin-inline: auto;
+  max-width: 100%;
+  height: auto;
+}
+
+.md-typeset figure,
+.md-typeset .mermaid {
+  margin-inline: auto;
+  text-align: center;
+}

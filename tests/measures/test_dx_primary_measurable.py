@@ -28,6 +28,7 @@ def _load_dx_primary_registry(monkeypatch):
         sa.Column("condition_episode", sa.Integer),
         sa.Column("condition_start_date", sa.Date),
         sa.Column("metastatic_disease_date", sa.Date),
+        sa.Column("metastatic_disease_id", sa.Integer),
         sa.Column("metastatic_disease_concept_id", sa.Integer),
         extend_existing=True,
     )
@@ -66,6 +67,7 @@ def _load_dx_primary_registry(monkeypatch):
             "condition_episode": modified_table.c.condition_episode,
             "condition_start_date": modified_table.c.condition_start_date,
             "metastatic_disease_date": modified_table.c.metastatic_disease_date,
+            "metastatic_disease_id": modified_table.c.metastatic_disease_id,
             "metastatic_disease_concept_id": modified_table.c.metastatic_disease_concept_id,
         },
     )
@@ -90,6 +92,7 @@ def _load_dx_primary_registry(monkeypatch):
             "person_id": stage_table.c.person_id,
             "condition_episode": stage_table.c.condition_episode,
             "stage_date": stage_table.c.stage_date,
+            "stage_id": stage_table.c.stage_id,
             "stage_concept_id": stage_table.c.stage_concept_id,
             "stage_label": stage_table.c.stage_label,
         },

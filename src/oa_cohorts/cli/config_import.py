@@ -147,6 +147,8 @@ def _clean_row(raw_row: dict[str, str], spec: TableImportSpec) -> dict[str, Any]
         transformed = spec.value_transforms.get(key, lambda item: item)(value)
         cleaned[key] = _coerce_value(available_columns[key], transformed)
 
+    if spec.table.name == "indicator" and "grain" in cleaned and cleaned["grain"] is None:
+        raise ValueError("Indicator grain must be episode or patient; omit the column to use the default")
     missing = _required_columns(spec.table) - cleaned.keys()
     if missing:
         raise ValueError(
@@ -514,6 +516,10 @@ def import_config_directory(
             session.expire_all()
             for measure in session.scalars(sa.select(Measure)).unique():
                 _validate_measure_dependencies(measure)
+            from ..query.indicator_evaluation import validate_resolution_policy
+
+            for indicator in session.scalars(sa.select(Indicator)).unique():
+                validate_resolution_policy(indicator)
             session.commit()
     except Exception:
         if not dry_run:

@@ -1,8 +1,10 @@
 # Measure Resolution
 
-## `MeasureMember`: the atomic result row
+For worked clinical examples, counting rules and date roles, start with [From clinical evidence to one indicator result](evidence_and_indicators.md). This page describes the SQL projections.
 
-When a measure executes, it materialises `MeasureMember` rows:
+## The evidence returned by a measure
+
+A measure returns `MeasureMember` rows. These identify the patient, cancer and date; additional fields retain source identifiers, treatment identifiers and dates needed by later criteria. The four core fields are:
 
 ```python
 @dataclass(frozen=True)
@@ -15,24 +17,24 @@ class MeasureMember:
 
 A `MeasureMember` is not just a boolean membership flag. It captures:
 
-* who qualified
-* under which resolver
-* on what date
+* which patient and cancer the evidence belongs to
+* which episode is used for matching (`measure_resolver`)
+* the date returned by the measure
 
 This preserved timing is what allows indicator windows, per-period reporting, and episode-aware logic to work later in the pipeline.
 
-## Canonical Combination Semantics
+## Combining criteria
 
-Measures compose child results using the canonical member shape. In the shipped config this is primarily through `OR` and `AND`.
+Measures combine evidence using `OR`, `AND` and `EXCEPT`. They retain the records and dates needed by later criteria. The indicator decides how that evidence contributes to the final count.
 
 ### `OR`: preserve all qualifying rows
 
-`OR` logic unions child outputs without collapsing them.
+`OR` keeps distinct qualifying evidence, deduplicating the same physical event.
 
 Implementation shape:
 
-* each child emits canonical rows
-* rows are combined with `UNION ALL`
+* each child supplies evidence rows
+* rows are combined with `UNION`
 * all qualifying dates are preserved
 
 Example:
@@ -41,19 +43,21 @@ Example:
 
 If the same person qualifies on two different dates, both rows survive.
 
-![Qualification temporal resolution](img/temporal_resolver_2.png)
+![OR retains evidence from either criterion, including distinct events on the same date, while keeping each cancer separate.](img/or_evidence.svg)
 
-### `AND`: resolver-aligned intersection
+This is the full evidence result. The four-column `sql_any()` projection can merge distinct events that share a cancer and date; `sql_evidence()` retains their source identities.
 
-`AND` is not a simple person-level intersection. The same `measure_resolver` must satisfy all child criteria.
+### `AND`: both criteria for the same cancer
+
+`AND` requires all child criteria to be met for the same cancer. Matching only the patient would allow evidence from one primary to qualify another.
 
 Implementation shape:
 
-* child rows are aligned by `measure_resolver`
-* the resulting qualification date is the latest child date
+* child rows are aligned by `(person_id, episode_id, measure_resolver)`
+* first qualification is the latest of the earliest child completions; branch evidence remains available
 * rows with mismatched resolvers do not qualify together
 
-This represents the earliest point at which all required conditions have become true for the same clinical context.
+This gives the first date by which all required events had occurred. If the criteria must be met close together in time, add an explicit date window.
 
 Example:
 
@@ -63,15 +67,21 @@ If Stage III qualifies under episode 10 and Radiotherapy qualifies under episode
 
 If the two child rows belong to different episodes, they do not intersect.
 
-![Qualification temporal resolution](img/temporal_resolver_3.png)
+![AND retains the supporting stage and RT records for cancer A, preserving source dates and recording when both criteria were complete. Other cancers cannot borrow that evidence.](img/and_evidence.svg)
 
-### `FIRST` vs `ANY`
+The stage record keeps its original `source_date` of 10 January. Its combined `measure_date` and `completion_date` are 20 January, when both requirements had occurred. Later RT evidence also remains available. `sql_qualification()` returns the first completion date for the cancer.
 
-The engine compiles multiple SQL variants for measures and subqueries:
+### Choosing a SQL result
 
-* `ANY`: preserve all qualifying rows
-* `FIRST`: collapse to the earliest qualifying row per resolver
-* `UNDATED`: keep qualifying membership without dates for intermediate set logic
+Use the query that answers the question being asked:
+
+* `sql_evidence()` preserves qualifying records, source identities and date roles.
+* `sql_any()` returns distinct rows with the four core fields.
+* `sql_first()` returns the earliest emitted date per `(person_id, episode_id, measure_resolver)`.
+* `sql_qualification()` returns the earliest completion date per cancer: when all dated requirements had occurred.
+* `sql_undated()` returns distinct membership keys without dates; it is unsupported for temporal-window measures.
+
+`MeasureExecutor` retains the evidence fields and scopes its cache to the selected people and episode override. Cumulative AND combines each child’s evidence with the other children’s earliest completions, so 32 records from each of two children need at most 64 evidence rows rather than 1,024 pairs.
 
 ### Temporal Window: Event-to-Event Timing
 
@@ -81,22 +91,22 @@ This is expressed via `MeasureTemporalWindow`, a separate config table with a 1:
 
 **Anchor and candidate**
 
-The anchor uses exactly one source: the measure's `subquery_id`, or `MeasureTemporalWindow.anchor_measure_id` pointing to another dated measure. A separate `candidate_measure_id` identifies the events evaluated relative to that anchor. A measure anchor runs its own filters first; only then is its earliest returned date selected per `(person_id, episode_id, measure_resolver)`. Existing subquery anchors keep their earliest-event behaviour. Missing references, two anchor sources, reversed bounds and dependency cycles are rejected before SQL compilation. 
+The anchor uses exactly one source: the measure's `subquery_id`, or `MeasureTemporalWindow.anchor_measure_id` pointing to another dated measure. A separate `candidate_measure_id` identifies the events evaluated relative to that anchor. A measure anchor runs its own filters first; only then does its declared first/latest/all anchor selection run per `(person_id, episode_id, measure_resolver)`. The default anchor selection is `first`. Missing references, two anchor sources, reversed bounds and dependency cycles are rejected before SQL compilation.
 
 **Window bounds**
 
-`window_min_days` and `window_max_days` are optional. `NULL` means unbounded on that side. Negative values are valid — a candidate event occurring before the anchor can still qualify when it falls within the configured bounds. The emitted result remains the canonical `MeasureMember` row shape described above, so downstream comparison is based on the resolved `measure_date` selected by the window logic rather than on a separately emitted delta column.
+`window_min_days` and `window_max_days` are optional. `NULL` means unbounded on that side. Negative values are valid — a candidate event occurring before the anchor can still qualify when it falls within the configured bounds. The selected result date is returned as `measure_date`; the supporting event dates remain available in the evidence fields.
 
 **Pick strategy** (`window_pick_strategy`)
 
-Controls which candidate event is retained per resolver after applying the window filter:
+Controls which candidate events are retained for each selected anchor, after applying the window filter:
 
 | Value | Behaviour |
 |-------|-----------|
 | `any` | All qualifying candidate events are preserved |
-| `earliest` | One row per resolver: earliest qualifying candidate date |
-| `latest` | One row per resolver: latest qualifying candidate date |
-| `closest` | One row per resolver: candidate date closest to anchor date |
+| `earliest` | Earliest qualifying candidate for each selected anchor |
+| `latest` | Latest qualifying candidate for each selected anchor |
+| `closest` | Qualifying candidate closest to each selected anchor |
 
 Default when `NULL`: `earliest`.
 
@@ -115,7 +125,7 @@ Default when `NULL`: `candidate`.
 
 **Resolver alignment** (`require_same_resolver`)
 
-When `TRUE` (default), the anchor and candidate are joined on both `person_id` and `measure_resolver`. When `FALSE`, the join is on `person_id` only.
+When `TRUE` (default), the anchor and candidate must match on `(person_id, episode_id, measure_resolver)`. When `FALSE`, matching uses `person_id` only. Reserve that setting for intentionally patient-level facts; it permits matching across the patient’s cancers.
 
 **SQL variants**
 
@@ -154,9 +164,9 @@ Evaluation proceeds bottom-up:
 
 1. `B OR C` resolves to all qualifying child rows
 2. `A` resolves independently
-3. `AND` aligns rows on `measure_resolver`
-4. the composite qualification date becomes the latest aligned child date
+3. `AND` matches evidence on `(person_id, episode_id, measure_resolver)`
+4. its first qualification is the later of A’s and the qualifying alternative’s earliest completion dates
 
-The canonical member shape is preserved at every level, which is why deeply nested logic can still feed report generation consistently.
+The supporting evidence remains available to later measures and indicator windows.
 
-![Qualification temporal resolution](img/temporal_resolver_1.png)
+![Stage III AND either RT or surgery qualifies separately for each cancer. Completion is the later of stage and the qualifying treatment; evidence cannot be combined across two cancers in the same patient.](img/nested_measure_evidence.svg)

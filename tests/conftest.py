@@ -168,6 +168,7 @@ class FakeDashCohortDefinition:
 
 
 class FakeIndicator:
+    patient_results = Indicator.patient_results
     numerator_members = Indicator.numerator_members
     denominator_members = Indicator.denominator_members
     numerator_window = Indicator.numerator_window
@@ -177,9 +178,6 @@ class FakeIndicator:
     member_within_window = Indicator.member_within_window
     _window_for_side = Indicator._window_for_side
     _coerce_member_date = staticmethod(Indicator._coerce_member_date)
-    _anchor_dates_by_key = Indicator._anchor_dates_by_key
-    _matches_any_cohort_anchor = Indicator._matches_any_cohort_anchor
-    _uses_full_cohort_denominator = Indicator._uses_full_cohort_denominator
 
 
 class FakeCohort:

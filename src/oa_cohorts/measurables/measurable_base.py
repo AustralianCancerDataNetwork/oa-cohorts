@@ -10,6 +10,7 @@ from sqlalchemy.orm.attributes import QueryableAttribute
 from sqlalchemy.sql import ColumnElement
 
 from ..core import RuleTarget, RuleTemporality
+from .evidence import evidence_selectables, intrinsic_predicate
 
 SQLCol: TypeAlias = sa.Column[Any] | ColumnElement[Any]
 
@@ -51,6 +52,13 @@ class MeasurableSpec:
 
     temporality_map: Mapping[RuleTemporality, str] | None = None
     valid_targets: set[RuleTarget] | None = None
+    source_table: str | None = None
+    event_id_attr: str | None = None
+    opportunity_id_attr: str | None = None
+    start_date_attr: str | None = None
+    end_date_attr: str | None = None
+    eligibility_attr: str | None = None
+    reject_conflicting_values: bool = False
 
     def _resolve(self, cls: type[Any], field: str, attr: str) -> SQLCol:
         """Resolve one declared attribute name to a column on ``cls``.
@@ -122,6 +130,15 @@ class MeasurableSpec:
                 for temporality, attr in (self.temporality_map or {}).items()
             },
             valid_targets=self.valid_targets,
+            source_table=self.source_table,
+            evidence_columns={name: self._resolve(cls, name, attr) for name, attr in {
+                "source_event_id": self.event_id_attr,
+                "opportunity_id": self.opportunity_id_attr,
+                "start_date": self.start_date_attr,
+                "end_date": self.end_date_attr,
+            }.items() if attr},
+            eligibility_col=self._resolve(cls, "eligibility_attr", self.eligibility_attr) if self.eligibility_attr else None,
+            reject_conflicting_values=self.reject_conflicting_values,
         )
 
 @dataclass(frozen=True)
@@ -141,6 +158,10 @@ class BoundMeasurableSpec:
 
     temporality_map: Mapping[RuleTemporality, SQLCol] | None = None
     valid_targets: set[RuleTarget] | None = None
+    source_table: str | None = None
+    evidence_columns: Mapping[str, SQLCol] | None = None
+    eligibility_col: SQLCol | None = None
+    reject_conflicting_values: bool = False
 
 class MeasurableBase:
     """
@@ -179,7 +200,15 @@ class MeasurableBase:
         if tm and temporality in tm:
             return tm[temporality]
         return cls.event_date_col()
-    
+
+    @classmethod
+    def intrinsic_predicate(cls):
+        return intrinsic_predicate(cls)
+
+    @classmethod
+    def evidence_selectables(cls, temporality, ep_override=False):
+        return evidence_selectables(cls, temporality, ep_override)
+
     # TODO: confirm removal of episode override logic in favour of 
     # linking all events to episodes at the data level through MVs
     # and remove ep_override args from all methods

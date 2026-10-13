@@ -1,6 +1,11 @@
 import enum
 
 
+class IndicatorGrain(str, enum.Enum):
+    episode = "episode"
+    patient = "patient"
+
+
 class RuleMatcher(str, enum.Enum):
     substring = 'substring' 
     exact = 'exact' 
