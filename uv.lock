@@ -1335,7 +1335,7 @@ requires-dist = [
     { name = "myst-parser", marker = "extra == 'docs'" },
     { name = "oa-configurator", specifier = ">=2.0,<3" },
     { name = "omop-alchemy", extras = ["postgres"], specifier = ">=2.0,<3" },
-    { name = "omop-constructs", editable = "../../core-stack/omop-constructs" },
+    { name = "omop-constructs", git = "https://github.com/AustralianCancerDataNetwork/omop-constructs?tag=v0.11.0" },
     { name = "orm-loader", specifier = ">=2.0,<3" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.3" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0" },
@@ -1393,7 +1393,8 @@ postgres = [
 
 [[package]]
 name = "omop-constructs"
-source = { editable = "../../core-stack/omop-constructs" }
+version = "0.11.0"
+source = { git = "https://github.com/AustralianCancerDataNetwork/omop-constructs?tag=v0.11.0#eb0a44aab54ab1491ed746ddec1790616a217170" }
 dependencies = [
     { name = "oa-configurator" },
     { name = "omop-alchemy", extra = ["postgres"] },
@@ -1401,29 +1402,6 @@ dependencies = [
     { name = "orm-loader" },
     { name = "sqlalchemy" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "ipython", marker = "extra == 'dev'", specifier = ">=9.8.0" },
-    { name = "mkdocs", marker = "extra == 'dev'", specifier = "<2.0" },
-    { name = "mkdocs-macros-plugin", marker = "extra == 'dev'" },
-    { name = "mkdocs-material", marker = "extra == 'dev'" },
-    { name = "mkdocs-mermaid2-plugin", marker = "extra == 'dev'" },
-    { name = "mkdocs-table-reader-plugin", marker = "extra == 'dev'" },
-    { name = "mkdocstrings", extras = ["python"], marker = "extra == 'dev'" },
-    { name = "oa-configurator", specifier = ">=2.0,<3" },
-    { name = "omop-alchemy", extras = ["postgres"], specifier = ">=2.0,<3" },
-    { name = "omop-semantics", specifier = ">=0.6.2" },
-    { name = "orm-loader", specifier = ">=2.0,<3" },
-    { name = "pygments", marker = "extra == 'dev'", specifier = ">=2.20.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.3" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=7.0.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.15,<0.16" },
-    { name = "sqlalchemy", specifier = ">=2.0.45" },
-    { name = "tornado", marker = "extra == 'dev'", specifier = ">=6.5.5" },
-    { name = "ty", marker = "extra == 'dev'", specifier = "==0.0.61" },
-]
-provides-extras = ["dev"]
 
 [[package]]
 name = "omop-semantics"

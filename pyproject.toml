@@ -38,7 +38,7 @@ packages = ["src/oa_cohorts"]
 cache-keys = [{ file = "pyproject.toml" }, { git = { commit = true, tags = true } }]
 
 [tool.uv.sources]
-omop-constructs = { path = "../../core-stack/omop-constructs", editable = true }
+omop-constructs = { git = "https://github.com/AustralianCancerDataNetwork/omop-constructs", tag = "v0.11.0" }
 
 [project.optional-dependencies]
 dev = [
