@@ -213,12 +213,11 @@ class DashCohort(HTMLRenderable, Base):
         blocks.append(RawHTML("<div class='subquery-section-title'>Definitions</div>"))
 
         if self.definitions:
-            blocks.extend(
-                sorted(
-                    self.definitions,
-                    key=lambda d: d.dash_cohort_def_name,
-                )
+            definitions: list[DashCohortDef] = sorted(
+                self.definitions,
+                key=lambda d: d.dash_cohort_def_name,
             )
+            blocks.extend(definitions)
         else:
             blocks.append(RawHTML("<div class='muted'><i>No cohort definitions</i></div>"))
 
