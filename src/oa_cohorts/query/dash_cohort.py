@@ -216,7 +216,7 @@ class DashCohort(HTMLRenderable, Base):
             blocks.extend(
                 sorted(
                     self.definitions,
-                    key=lambda d: d.dash_cohort_def_name,  # type: ignore
+                    key=lambda d: d.dash_cohort_def_name,
                 )
             )
         else:

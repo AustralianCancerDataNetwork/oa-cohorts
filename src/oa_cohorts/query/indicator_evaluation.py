@@ -12,6 +12,7 @@ from .indicator_members import (
     indicator_grain,
     member_date,
     member_key,
+    member_keys,
     members_by_key,
     reduce_patient_results,
 )
@@ -73,7 +74,7 @@ def evaluate_cancer(indicator, candidates, numerators, cohort_date, *, whole):
         if candidates and (not dated or (needs_reference and cohort_date is None)):
             return IndicatorMemberResult(min(candidates, key=evidence_order), False, None,
                 denominator_value=False, eligibility_status="unresolved",
-                unresolved_keys=frozenset([member_key(candidates[0])]))
+                unresolved_keys=member_keys(candidates[:1]))
         return None
     eligible.sort(key=evidence_order)
     if policy(indicator, "opportunity_selection", "any") == "first" or whole:
@@ -82,7 +83,7 @@ def evaluate_cancer(indicator, candidates, numerators, cohort_date, *, whole):
     pair = passing_pair(indicator, eligible, numerators, cohort_date)
     numerator = pair[1] if pair else None
     explanation = pair[0] if pair else denominator
-    key = member_key(denominator)
+    keys = member_keys([denominator])
     completion = None
     if numerator is not None:
         dates = [qualification_date(explanation),
@@ -92,7 +93,7 @@ def evaluate_cancer(indicator, candidates, numerators, cohort_date, *, whole):
                     "numerator": member_date(numerator.measure_date) if numerator else None,
                     "completion": completion if pair else qualification_date(denominator)}
     return IndicatorMemberResult(denominator, bool(pair), member_date(numerator.measure_date) if numerator else None,
-        eligible_keys=frozenset([key]), passing_keys=frozenset([key]) if pair else frozenset(),
+        eligible_keys=keys, passing_keys=keys if pair else frozenset(),
         numerator=numerator, passing_denominator=explanation if pair else None,
         period_date=period_dates[policy(indicator, "period_date_source", "denominator")], completion_date=completion)
 
@@ -132,7 +133,10 @@ def first_in_window(indicator, index, anchor):
         return None
     dates, values = index
     prior = getattr(indicator, "numerator_max_days_prior", None)
-    lower = member_date(anchor) - timedelta(days=prior) if prior is not None else date.min
+    anchor_day = member_date(anchor)
+    if prior is not None and anchor_day is None:
+        return None
+    lower = anchor_day - timedelta(days=prior) if prior is not None and anchor_day else date.min
     offset = bisect_left(dates, lower)
     if offset < len(values) and within_window(indicator, values[offset].measure_date,
                                               anchor_date=anchor, side="numerator"):

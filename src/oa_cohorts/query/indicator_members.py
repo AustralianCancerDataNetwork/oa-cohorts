@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
 
@@ -35,8 +35,12 @@ def member_date(value: date | datetime | None) -> date | None:
     return value
 
 
+def member_keys(members: Iterable[MeasureMember]) -> frozenset[MemberKey]:
+    return frozenset(key for member in members if (key := member_key(member)) is not None)
+
+
 def earliest_date(values: Sequence[date | datetime | None]) -> date | None:
-    return min((member_date(value) for value in values if value is not None), default=None)
+    return min((day for value in values if (day := member_date(value)) is not None), default=None)
 
 
 def cohort_anchor_dates(cohort_members: Sequence[MeasureMember]) -> dict[MemberKey, date | None]:
@@ -83,9 +87,7 @@ def reduce_patient_results(results: Sequence[IndicatorMemberResult], *, period_s
 def _patient_result(person: int, results: Sequence[IndicatorMemberResult], *, period_source) -> IndicatorMemberResult:
     eligible = [result for result in results if result.denominator_value]
     passing = [result for result in eligible if result.numerator_value]
-    eligible_keys = frozenset(member_key(result.denominator) for result in eligible)
-    passing_keys = frozenset(member_key(result.denominator) for result in passing)
-    if None in eligible_keys:
+    if any(member_key(result.denominator) is None for result in eligible):
         raise ValueError("Patient reduction requires episode-aligned input results")
     explanation = min(passing, key=lambda result: (result.numerator_date or date.max,
                                                   member_key(result.denominator))) if passing else None
@@ -94,8 +96,8 @@ def _patient_result(person: int, results: Sequence[IndicatorMemberResult], *, pe
             [result.denominator.measure_date for result in eligible])),
         numerator_value=bool(passing),
         numerator_date=earliest_date([result.numerator_date for result in passing]),
-        eligible_keys=eligible_keys,
-        passing_keys=passing_keys,
+        eligible_keys=member_keys(result.denominator for result in eligible),
+        passing_keys=member_keys(result.denominator for result in passing),
         denominator_value=bool(eligible),
         eligibility_status="eligible" if eligible else "unresolved",
         numerator=explanation.numerator if explanation else None,
@@ -103,5 +105,5 @@ def _patient_result(person: int, results: Sequence[IndicatorMemberResult], *, pe
         period_date=(explanation.period_date if explanation and period_source in ("numerator", "completion")
                      else earliest_date([result.period_date for result in eligible])),
         completion_date=explanation.completion_date if explanation else None,
-        unresolved_keys=frozenset(member_key(result.denominator) for result in results if not result.denominator_value),
+        unresolved_keys=member_keys(result.denominator for result in results if not result.denominator_value),
     )

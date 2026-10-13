@@ -25,7 +25,7 @@ from ..errors import (  # noqa: F401 -- compatible error re-export
     MissingMaterializedViewError,
     reraise_schema_error,
 )
-from .evidence import EVIDENCE_TYPES, EvidenceCompiler, canonical_query
+from .evidence import EvidenceCompiler, canonical_query
 from .subquery import Subquery
 from .typing import SQLQuery, _first_member_query
 
@@ -72,7 +72,18 @@ class MeasureMember:
             measure_resolver=r.measure_resolver,
             episode_id=getattr(r, "episode_id", None),
             measure_date=getattr(r, "measure_date", None),
-            **{name: getattr(r, name, True if name == "date_required" else None) for name in EVIDENCE_TYPES},
+            source_table=getattr(r, "source_table", None),
+            source_event_id=getattr(r, "source_event_id", None),
+            opportunity_id=getattr(r, "opportunity_id", None),
+            source_date=getattr(r, "source_date", None),
+            start_date=getattr(r, "start_date", None),
+            end_date=getattr(r, "end_date", None),
+            completion_date=getattr(r, "completion_date", None),
+            anchor_date=getattr(r, "anchor_date", None),
+            candidate_date=getattr(r, "candidate_date", None),
+            anchor_event_id=getattr(r, "anchor_event_id", None),
+            candidate_event_id=getattr(r, "candidate_event_id", None),
+            date_required=getattr(r, "date_required", True),
         )
 
 
