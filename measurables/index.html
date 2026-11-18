@@ -446,6 +446,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#observation-answers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observation Answers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#diagnosis-targets" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -938,6 +949,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#observation-answers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observation Answers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#diagnosis-targets" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1227,6 +1249,11 @@ Some enum members are reserved for future design work and do not currently resol
 <td>radiotherapy intent flags</td>
 </tr>
 <tr>
+<td><code>intent_concurrent_rt</code></td>
+<td><code>IntentConcurrentRTMeasurable</code></td>
+<td>Intent and episode dates for RT courses with a recorded SACT exposure during the course</td>
+</tr>
+<tr>
 <td><code>tx_to_death_window</code></td>
 <td><code>TxDaysBeforeDeath</code></td>
 <td>derived days from treatment to death</td>
@@ -1239,7 +1266,7 @@ Some enum members are reserved for future design work and do not currently resol
 <tr>
 <td><code>tx_concurrent</code></td>
 <td><code>TxConcurrentChemoRT</code></td>
-<td>concurrent chemo-radiotherapy predicate</td>
+<td>CRT predicate dated by the first exposure of the earliest qualifying RT course</td>
 </tr>
 <tr>
 <td><code>referral_to_specialist_window</code></td>
@@ -1262,6 +1289,11 @@ Some enum members are reserved for future design work and do not currently resol
 <td>diagnosis-linked observations</td>
 </tr>
 <tr>
+<td><code>obs_value_concept</code></td>
+<td><code>ObserveValueConceptMeasurable</code></td>
+<td>coded answers on diagnosis-linked observations</td>
+</tr>
+<tr>
 <td><code>ev_visit</code></td>
 <td><code>VisitSpecialtyMeasurable</code></td>
 <td>diagnosis-linked specialty visits</td>
@@ -1273,6 +1305,38 @@ Some enum members are reserved for future design work and do not currently resol
 </tr>
 </tbody>
 </table>
+<p>For <code>tx_concurrent</code>, both the default event date and <code>dt_concurrent</code> use
+<code>first_concurrent_rt_start</code>. Use <code>dt_current_start</code> to select the condition start
+explicitly. The CRT predicate requires a recorded SACT drug exposure start
+within an individual RT course on the same attributed condition episode,
+including either boundary day. Indicators can apply diagnosis windows to the CRT
+event date.</p>
+<h2 id="observation-answers">Observation Answers<a class="headerlink" href="#observation-answers" title="Permanent link">&para;</a></h2>
+<p><code>obs_concept</code> matches the observation concept. <code>obs_value_concept</code> matches the coded answer from <code>Observation.value_as_concept_id</code>. Both use the observation event date for <code>dt_obs</code>.</p>
+<p>Attach exactly one <code>obs_context</code> rule and at least one answer rule to the same <code>obs_value_concept</code> subquery. The context rule matches an exact observation concept on the same row as each answer match. For example, a current smoking rule uses these two rules on one subquery:</p>
+<table>
+<thead>
+<tr>
+<th>Matcher</th>
+<th><code>concept_id</code></th>
+<th>Checks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>obs_context</code></td>
+<td><code>43054909</code></td>
+<td>Tobacco smoking status observation</td>
+</tr>
+<tr>
+<td><code>exact</code></td>
+<td><code>45881517</code></td>
+<td>Current every day smoker answer</td>
+</tr>
+</tbody>
+</table>
+<p>With multiple alternative answers, each alternative must match the observation concept. <code>obs_context</code> is only valid with <code>obs_value_concept</code>. The existing measurement answer target, <code>meas_value_concept</code>, still matches the measurement answer directly.</p>
+<p>Configurations using this target and matcher require schema revision <code>0007_observation_value_target</code>. A 0006 schema with existing rules can still be read and compiled. Before downgrading, remove all references to <code>obs_value_concept</code> and <code>obs_context</code>. PostgreSQL retains the two enum labels after downgrade.</p>
 <h2 id="diagnosis-targets">Diagnosis Targets<a class="headerlink" href="#diagnosis-targets" title="Permanent link">&para;</a></h2>
 <p>For clinical users, the most important distinction is between the two diagnosis concept targets:</p>
 <ul>
