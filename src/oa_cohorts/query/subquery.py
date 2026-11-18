@@ -13,7 +13,7 @@ from ..core.html_utils import HTMLChild, HTMLRenderable, RawHTML, esc, render_sq
 from ..measurables import MeasurableBase, get_measurable_registry
 from ..measurables.measurable_base import SQLCol
 from .evidence import canonical_query
-from .query_rule import AbsenceRule, QueryRule
+from .query_rule import AbsenceRule, ObservationContextRule, QueryRule
 from .typing import _first_member_query
 
 SQLQuery: TypeAlias = Select[Any] | CompoundSelect[Any]
@@ -148,18 +148,39 @@ class Subquery(HTMLRenderable, Base):
 
         return col
 
-    def where_clause(self) -> sa.ColumnElement[bool]:
-        measurable = self.measurable_cls()
-        field = self.filter_field(measurable)
-
+    def _rule_context(
+        self, measurable: type[MeasurableBase],
+    ) -> tuple[sa.ColumnElement[bool], list[QueryRule]]:
+        """Apply the observation guard to the source row of every answer rule."""
         if not self.rules:
             raise ValueError(f"Subquery {self.subquery_id} has no rules")
 
+        predicate = measurable.intrinsic_predicate()
+        guards = [rule for rule in self.rules if isinstance(rule, ObservationContextRule)]
+        if self.target != RuleTarget.obs_value_concept:
+            if guards:
+                raise ValueError(f"Subquery {self.subquery_id}: obs_context is only valid for obs_value_concept")
+            return predicate, self.rules
+
+        if len(guards) != 1:
+            raise ValueError(f"Subquery {self.subquery_id}: obs_value_concept requires exactly one obs_context rule")
+        answers = [rule for rule in self.rules if rule is not guards[0]]
+        if not answers:
+            raise ValueError(f"Subquery {self.subquery_id}: obs_value_concept requires at least one answer rule")
+        context_col = measurable.__bound_measurable__.context_concept_col
+        if context_col is None:
+            raise ValueError(f"{measurable.__name__} has no observation concept binding")
+        return sa.and_(predicate, guards[0].get_filter_details(context_col)), answers
+
+    def where_clause(self) -> sa.ColumnElement[bool]:
+        measurable = self.measurable_cls()
+        predicate, rules = self._rule_context(measurable)
+        field = self.filter_field(measurable)
         clauses: list[sa.ColumnElement[bool]] = [
             rule.get_filter_details(field)
-            for rule in self.rules
+            for rule in rules
         ]
-        return sa.and_(measurable.intrinsic_predicate(), *clauses)
+        return sa.and_(predicate, *clauses)
 
     def filter_table(self, *, ep_override: bool = False) -> tuple[sa.ColumnElement[Any], ...]:
         measurable = self.measurable_cls()
@@ -192,19 +213,17 @@ class Subquery(HTMLRenderable, Base):
         Used when measure combination is OR.
         Produces dated rows.
         """
-        if not self.rules:
-            raise ValueError(f"Subquery {self.subquery_id} has no rules")
-
         measurable = self.measurable_cls()
+        predicate, rules = self._rule_context(measurable)
         field = self.filter_field(measurable)
 
         selects: list[sa.Select[Any]] = [
             sa.select(*(sa.literal(not isinstance(rule, AbsenceRule)).label("date_required")
                         if column.key == "date_required" else column
                         for column in measurable.evidence_selectables(self.temporality, ep_override))).where(
-                measurable.intrinsic_predicate(), rule.get_filter_details(field)
+                predicate, rule.get_filter_details(field)
             )
-            for rule in self.rules
+            for rule in rules
         ]
 
         return sa.union_all(*selects)

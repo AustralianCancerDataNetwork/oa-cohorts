@@ -59,6 +59,7 @@ class MeasurableSpec:
     end_date_attr: str | None = None
     eligibility_attr: str | None = None
     reject_conflicting_values: bool = False
+    context_concept_attr: str | None = None
 
     def _resolve(self, cls: type[Any], field: str, attr: str) -> SQLCol:
         """Resolve one declared attribute name to a column on ``cls``.
@@ -139,6 +140,10 @@ class MeasurableSpec:
             }.items() if attr},
             eligibility_col=self._resolve(cls, "eligibility_attr", self.eligibility_attr) if self.eligibility_attr else None,
             reject_conflicting_values=self.reject_conflicting_values,
+            context_concept_col=(
+                self._resolve(cls, "context_concept_attr", self.context_concept_attr)
+                if self.context_concept_attr else None
+            ),
         )
 
 @dataclass(frozen=True)
@@ -162,6 +167,7 @@ class BoundMeasurableSpec:
     evidence_columns: Mapping[str, SQLCol] | None = None
     eligibility_col: SQLCol | None = None
     reject_conflicting_values: bool = False
+    context_concept_col: SQLCol | None = None
 
 class MeasurableBase:
     """

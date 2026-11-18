@@ -246,11 +246,12 @@ def test_history_lists_every_revision_oldest_first():
         "0004_window_measure_anchor",
         "0005_indicator_grain",
         "0006_resolution_policy",
+        "0007_observation_value_target",
     ]
     assert revisions[0].down_revision is None
     assert not revisions[0].is_head
     assert revisions[-1].is_head
-    assert revisions[-1].down_revision == "0005_indicator_grain"
+    assert revisions[-1].down_revision == "0006_resolution_policy"
 
 
 def test_revision_ids_fit_the_alembic_version_column():

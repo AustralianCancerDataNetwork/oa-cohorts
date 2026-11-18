@@ -16,6 +16,7 @@ class RuleMatcher(str, enum.Enum):
     scalar = 'scalar' 
     phenotype = 'phenotype' 
     predicate = 'predicate'
+    obs_context = 'obs_context'
     
 class RuleTemporality(str, enum.Enum):
     dt_any = "dt_any"
@@ -72,6 +73,7 @@ class RuleTarget(str, enum.Enum):
     # Observation / procedure / measurement
     obs_value = "obs_value"
     obs_concept = "obs_concept"
+    obs_value_concept = "obs_value_concept"
     proc_concept = "proc_concept"
     meas_concept = "meas_concept"
     meas_value_num = "meas_value_num"

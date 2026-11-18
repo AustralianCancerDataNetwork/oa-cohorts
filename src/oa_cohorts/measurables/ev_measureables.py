@@ -49,6 +49,19 @@ class ObserveMeasurable(DxObservationMV, MeasurableBase, Base):
         value_numeric_attr="value_as_number"
     )
 
+class ObserveValueConceptMeasurable(DxObservationMV, MeasurableBase, Base):
+    __measurable__ = MeasurableSpec(
+        domain=MeasurableDomain.obs,
+        source_table="observation",
+        label="Diagnosis-episode linked observation answers",
+        person_id_attr="person_id",
+        episode_id_attr="episode_id",
+        event_date_attr="event_date",
+        value_concept_attr="value_concept_id",
+        context_concept_attr="event_concept_id",
+    )
+
+
 class VisitSpecialtyMeasurable(DxRelevantVisitMV, MeasurableBase, Base):
     __measurable__ = MeasurableSpec(
         domain=MeasurableDomain.visit,

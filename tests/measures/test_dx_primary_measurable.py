@@ -129,6 +129,7 @@ def _load_dx_primary_registry(monkeypatch):
         "MeasurementMeasurable",
         "ProcedureMeasurable",
         "ObserveMeasurable",
+        "ObserveValueConceptMeasurable",
         "VisitSpecialtyMeasurable",
         "MeasurementValueConceptMeasurable",
     ):

@@ -10,7 +10,7 @@ requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.13",
     "oa-configurator>=2.0,<3",
-    "omop-constructs>=0.11,<1",
+    "omop-constructs>=0.13.0,<1",
     "omop-alchemy[postgres]>=2.0,<3",
     "orm-loader>=2.0,<3",
     "rich>=13.0",
@@ -38,7 +38,7 @@ packages = ["src/oa_cohorts"]
 cache-keys = [{ file = "pyproject.toml" }, { git = { commit = true, tags = true } }]
 
 [tool.uv.sources]
-omop-constructs = { git = "https://github.com/AustralianCancerDataNetwork/omop-constructs", tag = "v0.11.0" }
+omop-constructs = { git = "https://github.com/AustralianCancerDataNetwork/omop-constructs", tag = "v0.13.0" }
 
 [project.optional-dependencies]
 dev = [

@@ -1335,7 +1335,7 @@ requires-dist = [
     { name = "myst-parser", marker = "extra == 'docs'" },
     { name = "oa-configurator", specifier = ">=2.0,<3" },
     { name = "omop-alchemy", extras = ["postgres"], specifier = ">=2.0,<3" },
-    { name = "omop-constructs", git = "https://github.com/AustralianCancerDataNetwork/omop-constructs?tag=v0.11.0" },
+    { name = "omop-constructs", git = "https://github.com/AustralianCancerDataNetwork/omop-constructs?tag=v0.13.0" },
     { name = "orm-loader", specifier = ">=2.0,<3" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.3" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0" },
@@ -1393,8 +1393,8 @@ postgres = [
 
 [[package]]
 name = "omop-constructs"
-version = "0.11.0"
-source = { git = "https://github.com/AustralianCancerDataNetwork/omop-constructs?tag=v0.11.0#eb0a44aab54ab1491ed746ddec1790616a217170" }
+version = "0.13.0"
+source = { git = "https://github.com/AustralianCancerDataNetwork/omop-constructs?tag=v0.13.0#c49ef3ef3af3f397799e8a880ab87484456c91e9" }
 dependencies = [
     { name = "oa-configurator" },
     { name = "omop-alchemy", extra = ["postgres"] },

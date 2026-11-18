@@ -141,6 +141,7 @@ def _load_measurable_modules(monkeypatch):
         sa.Column("episode_id", sa.Integer),
         sa.Column("event_date", sa.Date),
         sa.Column("event_concept_id", sa.Integer),
+        sa.Column("value_concept_id", sa.Integer),
         sa.Column("event_label", sa.String),
         sa.Column("value_as_number", sa.Numeric),
         extend_existing=True,
@@ -217,6 +218,7 @@ def _load_measurable_modules(monkeypatch):
         sa.Column("treatment_days_before_death", sa.Integer),
         sa.Column("days_from_dx_to_treatment", sa.Integer),
         sa.Column("concurrent_chemort", sa.Boolean),
+        sa.Column("first_concurrent_rt_start", sa.Date),
         extend_existing=True,
     )
     consult_window_table = sa.Table(
@@ -346,6 +348,141 @@ def test_string_mapped_measurables_bind_expected_columns(monkeypatch):
         assert bound_col.key == expected_attr
         assert bound_col.table.name == expected_table
         assert isinstance(bound_col.type, sa.String)
+
+
+@pytest.mark.parametrize("date_role", ["dt_any", "dt_concurrent"])
+def test_concurrent_crt_indicator_window_uses_the_rt_course_date(monkeypatch, date_role):
+    from datetime import date
+
+    from oa_cohorts.core import RuleTarget, RuleTemporality
+    from oa_cohorts.query.measure import MeasureMember
+    from oa_cohorts.query.query_rule import PredicateRule
+    from oa_cohorts.query.subquery import Subquery
+    from tests.resolution.candidate_runtime import indicator_results
+
+    modules = _load_measurable_modules(monkeypatch)
+    measurable = modules["oa_cohorts.measurables.tx_measurables"].TxConcurrentChemoRT
+    monkeypatch.setattr("oa_cohorts.query.subquery.get_measurable_registry",
+                        lambda: {RuleTarget.tx_concurrent: measurable})
+    query = Subquery(subquery_id=82, target=RuleTarget.tx_concurrent, temporality=RuleTemporality(date_role),
+                     rules=[PredicateRule(query_rule_id=110, concept_id=1)])
+    with sa.create_engine("sqlite://").connect() as db:
+        table = measurable.__table__
+        table.create(db)
+        db.execute(table.insert(), [
+            {"mv_id": 1, "person_id": 1, "condition_episode": 10, "condition_start_date": date(2026, 1, 1),
+             "concurrent_chemort": True, "first_concurrent_rt_start": date(2026, 3, 2)},
+            {"mv_id": 2, "person_id": 2, "condition_episode": 20, "condition_start_date": date(2026, 1, 1),
+             "concurrent_chemort": True, "first_concurrent_rt_start": date(2026, 2, 15)},
+        ])
+        numerator = [MeasureMember.from_row(row) for row in db.execute(query.select())]
+    cohort = [MeasureMember(p, e, e, date(2026, 1, 1)) for p, e in [(1, 10), (2, 20)]]
+    results = indicator_results(cohort, numerator, cohort,
+                                grain="episode", numerator_max_days_prior=0, numerator_max_days_post=45)
+    assert {row.denominator.episode_id: row.numerator_value for row in results} == {10: False, 20: True}
+    assert next(row.numerator_date for row in results if row.numerator_value) == date(2026, 2, 15)
+
+
+def test_observation_value_target_binds_the_answer_column(monkeypatch):
+    from oa_cohorts.core import RuleTarget
+    from oa_cohorts.measurables.measurable_resolver import get_measurable_registry
+
+    modules = _load_measurable_modules(monkeypatch)
+    ev = modules["oa_cohorts.measurables.ev_measureables"]
+    registry = get_measurable_registry()
+    measurable = registry[RuleTarget.obs_value_concept]
+
+    assert measurable is ev.ObserveValueConceptMeasurable
+    assert measurable.__bound_measurable__.value_concept_col is measurable.value_concept_id
+    assert measurable.__bound_measurable__.context_concept_col is measurable.event_concept_id
+    assert registry[RuleTarget.obs_concept].__bound_measurable__.value_concept_col is ev.ObserveMeasurable.event_concept_id
+    assert measurable.__measurable__.event_date_attr == ev.ObserveMeasurable.__measurable__.event_date_attr
+
+
+def test_observation_value_exact_rule_matches_the_answer_on_postgres(monkeypatch):
+    import os
+    from datetime import date
+
+    from omop_alchemy.cdm.model import Concept
+
+    from oa_cohorts.core import RuleTarget, RuleTemporality
+    from oa_cohorts.measurables.measurable_resolver import get_measurable_registry
+    from oa_cohorts.query.query_rule import ExactRule, ObservationContextRule
+    from oa_cohorts.query.subquery import Subquery
+
+    url = os.environ.get("ENGINE_CDM")
+    if not url:
+        pytest.skip("Observation value evidence check requires local synthetic PostgreSQL")
+    parsed = sa.engine.make_url(url)
+    assert parsed.host in ("localhost", "127.0.0.1") and parsed.port == 55433 and parsed.database == "postgres" and not parsed.query
+
+    _load_measurable_modules(monkeypatch)
+    registry = get_measurable_registry()
+    monkeypatch.setattr("oa_cohorts.query.subquery.get_measurable_registry", lambda: registry)
+    day = date(2026, 1, 2)
+    with sa.create_engine(parsed).connect() as connection:
+        connection.exec_driver_sql(
+            "CREATE TEMP TABLE dx_observation_mv (person_id int, episode_id int, event_date date, "
+            "event_concept_id int, value_concept_id int)"
+        )
+        connection.exec_driver_sql(
+            "INSERT INTO dx_observation_mv VALUES (1,10,%s,43054909,45881517), "
+            "(2,20,%s,43054909,45883458), (2,20,%s,12345,45881517), "
+            "(3,30,%s,12345,45883458)", (day, day, day, day)
+        )
+        for target, expected in (
+            (RuleTarget.obs_value_concept, [(1, 10, day)]),
+            (RuleTarget.obs_concept, []),
+        ):
+            rules = [ExactRule(concept_id=45881517, concept=Concept(concept_id=45881517))]
+            if target is RuleTarget.obs_value_concept:
+                rules.append(ObservationContextRule(concept_id=43054909, concept=Concept(concept_id=43054909)))
+            subquery = Subquery(
+                subquery_id=1,
+                target=target,
+                temporality=RuleTemporality.dt_obs,
+                rules=rules,
+            )
+            for statement in (subquery.select(), subquery.get_subquery_evidence()):
+                rows = connection.execute(statement).all()
+                assert [(row.person_id, row.episode_id, row.measure_date) for row in rows] == expected
+
+            if target is RuleTarget.obs_value_concept:
+                subquery.rules.append(ExactRule(concept_id=45883458, concept=Concept(concept_id=45883458)))
+                # The guard applies to every answer branch of the evidence UNION.
+                evidence = subquery.get_subquery_evidence().subquery()
+                assert connection.execute(
+                    sa.select(evidence.c.person_id).order_by(evidence.c.person_id)
+                ).scalars().all() == [1, 2]
+
+
+@pytest.mark.parametrize(("target", "guards", "answers", "error"), [
+    ("obs_value_concept", 0, 1, "exactly one obs_context"),
+    ("obs_value_concept", 2, 1, "exactly one obs_context"),
+    ("obs_value_concept", 1, 0, "at least one answer rule"),
+    ("obs_concept", 1, 1, "only valid for obs_value_concept"),
+    ("meas_value_concept", 1, 1, "only valid for obs_value_concept"),
+])
+def test_observation_context_rules_reject_invalid_configuration(monkeypatch, target, guards, answers, error):
+    from oa_cohorts.core import RuleTarget, RuleTemporality
+    from oa_cohorts.measurables.measurable_resolver import get_measurable_registry
+    from oa_cohorts.query.query_rule import ExactRule, ObservationContextRule
+    from oa_cohorts.query.subquery import Subquery
+
+    _load_measurable_modules(monkeypatch)
+    registry = get_measurable_registry()
+    monkeypatch.setattr("oa_cohorts.query.subquery.get_measurable_registry", lambda: registry)
+    subquery = Subquery(
+        subquery_id=1,
+        target=RuleTarget(target),
+        temporality=RuleTemporality.dt_obs,
+        rules=[ObservationContextRule(concept_id=43054909) for _ in range(guards)]
+        + [ExactRule(concept_id=45881517) for _ in range(answers)],
+    )
+
+    for compile_query in (subquery.select, subquery.get_subquery_evidence):
+        with pytest.raises(ValueError, match=error):
+            compile_query()
 
 
 @pytest.mark.parametrize("grain", ["episode", "patient"])

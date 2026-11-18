@@ -136,15 +136,39 @@ Current registry:
 | `tx_radiotherapy` | `RTTreatmentMeasurable` | radiotherapy treatment episodes |
 | `intent_sact` | `IntentChemoMeasurable` | systemic therapy intent flags |
 | `intent_rt` | `IntentRTMeasurable` | radiotherapy intent flags |
+| `intent_concurrent_rt` | `IntentConcurrentRTMeasurable` | Intent and episode dates for RT courses with a recorded SACT exposure during the course |
 | `tx_to_death_window` | `TxDaysBeforeDeath` | derived days from treatment to death |
 | `dx_to_tx_window` | `TxDaysToStartTreatment` | derived days from diagnosis to treatment start |
-| `tx_concurrent` | `TxConcurrentChemoRT` | concurrent chemo-radiotherapy predicate |
+| `tx_concurrent` | `TxConcurrentChemoRT` | CRT predicate dated by the first exposure of the earliest qualifying RT course |
 | `referral_to_specialist_window` | `ReferralToSpecialistWindowMeasurable` | derived referral-to-specialist interval |
 | `meas_concept` | `MeasurementMeasurable` | diagnosis-linked measurements |
 | `proc_concept` | `ProcedureMeasurable` | diagnosis-linked procedures |
 | `obs_concept` | `ObserveMeasurable` | diagnosis-linked observations |
+| `obs_value_concept` | `ObserveValueConceptMeasurable` | coded answers on diagnosis-linked observations |
 | `ev_visit` | `VisitSpecialtyMeasurable` | diagnosis-linked specialty visits |
 | `demog_death` | `DeathMeasurable` | death-linked person rows |
+
+For `tx_concurrent`, both the default event date and `dt_concurrent` use
+`first_concurrent_rt_start`. Use `dt_current_start` to select the condition start
+explicitly. The CRT predicate requires a recorded SACT drug exposure start
+within an individual RT course on the same attributed condition episode,
+including either boundary day. Indicators can apply diagnosis windows to the CRT
+event date.
+
+## Observation Answers
+
+`obs_concept` matches the observation concept. `obs_value_concept` matches the coded answer from `Observation.value_as_concept_id`. Both use the observation event date for `dt_obs`.
+
+Attach exactly one `obs_context` rule and at least one answer rule to the same `obs_value_concept` subquery. The context rule matches an exact observation concept on the same row as each answer match. For example, a current smoking rule uses these two rules on one subquery:
+
+| Matcher | `concept_id` | Checks |
+|---|---|---|
+| `obs_context` | `43054909` | Tobacco smoking status observation |
+| `exact` | `45881517` | Current every day smoker answer |
+
+With multiple alternative answers, each alternative must match the observation concept. `obs_context` is only valid with `obs_value_concept`. The existing measurement answer target, `meas_value_concept`, still matches the measurement answer directly.
+
+Configurations using this target and matcher require schema revision `0007_observation_value_target`. A 0006 schema with existing rules can still be read and compiled. Before downgrading, remove all references to `obs_value_concept` and `obs_context`. PostgreSQL retains the two enum labels after downgrade.
 
 ## Diagnosis Targets
 
