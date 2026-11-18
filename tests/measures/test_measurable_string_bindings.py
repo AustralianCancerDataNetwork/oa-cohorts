@@ -218,6 +218,7 @@ def _load_measurable_modules(monkeypatch):
         sa.Column("treatment_days_before_death", sa.Integer),
         sa.Column("days_from_dx_to_treatment", sa.Integer),
         sa.Column("concurrent_chemort", sa.Boolean),
+        sa.Column("first_concurrent_rt_start", sa.Date),
         extend_existing=True,
     )
     consult_window_table = sa.Table(
@@ -347,6 +348,39 @@ def test_string_mapped_measurables_bind_expected_columns(monkeypatch):
         assert bound_col.key == expected_attr
         assert bound_col.table.name == expected_table
         assert isinstance(bound_col.type, sa.String)
+
+
+@pytest.mark.parametrize("date_role", ["dt_any", "dt_concurrent"])
+def test_concurrent_crt_indicator_window_uses_the_rt_course_date(monkeypatch, date_role):
+    from datetime import date
+
+    from oa_cohorts.core import RuleTarget, RuleTemporality
+    from oa_cohorts.query.measure import MeasureMember
+    from oa_cohorts.query.query_rule import PredicateRule
+    from oa_cohorts.query.subquery import Subquery
+    from tests.resolution.candidate_runtime import indicator_results
+
+    modules = _load_measurable_modules(monkeypatch)
+    measurable = modules["oa_cohorts.measurables.tx_measurables"].TxConcurrentChemoRT
+    monkeypatch.setattr("oa_cohorts.query.subquery.get_measurable_registry",
+                        lambda: {RuleTarget.tx_concurrent: measurable})
+    query = Subquery(subquery_id=82, target=RuleTarget.tx_concurrent, temporality=RuleTemporality(date_role),
+                     rules=[PredicateRule(query_rule_id=110, concept_id=1)])
+    with sa.create_engine("sqlite://").connect() as db:
+        table = measurable.__table__
+        table.create(db)
+        db.execute(table.insert(), [
+            {"mv_id": 1, "person_id": 1, "condition_episode": 10, "condition_start_date": date(2026, 1, 1),
+             "concurrent_chemort": True, "first_concurrent_rt_start": date(2026, 3, 2)},
+            {"mv_id": 2, "person_id": 2, "condition_episode": 20, "condition_start_date": date(2026, 1, 1),
+             "concurrent_chemort": True, "first_concurrent_rt_start": date(2026, 2, 15)},
+        ])
+        numerator = [MeasureMember.from_row(row) for row in db.execute(query.select())]
+    cohort = [MeasureMember(p, e, e, date(2026, 1, 1)) for p, e in [(1, 10), (2, 20)]]
+    results = indicator_results(cohort, numerator, cohort,
+                                grain="episode", numerator_max_days_prior=0, numerator_max_days_post=45)
+    assert {row.denominator.episode_id: row.numerator_value for row in results} == {10: False, 20: True}
+    assert next(row.numerator_date for row in results if row.numerator_value) == date(2026, 2, 15)
 
 
 def test_observation_value_target_binds_the_answer_column(monkeypatch):

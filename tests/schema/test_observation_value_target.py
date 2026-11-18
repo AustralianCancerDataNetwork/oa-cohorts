@@ -7,7 +7,12 @@ from sqlalchemy.orm import Session
 from oa_cohorts.core import RuleTarget
 from oa_cohorts.query.measure import Measure, MeasureSQLCompiler
 from oa_cohorts.query.subquery import Subquery
-from oa_cohorts.schema import bootstrap_query_schema, current_revision, downgrade, upgrade
+from oa_cohorts.schema import (
+    bootstrap_query_schema,
+    current_revision,
+    downgrade,
+    upgrade,
+)
 
 PREVIOUS = "0006_resolution_policy"
 REVISION = "0007_observation_value_target"

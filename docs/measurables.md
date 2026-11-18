@@ -136,9 +136,10 @@ Current registry:
 | `tx_radiotherapy` | `RTTreatmentMeasurable` | radiotherapy treatment episodes |
 | `intent_sact` | `IntentChemoMeasurable` | systemic therapy intent flags |
 | `intent_rt` | `IntentRTMeasurable` | radiotherapy intent flags |
+| `intent_concurrent_rt` | `IntentConcurrentRTMeasurable` | Intent and episode dates for RT courses with a recorded SACT exposure during the course |
 | `tx_to_death_window` | `TxDaysBeforeDeath` | derived days from treatment to death |
 | `dx_to_tx_window` | `TxDaysToStartTreatment` | derived days from diagnosis to treatment start |
-| `tx_concurrent` | `TxConcurrentChemoRT` | concurrent chemo-radiotherapy predicate |
+| `tx_concurrent` | `TxConcurrentChemoRT` | CRT predicate dated by the first exposure of the earliest qualifying RT course |
 | `referral_to_specialist_window` | `ReferralToSpecialistWindowMeasurable` | derived referral-to-specialist interval |
 | `meas_concept` | `MeasurementMeasurable` | diagnosis-linked measurements |
 | `proc_concept` | `ProcedureMeasurable` | diagnosis-linked procedures |
@@ -146,6 +147,13 @@ Current registry:
 | `obs_value_concept` | `ObserveValueConceptMeasurable` | coded answers on diagnosis-linked observations |
 | `ev_visit` | `VisitSpecialtyMeasurable` | diagnosis-linked specialty visits |
 | `demog_death` | `DeathMeasurable` | death-linked person rows |
+
+For `tx_concurrent`, both the default event date and `dt_concurrent` use
+`first_concurrent_rt_start`. Use `dt_current_start` to select the condition start
+explicitly. The CRT predicate requires a recorded SACT drug exposure start
+within an individual RT course on the same attributed condition episode,
+including either boundary day. Indicators can apply diagnosis windows to the CRT
+event date.
 
 ## Observation Answers
 
