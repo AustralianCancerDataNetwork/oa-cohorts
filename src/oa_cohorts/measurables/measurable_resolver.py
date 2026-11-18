@@ -14,6 +14,7 @@ def get_measurable_registry() -> dict[RuleTarget, type[MeasurableBase]]:
         MeasurementMeasurable,
         MeasurementValueConceptMeasurable,
         ObserveMeasurable,
+        ObserveValueConceptMeasurable,
         ProcedureMeasurable,
         VisitSpecialtyMeasurable,
     )
@@ -42,6 +43,7 @@ def get_measurable_registry() -> dict[RuleTarget, type[MeasurableBase]]:
         RuleTarget.meas_concept: MeasurementMeasurable,
         RuleTarget.proc_concept: ProcedureMeasurable,
         RuleTarget.obs_concept: ObserveMeasurable,
+        RuleTarget.obs_value_concept: ObserveValueConceptMeasurable,
         RuleTarget.tx_chemotherapy: ChemoTreatmentMeasurable,
         RuleTarget.tx_radiotherapy: RTTreatmentMeasurable,
         RuleTarget.intent_sact: IntentChemoMeasurable,

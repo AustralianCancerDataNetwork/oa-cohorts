@@ -143,8 +143,24 @@ Current registry:
 | `meas_concept` | `MeasurementMeasurable` | diagnosis-linked measurements |
 | `proc_concept` | `ProcedureMeasurable` | diagnosis-linked procedures |
 | `obs_concept` | `ObserveMeasurable` | diagnosis-linked observations |
+| `obs_value_concept` | `ObserveValueConceptMeasurable` | coded answers on diagnosis-linked observations |
 | `ev_visit` | `VisitSpecialtyMeasurable` | diagnosis-linked specialty visits |
 | `demog_death` | `DeathMeasurable` | death-linked person rows |
+
+## Observation Answers
+
+`obs_concept` matches the observation concept. `obs_value_concept` matches the coded answer from `Observation.value_as_concept_id`. Both use the observation event date for `dt_obs`.
+
+Attach exactly one `obs_context` rule and at least one answer rule to the same `obs_value_concept` subquery. The context rule matches an exact observation concept on the same row as each answer match. For example, a current smoking rule uses these two rules on one subquery:
+
+| Matcher | `concept_id` | Checks |
+|---|---|---|
+| `obs_context` | `43054909` | Tobacco smoking status observation |
+| `exact` | `45881517` | Current every day smoker answer |
+
+With multiple alternative answers, each alternative must match the observation concept. `obs_context` is only valid with `obs_value_concept`. The existing measurement answer target, `meas_value_concept`, still matches the measurement answer directly.
+
+Configurations using this target and matcher require schema revision `0007_observation_value_target`. A 0006 schema with existing rules can still be read and compiled. Before downgrading, remove all references to `obs_value_concept` and `obs_context`. PostgreSQL retains the two enum labels after downgrade.
 
 ## Diagnosis Targets
 

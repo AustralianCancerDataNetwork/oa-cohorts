@@ -228,6 +228,15 @@ class ExactRule(QueryRule):
     def get_filter_details(self, field: sa.ColumnElement[Any]) -> sa.ColumnElement[bool]:
         return field.__eq__(self.comparator)
 
+
+class ObservationContextRule(ExactRule):
+    """Match the observation concept shared by all answer rules in a subquery."""
+
+    __mapper_args__: ClassVar[dict[str, Any]] = {
+        "polymorphic_identity": RuleMatcher.obs_context,
+    }
+
+
 class HierarchyBase(QueryRule):
     """
     Abstract base class for hierarchy-based rules.
