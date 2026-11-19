@@ -147,6 +147,7 @@ Current registry:
 | `obs_value_concept` | `ObserveValueConceptMeasurable` | coded answers on diagnosis-linked observations |
 | `ev_visit` | `VisitSpecialtyMeasurable` | diagnosis-linked specialty visits |
 | `demog_death` | `DeathMeasurable` | death-linked person rows |
+| `demog_age_at_dx` | `AgeAtDiagnosisMeasurable` | age in completed years at each cancer episode start (numeric only) |
 
 For `tx_concurrent`, both the default event date and `dt_concurrent` use
 `first_concurrent_rt_start`. Use `dt_current_start` to select the condition start
@@ -169,6 +170,24 @@ Attach exactly one `obs_context` rule and at least one answer rule to the same `
 With multiple alternative answers, each alternative must match the observation concept. `obs_context` is only valid with `obs_value_concept`. The existing measurement answer target, `meas_value_concept`, still matches the measurement answer directly.
 
 Configurations using this target and matcher require schema revision `0007_observation_value_target`. A 0006 schema with existing rules can still be read and compiled. Before downgrading, remove all references to `obs_value_concept` and `obs_context`. PostgreSQL retains the two enum labels after downgrade.
+
+## Age at Diagnosis
+
+`demog_age_at_dx` gives each cancer episode the patient's age in completed years at
+the episode start date. It uses the full birth date from `person.birth_datetime`
+(else `month_of_birth` and `day_of_birth`), so an episode that starts the day before
+a birthday counts the younger age. When only `year_of_birth` is recorded it falls
+back to the plain year difference, which can read one year high.
+
+Select it with a threshold-only `scalar` rule: `concept_id` `0`,
+`threshold_comparator` `demog_age_at_dx`, and a direction and threshold. For
+example, "older than 75" is `>` `75`, which means 76 or more completed years; use
+`>` `74` for "75 and over". The target exposes no concept column, so concept
+matchers and `presence`/`absence` are rejected. Event dates use the episode start.
+
+Configurations using this target require schema revision
+`0008_age_at_diagnosis_target`. Before downgrading, remove every subquery and
+scalar rule that names `demog_age_at_dx`.
 
 ## Diagnosis Targets
 

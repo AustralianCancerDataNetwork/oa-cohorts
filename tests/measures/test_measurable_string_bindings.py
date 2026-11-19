@@ -237,6 +237,8 @@ def _load_measurable_modules(monkeypatch):
         sa.Column("mv_id", sa.Integer, primary_key=True),
         sa.Column("person_id", sa.Integer),
         sa.Column("episode_id", sa.Integer),
+        sa.Column("episode_start_date", sa.Date),
+        sa.Column("year_of_birth", sa.Integer),
         sa.Column("death_datetime", sa.Date),
         sa.Column("gender_concept_id", sa.Integer),
         extend_existing=True,
@@ -552,3 +554,81 @@ def test_absence_rule_marks_only_its_own_alternative_as_membership_only(monkeypa
         db.exec_driver_sql("CREATE TABLE test_events (person_id int,episode_id int,event_date date,concept_id int,value_number int)")
         db.exec_driver_sql("INSERT INTO test_events VALUES (1,10,NULL,NULL,NULL),(1,20,NULL,1,NULL)")
         assert list(db.execute(sa.select(evidence.c.episode_id, evidence.c.date_required))) == [(10, False), (20, True)]
+
+
+def test_age_at_diagnosis_binds_a_numeric_column_only(monkeypatch):
+    from oa_cohorts.core import RuleTarget
+    from oa_cohorts.measurables.measurable_resolver import get_measurable_registry
+
+    modules = _load_measurable_modules(monkeypatch)
+    age = get_measurable_registry()[RuleTarget.demog_age_at_dx]
+    bound = age.__bound_measurable__
+
+    assert age is modules["oa_cohorts.measurables.pr_measurables"].AgeAtDiagnosisMeasurable
+    assert bound.value_numeric_col is age.age_at_diagnosis
+    assert bound.value_concept_col is None
+    assert bound.event_date_col is age.episode_start_date
+
+
+@pytest.mark.parametrize("dialect", ["sqlite", "postgresql"])
+def test_age_at_diagnosis_counts_completed_years_and_filters_by_threshold(monkeypatch, dialect):
+    import os
+
+    from oa_cohorts.core import RuleTarget, RuleTemporality, ThresholdDirection
+    from oa_cohorts.query.measure import MeasureMember
+    from oa_cohorts.query.query_rule import ScalarRule
+    from oa_cohorts.query.subquery import Subquery
+
+    modules = _load_measurable_modules(monkeypatch)
+    age = modules["oa_cohorts.measurables.pr_measurables"].AgeAtDiagnosisMeasurable
+    for module in ("oa_cohorts.query.subquery", "oa_cohorts.query.query_rule"):
+        monkeypatch.setattr(f"{module}.get_measurable_registry", lambda: {RuleTarget.demog_age_at_dx: age})
+    url = "sqlite://" if dialect == "sqlite" else os.environ.get("ENGINE_CDM")
+    if not url:
+        pytest.skip("PostgreSQL age check requires the local synthetic database")
+    parsed = sa.engine.make_url(url)
+    if dialect == "postgresql":
+        assert parsed.host in ("localhost", "127.0.0.1") and parsed.port == 55433 and parsed.database == "postgres" and not parsed.query
+    options = {"schema_translate_map": {"primary": None, "vocab": None}} if dialect == "sqlite" else {}
+    with sa.create_engine(url, execution_options=options).connect() as db:
+        db.exec_driver_sql("CREATE TEMPORARY TABLE person_demography_mv "
+                           "(person_id int, episode_id int, episode_start_date date, year_of_birth int)")
+        db.exec_driver_sql("CREATE TABLE person (person_id int PRIMARY KEY, year_of_birth int, "
+                           "month_of_birth int, day_of_birth int, birth_datetime timestamp)")
+        # 1: born 1950-06-15, episode the day before the 76th birthday -> 75
+        # 2: same birth date, episode on the 76th birthday              -> 76
+        # 3: month/day columns only (no birth_datetime), 1949-03-01, episode 2026-02-28 -> 76
+        # 4: year only (1950), episode 2026-01-10 -> plain year difference 76
+        # 5: born 1970, episode 2026 -> 56
+        db.exec_driver_sql("INSERT INTO person_demography_mv VALUES "
+                           "(1,10,'2026-06-14',1950),(2,20,'2026-06-15',1950),(3,30,'2026-02-28',1949),"
+                           "(4,40,'2026-01-10',1950),(5,50,'2026-05-01',1970)")
+        db.exec_driver_sql("INSERT INTO person VALUES "
+                           "(1,1950,6,15,'1950-06-15 00:00:00'),(2,1950,6,15,'1950-06-15 00:00:00'),"
+                           "(3,1949,3,1,NULL),(4,1950,NULL,NULL,NULL),(5,1970,1,1,'1970-01-01 00:00:00')")
+
+        ages = dict(db.execute(sa.select(age.episode_id, age.age_at_diagnosis)).all())
+        assert ages == {10: 75, 20: 76, 30: 76, 40: 76, 50: 56}
+
+        over_75 = Subquery(subquery_id=1, target=RuleTarget.demog_age_at_dx, temporality=RuleTemporality.dt_any,
+                           rules=[ScalarRule(query_rule_id=1, concept_id=0, scalar_threshold=75,
+                                             threshold_direction=ThresholdDirection.gt,
+                                             threshold_comparator=RuleTarget.demog_age_at_dx)])
+        statement = over_75.select() if dialect == "sqlite" else over_75.get_subquery_evidence()
+        members = [MeasureMember.from_row(row) for row in db.execute(statement)]
+        assert {m.episode_id for m in members} == {20, 30, 40}
+
+
+def test_age_at_diagnosis_rejects_concept_rules(monkeypatch):
+    from oa_cohorts.core import RuleTarget, RuleTemporality
+    from oa_cohorts.query.query_rule import PresenceRule
+    from oa_cohorts.query.subquery import Subquery
+
+    modules = _load_measurable_modules(monkeypatch)
+    age = modules["oa_cohorts.measurables.pr_measurables"].AgeAtDiagnosisMeasurable
+    monkeypatch.setattr("oa_cohorts.query.subquery.get_measurable_registry",
+                        lambda: {RuleTarget.demog_age_at_dx: age})
+    query = Subquery(subquery_id=1, target=RuleTarget.demog_age_at_dx, temporality=RuleTemporality.dt_any,
+                     rules=[PresenceRule(query_rule_id=1, concept_id=0)])
+    with pytest.raises(ValueError, match="does not expose required concept value column"):
+        query.select()
