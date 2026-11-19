@@ -136,6 +136,7 @@ def _load_dx_primary_registry(monkeypatch):
         setattr(ev_measurables_mod, name, type(name, (), {}))
     pr_measurables_mod = types.ModuleType("oa_cohorts.measurables.pr_measurables")
     pr_measurables_mod.DeathMeasurable = type("DeathMeasurable", (), {})
+    pr_measurables_mod.AgeAtDiagnosisMeasurable = type("AgeAtDiagnosisMeasurable", (), {})
 
     monkeypatch.setitem(sys.modules, "omop_constructs", omop_constructs_pkg)
     monkeypatch.setitem(sys.modules, "omop_constructs.alchemy", alchemy_pkg)

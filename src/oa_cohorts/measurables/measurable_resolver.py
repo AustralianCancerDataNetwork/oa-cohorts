@@ -18,7 +18,7 @@ def get_measurable_registry() -> dict[RuleTarget, type[MeasurableBase]]:
         ProcedureMeasurable,
         VisitSpecialtyMeasurable,
     )
-    from .pr_measurables import DeathMeasurable
+    from .pr_measurables import AgeAtDiagnosisMeasurable, DeathMeasurable
     from .tx_measurables import (
         AllCurrentTreatmentMeasurable,
         ChemoTreatmentMeasurable,
@@ -50,6 +50,7 @@ def get_measurable_registry() -> dict[RuleTarget, type[MeasurableBase]]:
         RuleTarget.intent_rt: IntentRTMeasurable,
         RuleTarget.intent_concurrent_rt: IntentConcurrentRTMeasurable,
         RuleTarget.demog_death: DeathMeasurable,
+        RuleTarget.demog_age_at_dx: AgeAtDiagnosisMeasurable,
         RuleTarget.tx_to_death_window: TxDaysBeforeDeath,
         RuleTarget.dx_to_tx_window: TxDaysToStartTreatment,
         RuleTarget.tx_concurrent: TxConcurrentChemoRT,

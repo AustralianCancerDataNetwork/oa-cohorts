@@ -69,6 +69,7 @@ class RuleTarget(str, enum.Enum):
     # Demographics / person
     demog_gender = "demog_gender"
     demog_death = "demog_death"
+    demog_age_at_dx = "demog_age_at_dx"
 
     # Observation / procedure / measurement
     obs_value = "obs_value"
