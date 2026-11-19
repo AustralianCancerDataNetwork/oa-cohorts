@@ -457,6 +457,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#age-at-diagnosis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Age at Diagnosis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#diagnosis-targets" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -960,6 +971,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#age-at-diagnosis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Age at Diagnosis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#diagnosis-targets" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1303,6 +1325,11 @@ Some enum members are reserved for future design work and do not currently resol
 <td><code>DeathMeasurable</code></td>
 <td>death-linked person rows</td>
 </tr>
+<tr>
+<td><code>demog_age_at_dx</code></td>
+<td><code>AgeAtDiagnosisMeasurable</code></td>
+<td>age in completed years at each cancer episode start (numeric only)</td>
+</tr>
 </tbody>
 </table>
 <p>For <code>tx_concurrent</code>, both the default event date and <code>dt_concurrent</code> use
@@ -1337,6 +1364,20 @@ event date.</p>
 </table>
 <p>With multiple alternative answers, each alternative must match the observation concept. <code>obs_context</code> is only valid with <code>obs_value_concept</code>. The existing measurement answer target, <code>meas_value_concept</code>, still matches the measurement answer directly.</p>
 <p>Configurations using this target and matcher require schema revision <code>0007_observation_value_target</code>. A 0006 schema with existing rules can still be read and compiled. Before downgrading, remove all references to <code>obs_value_concept</code> and <code>obs_context</code>. PostgreSQL retains the two enum labels after downgrade.</p>
+<h2 id="age-at-diagnosis">Age at Diagnosis<a class="headerlink" href="#age-at-diagnosis" title="Permanent link">&para;</a></h2>
+<p><code>demog_age_at_dx</code> gives each cancer episode the patient's age in completed years at
+the episode start date. It uses the full birth date from <code>person.birth_datetime</code>
+(else <code>month_of_birth</code> and <code>day_of_birth</code>), so an episode that starts the day before
+a birthday counts the younger age. When only <code>year_of_birth</code> is recorded it falls
+back to the plain year difference, which can read one year high.</p>
+<p>Select it with a threshold-only <code>scalar</code> rule: <code>concept_id</code> <code>0</code>,
+<code>threshold_comparator</code> <code>demog_age_at_dx</code>, and a direction and threshold. For
+example, "older than 75" is <code>&gt;</code> <code>75</code>, which means 76 or more completed years; use
+<code>&gt;</code> <code>74</code> for "75 and over". The target exposes no concept column, so concept
+matchers and <code>presence</code>/<code>absence</code> are rejected. Event dates use the episode start.</p>
+<p>Configurations using this target require schema revision
+<code>0008_age_at_diagnosis_target</code>. Before downgrading, remove every subquery and
+scalar rule that names <code>demog_age_at_dx</code>.</p>
 <h2 id="diagnosis-targets">Diagnosis Targets<a class="headerlink" href="#diagnosis-targets" title="Permanent link">&para;</a></h2>
 <p>For clinical users, the most important distinction is between the two diagnosis concept targets:</p>
 <ul>
