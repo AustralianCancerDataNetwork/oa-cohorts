@@ -1,15 +1,33 @@
 from __future__ import annotations
 
+import math
 from datetime import UTC, date, datetime, time
 from enum import Enum
 from typing import Any
 
 import sqlalchemy as sa
-from orm_loader.helpers import normalise_null
+
+_NULL_STRINGS = {"", "nan", "null", "none", "na", "n/a"}
+
+
+def _normalise_null(value: Any) -> Any | None:
+    if value is None:
+        return None
+
+    # math.isnan handles Python and NumPy floating NaNs without a pandas dependency.
+    try:
+        if math.isnan(value):
+            return None
+    except (TypeError, ValueError):
+        pass
+
+    if isinstance(value, str) and value.strip().lower() in _NULL_STRINGS:
+        return None
+    return value
 
 
 def parse_bool(value: Any) -> bool | None:
-    value = normalise_null(value)
+    value = _normalise_null(value)
     if value is None:
         return None
     if isinstance(value, bool):
@@ -26,7 +44,7 @@ def parse_bool(value: Any) -> bool | None:
 
 
 def parse_int(value: Any) -> int | None:
-    value = normalise_null(value)
+    value = _normalise_null(value)
     if value is None:
         return None
     if isinstance(value, bool):
@@ -50,7 +68,7 @@ def parse_int(value: Any) -> int | None:
 
 
 def parse_float(value: Any) -> float | None:
-    value = normalise_null(value)
+    value = _normalise_null(value)
     if value is None:
         return None
     if isinstance(value, (int, float)) and not isinstance(value, bool):
@@ -78,7 +96,7 @@ def to_naive_utc(value: datetime) -> datetime:
 
 
 def parse_datetime(value: Any) -> datetime | None:
-    value = normalise_null(value)
+    value = _normalise_null(value)
     if value is None:
         return None
     if isinstance(value, datetime):
@@ -95,7 +113,7 @@ def parse_datetime(value: Any) -> datetime | None:
 
 
 def parse_date(value: Any) -> date | None:
-    value = normalise_null(value)
+    value = _normalise_null(value)
     if value is None:
         return None
     if isinstance(value, datetime):
@@ -116,7 +134,7 @@ def parse_date(value: Any) -> date | None:
 
 
 def parse_enum(value: Any, enum_cls: type[Enum]) -> Any:
-    value = normalise_null(value)
+    value = _normalise_null(value)
     if value is None or isinstance(value, enum_cls):
         return value
     if isinstance(value, str):
@@ -136,7 +154,7 @@ def parse_enum(value: Any, enum_cls: type[Enum]) -> Any:
 
 
 def coerce_column_value(column: sa.Column[Any], value: Any) -> Any:
-    value = normalise_null(value)
+    value = _normalise_null(value)
     if value is None:
         return None
 
